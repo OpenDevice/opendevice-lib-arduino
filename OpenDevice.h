@@ -1,57 +1,71 @@
 /*
- * OpenDevice.h
+ * OpenDeviceClass.h
  *
  *  Created on: 27/06/2014
  *      Author: ricardo
  */
 
-#ifndef OPENDEVICE_H_
-#define OPENDEVICE_H_
+#ifndef OpenDevice_H_
+#define OpenDevice_H_
 
 #include <Arduino.h>
 #include "Command.h"
 #include "DeviceConnection.h"
 #include "DeviceManager.h"
 
-class OpenDevice {
+
+class OpenDeviceClass {
 
 private:
 
 	// Internal Listeners..
 	// NOTE: Static because: deviceManager->setDefaultListener
-	static void onMessageReceived(Command);
-	static void notifyReceived(ResponseStatus::ResponseStatus);
-	static void sensorChanged(uint8_t id, uint16_t value);
+	static void onMessageReceived(Command cmd);
+	static void sensorChanged(uint8_t id, unsigned long value);
 
+	void notifyReceived(ResponseStatus::ResponseStatus status);
+	
 	// Utils....
-	static void freeRam();
-	static void debugChange(uint8_t id, uint16_t value);
-
+	void freeRam();
+	void debugChange(uint8_t id, unsigned long value);
 
 
 public:
+ 
+	bool autoControl; // Changes in the sensor should affect bonded devices..
+	Command lastCMD; // Command received / send.
+	bool debugMode;
+	uint8_t debugTarget;
+	DeviceConnection *deviceConnection;
+	DeviceManager *deviceManager;
 
-	static bool autoControl; // Changes in the sensor should affect bonded devices..
-	static Command lastCMD; // Command received / send.
-	static bool debugMode;
-	static uint8_t debugTarget;
-	static DeviceConnection *deviceConnection;
-	static DeviceManager *deviceManager;
+	OpenDeviceClass();
+	// virtual ~OpenDeviceClass();
 
-	OpenDevice();
-	OpenDevice(DeviceConnection*, DeviceManager*);
-	// virtual ~OpenDevice();
-	static void begin(DeviceConnection&);
-//	static void begin(Stream &serial);
+    /**
+	 * Setup using the standard serial port
+	 * @param baud - Sets the data rate in bits per second, Values:(300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
+	 */
+	void begin(unsigned long baud);
+	void begin(DeviceConnection &deviceConnection);
 
-	static void loop();
-	static void sendCommand(Command cmd);
-	static void debug(const __FlashStringHelper* data);
-	static void debug(const char str[]);
+//	void begin(Stream &serial);
 
-	static bool addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	static bool addSensor(uint8_t pin, Device::DeviceType type);
-	static bool addDevice(uint8_t pin, Device::DeviceType type);
+	void loop();
+	void sendCommand(Command cmd);
+	void debug(const __FlashStringHelper* data);
+	void debug(const char str[]);
+	#ifdef ARDUINO
+	void debug(String& str);
+	#endif
+
+	bool addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
+	bool addSensor(uint8_t pin, Device::DeviceType type);
+	bool addDevice(uint8_t pin, Device::DeviceType type);
+	bool addDevice(Device& device);
+	bool addSensor(Device& device);
 };
 
-#endif /* OPENDEVICE_H_ */
+extern OpenDeviceClass OpenDevice;
+
+#endif /* OpenDevice_H_ */

@@ -27,11 +27,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Libraries/SoftwareSerial</name>
-			<type>2</type>
-			<locationURI>ArduinoHardwareLibPath/SoftwareSerial</locationURI>
-		</link>
-		<link>
 			<name>arduino/core</name>
 			<type>2</type>
 			<locationURI>ArduinoPlatformPath/cores/arduino</locationURI>

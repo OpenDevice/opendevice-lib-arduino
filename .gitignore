@@ -1,1 +1,6 @@
-*.cproject
+/arduino/
+/.settings/
+/.project
+/.cproject
+/lib.index
+/spec.d

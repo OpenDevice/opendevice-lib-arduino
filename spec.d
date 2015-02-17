@@ -1,2 +1,2 @@
 spec.o:  \
- /media/Dados/Codigos/Java/Projetos/OpenDevice/OpenDeviceFirmware/workspace/.metadata/.plugins/org.eclipse.cdt.managedbuilder.core/spec.C
+ /media/Dados/Programacao/ArduinoEclipseV2.3/workspace/.metadata/.plugins/org.eclipse.cdt.managedbuilder.core/spec.C

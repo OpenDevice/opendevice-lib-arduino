@@ -38,19 +38,21 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	}
 }
 
-bool Device::setValue(uint16_t value){
+bool Device::setValue(unsigned long value){
 	currentValue = value;
 
-	if(type == Device::DIGITAL){
-		digitalWrite(pin, (value == 1 ? HIGH : LOW));
-	}else{
-		analogWrite(pin, value);
+	if(!sensor){
+		if(type == Device::DIGITAL){
+			digitalWrite(pin, (value == 1 ? HIGH : LOW));
+		}else{
+			analogWrite(pin, value);
+		}
 	}
 
 	return true;
 }
 
-uint16_t Device::getValue(){
+unsigned long Device::getValue(){
 
 	if(sensor){
 		return currentValue; // return last filtered value... (see: hasChanged)
@@ -64,10 +66,18 @@ uint16_t Device::getValue(){
 
 }
 
+size_t Device::serializeExtraData(DeviceConnection *conn){
+	return -1;
+}
+
+void Device::deserializeExtraData(Command *cmd, DeviceConnection *conn){
+	// do nothing
+}
+
 // FOR SENSOR device...
 bool Device::hasChanged(){
 
-	uint16_t v = 0;
+	unsigned long v = 0;
 
 	if(type == Device::DIGITAL){
 		v = ! digitalRead(pin); // READ and Invert state because is a INPUT_PULLUP
@@ -107,7 +117,7 @@ DeviceManager::DeviceManager() {
 	_init();
 }
 
-void DeviceManager::setDefaultListener(void (*pt2Func)(uint8_t, uint16_t)){
+void DeviceManager::setDefaultListener(void (*pt2Func)(uint8_t, unsigned long)){
 	callbackPtr = pt2Func;
 }
 
@@ -137,11 +147,34 @@ bool DeviceManager::addDevice(uint8_t pin, Device::DeviceType type){
 	return addDevice(pin, type, false, 0);
 }
 
+
+bool DeviceManager::addDevice(Device& device){
+	if (deviceLength < MAX_DEVICE) {
+
+		if (device.sensor) {
+			if (device.type == Device::DIGITAL) {
+				pinMode(device.pin, INPUT_PULLUP); // Enable internal pull-up resistor..
+			}
+		} else {
+			pinMode(device.pin, OUTPUT);
+		}
+
+		devices[deviceLength] = &device;
+		deviceLength = deviceLength + 1;
+
+		return true;
+	} else{
+		return false;
+	}
+
+}
+
+
 bool DeviceManager::addDevice(uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
 	if (deviceLength < MAX_DEVICE) {
 
 		if (sensor) {
-			if (type && Device::DIGITAL) {
+			if (type == Device::DIGITAL) {
 				pinMode(pin, INPUT_PULLUP); // Enable internal pull-up resistor..
 			}
 		} else {
@@ -151,7 +184,7 @@ bool DeviceManager::addDevice(uint8_t pin, Device::DeviceType type, bool sensor,
 		if (id == 0) id = (deviceLength + 1);
 
 		devices[deviceLength] = new Device(id, pin, type, sensor);
-		deviceLength = deviceLength + 1;
+		deviceLength++;
 
 		return true;
 	} else{
@@ -180,7 +213,7 @@ void DeviceManager::checkStatus(){
 
 }
 
-void DeviceManager::setValue(uint8_t id, uint16_t value){
+void DeviceManager::setValue(uint8_t id, unsigned long value){
     for (int i = 0; i < deviceLength; i++) {
     	if(devices[i]->id == id){
     		devices[i]->setValue(value);
@@ -189,7 +222,7 @@ void DeviceManager::setValue(uint8_t id, uint16_t value){
     }
 }
 
-void DeviceManager::sendToAll(uint16_t value){
+void DeviceManager::sendToAll(unsigned long value){
     for (int i = 0; i < deviceLength; i++) {
     	devices[i]->setValue(value);
     }
@@ -221,8 +254,8 @@ Device* DeviceManager::getDevice(uint8_t id){
 
 Device* DeviceManager::getDeviceAt(uint8_t index){
 
-	if(index > 0 && index < deviceLength){
-		return devices[index];
+	if(index > 0 && index <= deviceLength){
+		return devices[index-1];
 	}
 
     return NULL;

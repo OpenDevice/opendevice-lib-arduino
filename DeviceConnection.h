@@ -2,8 +2,9 @@
 #ifndef DeviceConnection_h
 #define DeviceConnection_h
 
+#include <Arduino.h>
 #include <inttypes.h>
-#include "Print.h"
+#include <string.h>
 #include "Stream.h"
 #include "Command.h"
 
@@ -24,25 +25,11 @@ extern "C"
 class DeviceConnection{
 
 
-#define API_VERSION   1 // software version of this library
-#define DATA_BUFFER   64
-#define MAX_LISTENERS 10
-#define DEBUG_CON	0 // set 1 to enable
-
-
 protected:
 	Stream * com;
 	virtual void init();
 private:
-	// per object data
-	uint8_t bufferCount;
-	uint8_t buffer[DATA_BUFFER];
 	
-	static const uint8_t START_BIT = 18;
-	static const uint8_t ACK_BIT = 19;
-	static const uint8_t STOP_BIT = 27;
-	static const uint8_t TOKEN_BIT = 59;
-
 	int numberOfValues;
 
 	CommandListener defaultListener;  			// default listener
@@ -53,10 +40,25 @@ private:
 	// private methods
 	void parseCommand(void);
 	void notifyListeners(Command);
+	void notifyError(ResponseStatus::ResponseStatus status);
 
 	int getArrayLength();
 
+	bool isListStart(char c);
+	bool isListEnd(char c);
+	bool isSeparator(char c);
+	int nextEndOffSet();
+
 public: 
+	static const uint8_t START_BIT = 18;
+	static const uint8_t ACK_BIT = 19;
+	static const uint8_t STOP_BIT = 27;
+	static const uint8_t TOKEN_BIT = Command::SEPARATOR;
+
+	uint8_t buffer[DATA_BUFFER];
+	uint8_t bufferCount;
+	uint8_t bufferOffset;
+
 	// public methods
 	DeviceConnection();
 	DeviceConnection(Stream &serial);
@@ -71,12 +73,12 @@ public:
 	int stringLength(){return bufferCount;} // string without flag but '/0' at the end
 	void getBuffer(uint8_t[]);
 	
-	void readString(char[]);
-	int readInt();
+	int readString(char** target);
+	int readInt(uint8_t endOffset = 0);
 	long readLong();
 	float readFloat();
 	double readDouble();
-	void readIntValues(int[]);
+	int readIntValues(int[], int max = -1);
 	void readFloatValues(float[]);
 	void readDoubleValues(float[]); // in Arduino double and float are the same
 	
@@ -103,7 +105,7 @@ public:
     void send(long, int);
     void send(double);
     void sendln(void);
-    void send(Command);
+    void send(Command, bool complete = true);
 
     template < class T > void sendCmdArg (T arg){
     	com->write(START_BIT);

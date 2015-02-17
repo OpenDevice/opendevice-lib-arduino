@@ -5,37 +5,31 @@
  * *****************************************************************************
  */
 
+
 #include <DeviceConnection.h>
 #include <OpenDevice.h>
+#include <SoftwareSerial.h>
 
-// Configs for Wiznet shieds
-//#include <SPI.h>
-//#include <Ethernet.h>
-//#include <TcpConnection.h>
-//TcpConnection deviceConnection(8081);
-
-// Configs for ENC28J60 shieds/modules
-#include <UIPEthernet.h>
-#include <TcpConnectionENC28.h>
-TcpConnectionENC28 deviceConnection(8081);
+SoftwareSerial serialBT(10, 11); // RX  TX
+DeviceConnection deviceConnection(serialBT);
 
 
 void setup(){
     OpenDevice::debugMode = true;
-    OpenDevice::debugTarget = 0;
-    
-    Serial.begin(9600);  
-    // while (!Serial){delay(1);} // uncomment if using Leonardo
-   
+    OpenDevice::debugTarget = 0; // 0:Serial, 1:DeviceConnection
+
+    serialBT.begin(9600);
+    Serial.begin(9600);
+
     OpenDevice::addDevice(13, Device::DIGITAL); // ID:1
     
-    OpenDevice::begin(deviceConnection);			
+    OpenDevice::begin(deviceConnection);
     OpenDevice::debug("Started!");
          
 }
 
 void loop(){
 	
-    OpenDevice::loop();
+	OpenDevice::loop();
 
 }
