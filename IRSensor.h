@@ -11,7 +11,7 @@
 #define IRSENSOR_H_
 
 #include "Stream.h"
-#include "DeviceManager.h"
+#include "Device.h"
 #include "DataUtils.h"
 #include "../IRremote/IRremote.h"
 

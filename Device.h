@@ -1,12 +1,12 @@
 /*
- * DeviceManager.h
+ * Device.h
  *
  *  Created on: 05/02/2013
  *      Author: Ricardo JL Rufino
  */
 
-#ifndef DeviceManager_H_
-#define DeviceManager_H_
+#ifndef Device_H_
+#define Device_H_
 
 #include <Arduino.h>
 #include "Command.h"
@@ -63,40 +63,4 @@ public:
 };
 
 
-class DeviceManager {
-private:
-	Device* devices[MAX_DEVICE];
-
-	// Debouncng of normal pressing (for Sensor's)
-	long time;
-
-	void _init();
-	bool addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
-
-	/**
-	 * Registered Callback function
-	 * Params: pinNumber, newValue
-	 */
-	void (*callbackPtr)(uint8_t pinNumber, unsigned long newValue);
-
-
-public:
-	int deviceLength;
-
-	DeviceManager();
-	// bool addSensor(Sensor* sensor);
-	bool addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	bool addDevice(uint8_t pin, Device::DeviceType type);
-	bool addDevice(Device& device);
-	Device* getDevice(uint8_t);
-	Device* getDeviceAt(uint8_t);
-
-	void setDefaultListener(void (*pt2Func)(uint8_t, unsigned long));
-	void checkStatus();
-	void setValue(uint8_t id, unsigned long value);
-	void sendToAll(unsigned long value);
-	void init();
-
-};
-
-#endif /* DeviceManager_H_ */
+#endif /* Device_H_ */

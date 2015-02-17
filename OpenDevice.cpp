@@ -8,17 +8,20 @@
 #include "OpenDevice.h"
 
 OpenDeviceClass::OpenDeviceClass() {
-	deviceManager = new DeviceManager();
 	deviceConnection = NULL;
 	autoControl = false;
 	debugMode = false;
+	keepAliveEnabled = false;
+	keepAliveTime = 0;
 	debugTarget = 0; // 0 - Default Serial, 1 - Target Connection
+
+	time = 0;
+	deviceLength = 0;
+	for (int i = 0; i < MAX_DEVICE; i++) {
+		devices[i] = NULL;
+	}
 }
 
-
-//OpenDeviceClass::~OpenDeviceClass() {
-//	// TODO Auto-generated destructor stub
-//}
 
 //void OpenDeviceClass::begin(Stream &serial) {
 //	OpenDeviceClass::begin(&DeviceConnection(serial));
@@ -36,37 +39,19 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
 
-	if(deviceManager){
-		deviceManager->setDefaultListener(&(OpenDeviceClass::sensorChanged));
-		deviceManager->init(); // Init Sensors and Devices.
+	for (int i = 0; i < deviceLength; i++) {
+		devices[i]->init();
 	}
 
 	if(deviceConnection){
 		deviceConnection->setDefaultListener(&(OpenDeviceClass::onMessageReceived));
 	}
 
+	OpenDevice.debug("Begin [OK]");
 }
 
 
-bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID){
-	return deviceManager->addSensor(pin, type, targetID);
-}
 
-bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
-	return deviceManager->addSensor(pin, type, -1);
-}
-
-bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type){
-	return deviceManager->addDevice(pin, type);
-}
-
-bool OpenDeviceClass::addDevice(Device& device){
-	return deviceManager->addDevice(device);
-}
-
-bool OpenDeviceClass::addSensor(Device& sensor){
-	return deviceManager->addDevice(sensor);
-}
 
 void OpenDeviceClass::loop() {
 
@@ -74,8 +59,17 @@ void OpenDeviceClass::loop() {
 		deviceConnection->checkDataAvalible();
 	}
 
-	if(deviceManager){
-		deviceManager->checkStatus();
+	checkSensorsStatus();
+
+	clear(lastCMD);
+
+	// Send PING/KeepAlive if enabled
+	if(keepAliveEnabled){
+	  unsigned long currentMillis = millis();
+	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
+		keepAliveTime = currentMillis;
+		OpenDevice.send(cmd(CommandType::PING));
+	  }
 	}
 
 }
@@ -83,7 +77,6 @@ void OpenDeviceClass::loop() {
 /** Called when a command is received by the connection */
 void OpenDeviceClass::onMessageReceived(Command cmd){
 	OpenDevice.lastCMD = cmd;
-	DeviceManager *deviceManager = OpenDevice.deviceManager;
 	DeviceConnection *deviceConnection = OpenDevice.deviceConnection;
 
 	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
@@ -97,27 +90,28 @@ void OpenDeviceClass::onMessageReceived(Command cmd){
 		deviceConnection->print(cmd.id);
 		deviceConnection->doToken();
 
-		for (int i = 0; i < deviceManager->deviceLength; ++i) {
-			Device *device = deviceManager->getDeviceAt(i);
+		for (int i = 0; i < OpenDevice.deviceLength; ++i) {
+			Device *device = OpenDevice.getDeviceAt(i);
 			// Write array to connection..
 			char buffer[50]; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
 			device->toString(buffer);
 			deviceConnection->print(buffer);
 
-			if(i < deviceManager->deviceLength){
+			if(i < OpenDevice.deviceLength){
 				deviceConnection->doToken();
 			}
 		}
 
 		deviceConnection->doEnd();
 
+    // Directed to a device (Like On/OFF or more complex)
 	}else if(cmd.deviceID > 0){
 
-		Device *findDevice = deviceManager->getDevice(cmd.deviceID);
-		if (findDevice != NULL) {
-			OpenDevice.debugChange(findDevice->id, cmd.value);
-			findDevice->setValue(cmd.value);
-			findDevice->deserializeExtraData(&cmd, deviceConnection);
+		Device *foundDevice = OpenDevice.getDevice(cmd.deviceID);
+		if (foundDevice != NULL) {
+			OpenDevice.debugChange(foundDevice->id, cmd.value);
+			foundDevice->setValue(cmd.value);
+			foundDevice->deserializeExtraData(&cmd, deviceConnection);
 			OpenDevice.notifyReceived(ResponseStatus::SUCCESS);
 		} else {
 			OpenDevice.notifyReceived(ResponseStatus::NOT_FOUND);
@@ -127,9 +121,10 @@ void OpenDeviceClass::onMessageReceived(Command cmd){
 }
 
 
-void OpenDeviceClass::sensorChanged(uint8_t id, unsigned long value){
-	Device* sensor = OpenDevice.deviceManager->getDevice(id);
-	Device* device = OpenDevice.deviceManager->getDevice(sensor->targetID);
+// FIMXE: rename to onSensorChange
+void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
+	Device* sensor = getDevice(id);
+	Device* device = getDevice(sensor->targetID);
 
 //    if(id < 100) // FIXME: detectar se é o IR.
 //    	value = !value;        // NOTA: Os valores do Swicth sao invertidos
@@ -158,17 +153,32 @@ void OpenDeviceClass::sensorChanged(uint8_t id, unsigned long value){
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
-	// Check extra data to send.
 	OpenDevice.deviceConnection->send(lastCMD, false);
+	// Check extra data to send.
 	sensor->serializeExtraData(OpenDevice.deviceConnection);
 	OpenDevice.deviceConnection->doEnd();
 }
 
 
-void OpenDeviceClass::sendCommand(Command cmd){
+void OpenDeviceClass::send(Command cmd){
 	if(deviceConnection){
-		deviceConnection->send(cmd);
+		deviceConnection->send(cmd, true);
 	}
+}
+
+Command OpenDeviceClass::cmd(uint8_t type, uint8_t deviceID, unsigned long value){
+	lastCMD.type = type;
+	lastCMD.deviceID = deviceID;
+	lastCMD.value = value;
+	return lastCMD;
+}
+
+void OpenDeviceClass::clear(Command cmd){
+	lastCMD.id = 0;
+	lastCMD.type = 0;
+	lastCMD.deviceID = 0;
+	lastCMD.value = 0;
+	lastCMD.length = 0;
 }
 
 
@@ -179,7 +189,7 @@ void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
   lastCMD.value = status;
   // FIXME: lastCMD.data =  NULL;
   lastCMD.length = 0;
-  sendCommand(lastCMD);
+  send(lastCMD);
 }
 
 void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
@@ -205,6 +215,151 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 		}
 	}
 }
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// DeviceManager
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID){
+	bool v = addDevice(pin, type, true, 0);
+	if(v) devices[deviceLength-1]->targetID = targetID;
+	return v;
+}
+
+bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
+	return addSensor(pin, type, -1);
+}
+
+bool OpenDeviceClass::addSensor(Device& sensor){
+	return addDevice(sensor);
+}
+
+
+bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type){
+	return addDevice(pin, type, false, 0);
+}
+
+
+bool OpenDeviceClass::addDevice(Device& device){
+	if (deviceLength < MAX_DEVICE) {
+
+		if (device.sensor) {
+			if (device.type == Device::DIGITAL) {
+				pinMode(device.pin, INPUT_PULLUP); // Enable internal pull-up resistor..
+			}
+		} else {
+			pinMode(device.pin, OUTPUT);
+		}
+
+		devices[deviceLength] = &device;
+		deviceLength = deviceLength + 1;
+
+		return true;
+	} else{
+		return false;
+	}
+
+}
+
+
+bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
+	if (deviceLength < MAX_DEVICE) {
+
+		if (sensor) {
+			if (type == Device::DIGITAL) {
+				pinMode(pin, INPUT_PULLUP); // Enable internal pull-up resistor..
+			}
+		} else {
+			pinMode(pin, OUTPUT);
+		}
+
+		if (id == 0) id = (deviceLength + 1);
+
+		devices[deviceLength] = new Device(id, pin, type, sensor);
+		deviceLength++;
+
+		return true;
+	} else{
+		return false;
+	}
+}
+
+void OpenDeviceClass::checkSensorsStatus(){
+
+	// Arduino DOC (http://arduino.cc/en/Reference/analogRead):
+	// Takes about 100 microseconds (0.0001 s) to read an analog input, so the maximum reading rate is about 10,000 times
+
+	if(time == 0) time = millis();
+
+	if (millis() - time > READING_INTERVAL){ // don't sample analog/digital more than XXXms
+	    for (int i = 0; i < deviceLength; i++) {
+
+	    	if(devices[i]->sensor && devices[i]->hasChanged()){
+	    		onSensorChanged(devices[i]->id, devices[i]->currentValue);
+	    	}
+
+	    }
+
+	    time = millis();
+	}
+
+}
+
+void OpenDeviceClass::setValue(uint8_t id, unsigned long value){
+    for (int i = 0; i < deviceLength; i++) {
+    	if(devices[i]->id == id){
+    		devices[i]->setValue(value);
+    		break;
+    	}
+    }
+}
+
+void OpenDeviceClass::sendToAll(unsigned long value){
+    for (int i = 0; i < deviceLength; i++) {
+    	devices[i]->setValue(value);
+    }
+}
+
+Device* OpenDeviceClass::getDevice(uint8_t id){
+
+//	Serial.print("DB: getDevice :: size: ");
+//	Serial.print(deviceLength, DEC);
+//	Serial.print(" > ");
+
+    for (int i = 0; i < deviceLength; i++) {
+
+//    	Serial.print(devices[i]->id);
+//    	Serial.print(",");
+
+    	if(devices[i]->id == id){
+//    		Serial.println("DB: getDevice TRUE");
+//    		Serial.write(19);
+    		return devices[i];
+    	}
+    }
+
+//	Serial.println("DB: getDevice FALSE");
+//	Serial.write(19);
+
+    return NULL;
+}
+
+Device* OpenDeviceClass::getDeviceAt(uint8_t index){
+
+	if(index > 0 && index <= deviceLength){
+		return devices[index-1];
+	}
+
+    return NULL;
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// END: DeviceManager
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 void OpenDeviceClass::freeRam() {
 
@@ -242,6 +397,16 @@ void OpenDeviceClass::debug(const char str[]){
 	}
 }
 
+
+void OpenDeviceClass::enableKeepAlive(){
+	keepAliveEnabled = true;
+}
+
+void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
+	debugMode = true;
+	debugTarget = _debugTarget;
+}
+
 #ifdef ARDUINO
 void OpenDeviceClass::debug(String& str){
 	if(debugMode){ // FIXME: a logica não está muito legal não... !
@@ -252,6 +417,7 @@ void OpenDeviceClass::debug(String& str){
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
+			// FIXME: how to use another ports ? [Mega: 2 = Serial1, 3 = Serial2, 4 = Serial3 ]
 			Serial.print("DB:");
 			Serial.print(str);
 			Serial.write(19);
