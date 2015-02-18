@@ -1,3 +1,15 @@
+/*
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
+ */
 
 // Includes
 #include "DeviceConnection.h"
@@ -75,7 +87,7 @@ bool DeviceConnection::checkDataAvalible(){
 			delay(500);
 			Serial.print("DB:available=");
 			Serial.println(com->available());
-			Serial.write(19);
+			Serial.write(ACK_BIT);
 		#endif
 
 		while(com->available() > 0)
@@ -86,7 +98,7 @@ bool DeviceConnection::checkDataAvalible(){
 			#if DEBUG_CON
 				Serial.print("DB:READ:");
 				Serial.println(lastByte);
-				Serial.write(19);
+				Serial.write(ACK_BIT);
 			#endif
 
 			if(lastByte == STOP_BIT){
@@ -103,7 +115,7 @@ bool DeviceConnection::checkDataAvalible(){
 			else{
 				notifyError(ResponseStatus::BUFFER_OVERFLOW);
 				#if DEBUG_CON
-				Serial.print("DB:BUFFER_OVERFLOW");Serial.write(19);
+				Serial.print("DB:BUFFER_OVERFLOW");Serial.write(ACK_BIT);
 				#endif
 				return false;
 			}
@@ -157,7 +169,7 @@ void DeviceConnection::parseCommand(){
 		Serial.print(cmd.id);Serial.print(";");
 		Serial.print(cmd.deviceID);Serial.print(";");
 		Serial.print(cmd.value);Serial.print("");
-		Serial.write(19);
+		Serial.write(ACK_BIT);
 	#endif
 
 
@@ -243,7 +255,7 @@ int DeviceConnection::getArrayLength()
 	numberOfValues = 1;
 	// find the amount of values we got
 	for (int a=1; a<bufferCount;a++){
-		if (buffer[a]==TOKEN_BIT) numberOfValues++;
+		if (buffer[a]==SEPARATOR) numberOfValues++;
 	}
 	return numberOfValues;
 }
@@ -256,7 +268,7 @@ void DeviceConnection::readFloatValues(float values[])
 	int start = 1; // start of first value
 	for (int end=1; end<bufferCount;end++){
 		// find end of value
-		if (buffer[end]==TOKEN_BIT) {
+		if (buffer[end]==SEPARATOR) {
 			// now we know start and end of a value
 			char b[(end-start)+1]; // create container for one value plus '\0'
 			t = 0;
@@ -356,7 +368,7 @@ void DeviceConnection::doStart(){
 }
 
 void DeviceConnection::doToken(){
-	com->write(TOKEN_BIT);
+	com->write(SEPARATOR);
 }
 
 void DeviceConnection::doEnd(){
@@ -382,7 +394,7 @@ void DeviceConnection::send(long values[], int size){
 	for (int i = 0; i < size; ++i) {
 		ltoa(values[i], vbuffer, 10);
 		com->write(vbuffer);
-		com->write(TOKEN_BIT);
+		com->write(SEPARATOR);
 	}
 	com->write(ACK_BIT);
 }
@@ -394,7 +406,7 @@ void DeviceConnection::send(int values[], int size){
 	for (int i = 0; i < size; ++i) {
 		itoa(values[i], vbuffer, 10);
 		com->write(vbuffer);
-		com->write(TOKEN_BIT);
+		com->write(SEPARATOR);
 	}
 	com->write(ACK_BIT);
 }
@@ -444,16 +456,16 @@ void DeviceConnection::sendln(void){
 void DeviceConnection::send(Command cmd, bool complete){
 	com->write(START_BIT);
 	com->print(cmd.type);
-	com->write(TOKEN_BIT);
+	com->write(SEPARATOR);
 	com->print(cmd.id);
-	com->write(TOKEN_BIT);
+	com->write(SEPARATOR);
 	com->print(cmd.deviceID);
-	com->write(TOKEN_BIT);
+	com->write(SEPARATOR);
 	com->print(cmd.value);
 	if(complete)
 		com->write(ACK_BIT);
 	else
-		com->write(TOKEN_BIT);
+		com->write(SEPARATOR);
 }
 
 int DeviceConnection::nextEndOffSet(){
@@ -471,7 +483,7 @@ bool DeviceConnection::isListEnd(char c){
 }
 
 bool DeviceConnection::isSeparator(char c){
-	return c==TOKEN_BIT || c==',';
+	return c==SEPARATOR || c==',';
 }
 
 bool DeviceConnection::isListStart(char c){

@@ -1,3 +1,15 @@
+/*
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
+ */
 
 #ifndef DeviceConnection_h
 #define DeviceConnection_h
@@ -30,6 +42,13 @@ protected:
 	virtual void init();
 private:
 	
+	// Alias
+	static const uint8_t START_BIT = Command::START_BIT;
+	static const uint8_t ACK_BIT = Command::ACK_BIT;
+	static const uint8_t STOP_BIT = Command::STOP_BIT;
+	static const uint8_t SEPARATOR = Command::SEPARATOR;
+
+
 	int numberOfValues;
 
 	CommandListener defaultListener;  			// default listener
@@ -50,10 +69,6 @@ private:
 	int nextEndOffSet();
 
 public: 
-	static const uint8_t START_BIT = 18;
-	static const uint8_t ACK_BIT = 19;
-	static const uint8_t STOP_BIT = 27;
-	static const uint8_t TOKEN_BIT = Command::SEPARATOR;
 
 	uint8_t buffer[DATA_BUFFER];
 	uint8_t bufferCount;

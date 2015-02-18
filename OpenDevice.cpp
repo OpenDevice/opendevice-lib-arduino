@@ -1,12 +1,25 @@
 /*
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
+ */
+
+
+#include "OpenDevice.h"
+
+/*
  * OpenDeviceClass.cpp
  *
  *  Created on: 27/06/2014
  *      Author: ricardo
  */
-
-#include "OpenDevice.h"
-
 OpenDeviceClass::OpenDeviceClass() {
 	deviceConnection = NULL;
 	autoControl = false;
@@ -75,14 +88,38 @@ void OpenDeviceClass::loop() {
 }
 
 /** Called when a command is received by the connection */
-void OpenDeviceClass::onMessageReceived(Command cmd){
+void OpenDeviceClass::onMessageReceived(Command cmd) {
 	OpenDevice.lastCMD = cmd;
 	DeviceConnection *deviceConnection = OpenDevice.deviceConnection;
 
 	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
 
-	// Send response Ex: GET_DEVICES_RESPONSE;ID;[ID,PIN,VALUE,...];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
-	if(cmd.type== CommandType::GET_DEVICES){
+	// Directed to a device (Like On/OFF or more complex)
+	if (cmd.deviceID > 0) {
+
+		Device *foundDevice = OpenDevice.getDevice(cmd.deviceID);
+		if (foundDevice != NULL) {
+			OpenDevice.debugChange(foundDevice->id, cmd.value);
+			foundDevice->setValue(cmd.value);
+			foundDevice->deserializeExtraData(&cmd, deviceConnection);
+			OpenDevice.notifyReceived(ResponseStatus::SUCCESS);
+		} else {
+			OpenDevice.notifyReceived(ResponseStatus::NOT_FOUND);
+		}
+	// User-defined command, this is an easy way to extend OpenDevice protocol.
+	} else if (cmd.type == CommandType::USER_COMMAND) {
+
+//		char *name;
+//		deviceConnection->readString(&name);
+
+//		for (int i = 0; i < commandsLength; i++) {
+//			if (strncmp(name, commands[i].command, MAX_COMMAND_STRLEN) == 0) {
+//				(*commands[i].function)();
+//			}
+//		}
+
+		// Send response Ex: GET_DEVICES_RESPONSE;ID;[ID,PIN,VALUE,...];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
+	} else if (cmd.type == CommandType::GET_DEVICES) {
 
 		deviceConnection->doStart();
 		deviceConnection->print(CommandType::GET_DEVICES_RESPONSE);
@@ -97,25 +134,12 @@ void OpenDeviceClass::onMessageReceived(Command cmd){
 			device->toString(buffer);
 			deviceConnection->print(buffer);
 
-			if(i < OpenDevice.deviceLength){
+			if (i < OpenDevice.deviceLength) {
 				deviceConnection->doToken();
 			}
 		}
 
 		deviceConnection->doEnd();
-
-    // Directed to a device (Like On/OFF or more complex)
-	}else if(cmd.deviceID > 0){
-
-		Device *foundDevice = OpenDevice.getDevice(cmd.deviceID);
-		if (foundDevice != NULL) {
-			OpenDevice.debugChange(foundDevice->id, cmd.value);
-			foundDevice->setValue(cmd.value);
-			foundDevice->deserializeExtraData(&cmd, deviceConnection);
-			OpenDevice.notifyReceived(ResponseStatus::SUCCESS);
-		} else {
-			OpenDevice.notifyReceived(ResponseStatus::NOT_FOUND);
-		}
 
 	}
 }
@@ -287,6 +311,21 @@ bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool senso
 	}
 }
 
+
+bool OpenDeviceClass::addCommand(const char * name, void (*function)()){
+	if (commandsLength < MAX_COMMAND) {
+
+			strncpy(commands[commandsLength].command, name , MAX_COMMAND_STRLEN);
+			commands[commandsLength].function = function;
+			commandsLength++;
+
+			return true;
+		} else{
+			return false;
+		}
+}
+
+
 void OpenDeviceClass::checkSensorsStatus(){
 
 	// Arduino DOC (http://arduino.cc/en/Reference/analogRead):
@@ -336,13 +375,13 @@ Device* OpenDeviceClass::getDevice(uint8_t id){
 
     	if(devices[i]->id == id){
 //    		Serial.println("DB: getDevice TRUE");
-//    		Serial.write(19);
+//    		Serial.write(ACK_BIT);
     		return devices[i];
     	}
     }
 
 //	Serial.println("DB: getDevice FALSE");
-//	Serial.write(19);
+//	Serial.write(ACK_BIT);
 
     return NULL;
 }
@@ -391,7 +430,7 @@ void OpenDeviceClass::debug(const char str[]){
 			#if(ENABLE_SERIAL)
 			Serial.print("DB:");
 			Serial.print(str);
-			Serial.write(19);
+			Serial.write(Command::ACK_BIT);
 			#endif
 		}
 	}
@@ -420,7 +459,7 @@ void OpenDeviceClass::debug(String& str){
 			// FIXME: how to use another ports ? [Mega: 2 = Serial1, 3 = Serial2, 4 = Serial3 ]
 			Serial.print("DB:");
 			Serial.print(str);
-			Serial.write(19);
+			Serial.write(Command::ACK_BIT);
 			#endif
 		}
 	}

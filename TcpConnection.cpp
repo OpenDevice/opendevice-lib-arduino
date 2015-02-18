@@ -1,12 +1,24 @@
 /*
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
+ */
+
+#include "TcpConnection.h"
+
+/*
  * TcpConnection.cpp
  *
  *  Created on: 22/06/2014
  *  Author: Ricardo JL Rufino
  */
-
-#include "TcpConnection.h"
-
 TcpConnection::TcpConnection(uint16_t port) : DeviceConnection(){
 	_port = port;
 	 server = new EthernetServer(_port);

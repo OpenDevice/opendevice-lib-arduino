@@ -1,12 +1,24 @@
 /*
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
+ */
+
+#include "IRDevice.h"
+
+/*
  * IRDevice.cpp
  *
  *  Created on: 30/01/2015
  *      Author: ricardo
  */
-
-#include "IRDevice.h"
-
 IRDevice::IRDevice() {
 }
 
@@ -54,7 +66,7 @@ void IRDevice::deserializeExtraData(Command *cmd, DeviceConnection *conn){
 
 	if(debug) printf("\n");
 
-//	Serial.write(19);
+//	Serial.write(ACK_BIT);
 
 #ifndef DEBUG_ON_PC
 	irsend.sendRaw(rawvalues,length,32);

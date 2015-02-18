@@ -1,8 +1,14 @@
 /*
- * TcpConnection.h
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
  *
- *  Created on: 16/11/2014
- *      Author: ricardo
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
  */
 
 #ifndef TCPCONNECTION_H_
@@ -12,6 +18,12 @@
 #include "EthernetIncludes/Ethernet.h"
 #include "DeviceConnection.h"
 
+/*
+ * TcpConnection.h
+ *
+ *  Created on: 16/11/2014
+ *      Author: ricardo
+ */
 class TcpConnection : public DeviceConnection {
 private:
 	uint16_t _port;

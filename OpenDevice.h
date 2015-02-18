@@ -1,9 +1,16 @@
 /*
- * OpenDeviceClass.h
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
  *
- *  Created on: 27/06/2014
- *      Author: ricardo
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
  */
+
 
 #ifndef OpenDevice_H_
 #define OpenDevice_H_
@@ -14,13 +21,26 @@
 #include "Device.h"
 
 
+/*
+ * OpenDeviceClass.h
+ *
+ *  Created on: 27/06/2014
+ *      Author: ricardo
+ */
 class OpenDeviceClass {
 
 private:
 
-	Device* devices[MAX_DEVICE];
+	typedef struct _commandCallback {
+				char command[MAX_COMMAND_STRLEN];
+				void (*function)();
+	} CommandCallback;
 
-	// Debouncng of normal pressing (for Sensor's)
+
+	Device* devices[MAX_DEVICE];
+	CommandCallback commands[MAX_COMMAND];
+
+	// Debouncing of normal pressing (for Sensor's)
 	long time;
 
 	// Internal Listeners..
@@ -35,7 +55,6 @@ private:
 	void freeRam();
 	void debugChange(uint8_t id, unsigned long value);
 
-
 public:
 
 
@@ -48,6 +67,7 @@ public:
 	uint8_t debugTarget;
 
 	uint8_t deviceLength;
+	uint8_t commandsLength;
 	DeviceConnection *deviceConnection;
 
 	OpenDeviceClass();
@@ -92,6 +112,8 @@ public:
 	bool addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
 	bool addDevice(uint8_t pin, Device::DeviceType type);
 	bool addDevice(Device& device);
+
+	bool addCommand(const char * name, void (*function)());
 
 	Device* getDevice(uint8_t);
 	Device* getDeviceAt(uint8_t);
