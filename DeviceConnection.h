@@ -47,9 +47,11 @@ private:
 	static const uint8_t ACK_BIT = Command::ACK_BIT;
 	static const uint8_t STOP_BIT = Command::STOP_BIT;
 	static const uint8_t SEPARATOR = Command::SEPARATOR;
+	const char* SEPARATOR_LIST = ";";
 
 
 	int numberOfValues;
+	uint16_t readTimeout; // time in microseconds to the wait for next char
 
 	CommandListener defaultListener;  			// default listener
 	CommandListener listeners[MAX_LISTENERS];   // user listeners
@@ -57,7 +59,7 @@ private:
 	int listenersLength;
 
 	// private methods
-	void parseCommand(void);
+	void parseCommand(uint8_t type);
 	void notifyListeners(Command);
 	void notifyError(ResponseStatus::ResponseStatus status);
 
@@ -70,9 +72,10 @@ private:
 
 public: 
 
-	uint8_t buffer[DATA_BUFFER];
+	char buffer[DATA_BUFFER];
 	uint8_t bufferCount;
-	uint8_t bufferOffset;
+	char *bufferPos;
+	int bufferOffset;
 
 	// public methods
 	DeviceConnection();
@@ -88,8 +91,8 @@ public:
 	int stringLength(){return bufferCount;} // string without flag but '/0' at the end
 	void getBuffer(uint8_t[]);
 	
-	int readString(char** target);
-	int readInt(uint8_t endOffset = 0);
+	char * readString();
+	int readInt();
 	long readLong();
 	float readFloat();
 	double readDouble();
@@ -132,8 +135,6 @@ public:
     template < class T > void print (T arg){
     	com->print(arg);
     }
-
-	uint16_t waitTime;
 	
 	static int api_version() { return API_VERSION;}
 };

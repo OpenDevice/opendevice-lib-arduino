@@ -47,8 +47,6 @@ namespace CommandType {
 		GPIO_ANALOG = 5,   //  Commands sent directly to the pins (analogWrite)
 		PWM = 6,
 		INFRA_RED = 7,
-		//
-		USER_COMMAND = 9,
 		DEVICE_COMMAND_RESPONSE = 10, // Response to commands like: ON_OFF, POWER_LEVEL, INFRA RED
 		PING = 20,
 		PING_RESPONSE = 21,
@@ -56,8 +54,8 @@ namespace CommandType {
 		CPU_TEMPERATURE_REPORT = 23,
 		CPU_USAGE_REPORT = 24,
 		GET_DEVICES = 30,
-		GET_DEVICES_RESPONSE = 31
-
+		GET_DEVICES_RESPONSE = 31,
+		USER_COMMAND = 99
 	};
 }
 
@@ -86,14 +84,30 @@ struct Command {
 	static const uint8_t SEPARATOR = ';';
 	static const uint8_t ARRAY_SEPARATOR = ',';
 	static const uint8_t START_BIT = 18;
-	static const uint8_t ACK_BIT = 19;
+	static const uint8_t ACK_BIT = '\r';
 	static const uint8_t STOP_BIT = 27;
+
+	Command():type(0),id(0),deviceID(0),value(0),length(0){ }
 
 	uint8_t type; // values of CommandType
 	uint8_t id;
 	uint8_t deviceID;
 	unsigned long value;
 	size_t length;
+
+
+	static bool isDeviceCommand( uint8_t type ) {
+		if (type == 0) return false;
+
+		switch (type) {
+		case CommandType::ON_OFF: return true;
+		case CommandType::ANALOG: return true;
+		case CommandType::ANALOG_REPORT: return true;
+		default:
+			break;
+		}
+		return false;
+	}
 };
 
 #endif /* HEADER */

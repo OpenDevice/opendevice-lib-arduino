@@ -109,14 +109,17 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 	// User-defined command, this is an easy way to extend OpenDevice protocol.
 	} else if (cmd.type == CommandType::USER_COMMAND) {
 
-//		char *name;
-//		deviceConnection->readString(&name);
+		char *name = deviceConnection->readString();
 
-//		for (int i = 0; i < commandsLength; i++) {
-//			if (strncmp(name, commands[i].command, MAX_COMMAND_STRLEN) == 0) {
-//				(*commands[i].function)();
-//			}
-//		}
+		Serial.print("name:");Serial.println(name);
+
+
+		for (int i = 0; i < OpenDevice.commandsLength; i++) {
+			if (strncmp(name, OpenDevice.commands[i].command, MAX_COMMAND_STRLEN) == 0) {
+				/**FIXME */ Serial.print("!! MATCH_COMMAND !!");
+				(*OpenDevice.commands[i].function)();
+			}
+		}
 
 		// Send response Ex: GET_DEVICES_RESPONSE;ID;[ID,PIN,VALUE,...];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
 	} else if (cmd.type == CommandType::GET_DEVICES) {

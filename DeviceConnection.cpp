@@ -39,7 +39,7 @@ DeviceConnection::DeviceConnection(Stream &stream) {
 void DeviceConnection::init(){
 
 	numberOfValues = 0;
-	waitTime = 30;
+	readTimeout = 30; // ms
 	bufferOffset = 0;
 	bufferCount = 0;
 
@@ -80,6 +80,8 @@ bool DeviceConnection::checkDataAvalible(){
 	uint8_t lastByte;
 	bool timeout = false;
 
+	// non-blocking reading
+	// If the timeout (which is usually very low) occur the loop is finished
 	while(!timeout)
 	{
 
@@ -102,17 +104,23 @@ bool DeviceConnection::checkDataAvalible(){
 			#endif
 
 			if(lastByte == STOP_BIT){
+
 				flush();
-			}
-			else if(lastByte == ACK_BIT){
-				parseCommand();
+
+			}else if(lastByte == ACK_BIT){
+
+				char *token = strtok_r(buffer,SEPARATOR_LIST,&bufferPos);
+				if (token == NULL) return false;
+				uint8_t type = atoi(token);
+				parseCommand(type);
 				flush();
-			}
-			else if(bufferCount < DATA_BUFFER){
+
+			}else if(bufferCount < DATA_BUFFER){
+
 				buffer[bufferCount] = lastByte;
 				bufferCount++;
-			}
-			else{
+
+			}else{
 				notifyError(ResponseStatus::BUFFER_OVERFLOW);
 				#if DEBUG_CON
 				Serial.print("DB:BUFFER_OVERFLOW");Serial.write(ACK_BIT);
@@ -121,8 +129,10 @@ bool DeviceConnection::checkDataAvalible(){
 			}
 		}
 		
+		// Wait a bit to read the next byte if not available yet.
+		// If the timeout (which is usually very low) occur the loop is finished
 		if(com->available() <= 0 && !timeout){
-			if(waitTime > 0) delayMicroseconds(waitTime);
+			if(readTimeout > 0) delayMicroseconds(readTimeout);
 			if(com->available() <= 0) timeout = true;
 		}
 	}
@@ -154,14 +164,20 @@ void DeviceConnection::notifyError(ResponseStatus::ResponseStatus status){
 	send(cmd, true);
 }
 
-void DeviceConnection::parseCommand(){
+
+
+
+
+void DeviceConnection::parseCommand(uint8_t type){
 
 	Command cmd;
-	int data[4] = {}; readIntValues(data, 4);
-	cmd.type = (uint8_t) data[0];
-	cmd.id = (uint8_t) data[1];
-	cmd.deviceID = (uint8_t) data[2];
-	cmd.value = (unsigned long) data[3]; // TODO: Observar conversão de INT -> LONG
+	cmd.type = type;
+	cmd.id = readInt();
+
+	if(Command::isDeviceCommand(type)){
+		cmd.deviceID = readInt();
+		cmd.value = readLong();
+	}
 
 	#if DEBUG_CON || DEBUG_ON_PC
 		Serial.print("DB:CMD:");
@@ -171,7 +187,6 @@ void DeviceConnection::parseCommand(){
 		Serial.print(cmd.value);Serial.print("");
 		Serial.write(ACK_BIT);
 	#endif
-
 
 	notifyListeners(cmd);
 
@@ -188,60 +203,18 @@ void DeviceConnection::getBuffer(uint8_t buf[]){
 	}
 }
 
-int DeviceConnection::readString(char** target){
-	int length = nextEndOffSet() - bufferOffset;
-	*target = (char*) buffer;
-	*target += bufferOffset;
-	buffer[bufferOffset+length] = '\0'; // end string, replace ';'
-	bufferOffset = length + 1;
-	return length;
+char * DeviceConnection::readString(){
+	char *nextToken;
+	nextToken = strtok_r(NULL, SEPARATOR_LIST, &bufferPos);
+	return nextToken;
 }
 
-//int DeviceConnection::readString(char target[]){
-//
-//	int endOffset = nextEndOffSet();
-//	int pos = 0;
-//	for(int a = bufferOffset;a < endOffset;a++){
-//		if(isSeparator(buffer[a])) break;
-//		target[pos++] = buffer[a];
-//	}
-//	target[pos] = '\0';
-//	bufferOffset += pos+1;
-//	return pos;
-//}
-
-int DeviceConnection::readInt(uint8_t endOffset){
-
-	// find endOffset ( ';' or ',' or ']' ... )
-	if(endOffset == 0){
-		endOffset = nextEndOffSet();
-	}
-
-	uint8_t len = endOffset-bufferOffset;
-	uint8_t b[len+1]; // +1 for '\0';
-
-	int pos = 0;
-	for(int a = bufferOffset; a < endOffset;a++){
-		b[pos++] = buffer[a];
-		// printf("(%c)",buffer[a]);
-	}
-
-	b[len] = '\0';
-	bufferOffset += len;
-	bufferOffset++; // skip ';'
-	return atoi((char*)b);
+int DeviceConnection::readInt(){
+	return atoi(readString());
 }
 
-// FIX to new !!
-long DeviceConnection::readLong()
-{
-	uint8_t b[bufferCount];
-	for(int a = 1;a < bufferCount;a++){
-		b[a-1] = buffer[a];
-	}
-
-	b[bufferCount-1] = '\0';
-	return atol((char*)b);
+long DeviceConnection::readLong(){
+	return atol(readString());
 }
 
 float DeviceConnection::readFloat()
@@ -301,39 +274,76 @@ void DeviceConnection::readDoubleValues(float values[])
  * Can read single value list: 1;2;3;4 or array like: [1,2,3,4]
  * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
  */
+//int DeviceConnection::readIntValues(int values[], int max)
+//{
+//	int pos = 0;
+//
+//	for (int end=bufferOffset; end<bufferCount;end++){
+//
+//		// If is a start char '[ , (' skip to next
+//		if(isListStart(buffer[end])){
+//			bufferOffset++;
+//			continue;
+//		}
+//
+//		bool listEnd = isListEnd(buffer[end]) || (end+1 == bufferCount);
+//
+//		// find end of value
+//		if (isSeparator(buffer[end]) || listEnd) {
+//
+//			if(end+1 == bufferCount) end++; // read last value
+//
+//			values[pos++] = readInt();
+//			bufferOffset = end+1; // skip next separator
+//
+//			if((max > 0 && pos == max) || listEnd){
+//				if(listEnd) bufferOffset++; // skip next separator '];'
+//				break;
+//			}
+//
+//		}
+//
+//	}
+//
+//	if(bufferOffset > bufferCount) bufferOffset = bufferCount;
+//	//printf("size : %d", pos);
+//	return pos;
+//}
+
+
 int DeviceConnection::readIntValues(int values[], int max)
 {
 	int pos = 0;
 
-	for (int end=bufferOffset; end<bufferCount;end++){
-
-		// If is a start char '[ , (' skip to next
-		if(isListStart(buffer[end])){
-			bufferOffset++;
-			continue;
-		}
-
-		bool listEnd = isListEnd(buffer[end]) || (end+1 == bufferCount);
-
-		// find end of value
-		if (isSeparator(buffer[end]) || listEnd) {
-
-			if(end+1 == bufferCount) end++; // read last value
-
-			values[pos++] = readInt(end);
-			bufferOffset = end+1; // skip next separator
-
-			if((max > 0 && pos == max) || listEnd){
-				if(listEnd) bufferOffset++; // skip next separator '];'
-				break;
-			}
-
-		}
-
-	}
-
-	if(bufferOffset > bufferCount) bufferOffset = bufferCount;
-	//printf("size : %d", pos);
+//	do {
+//		// If is a start char '[ , (' skip to next
+//		if(isListStart(*bufferPos)){
+//			bufferPos++;
+//			continue;
+//		}
+//
+//		bool listEnd = isListEnd(*bufferPos) || (*(bufferPos+1) == '\0');
+//
+//		// find end of value
+//		if (isSeparator(buffer[end]) || listEnd) {
+//
+//			if(end+1 == bufferCount) end++; // read last value
+//
+//			values[pos++] = readInt();
+//			bufferOffset = end+1; // skip next separator
+//
+//			if((max > 0 && pos == max) || listEnd){
+//				if(listEnd) bufferOffset++; // skip next separator '];'
+//				break;
+//			}
+//
+//		}
+//
+//	} while (bufferPos != '\0');
+//
+//
+//	if(bufferOffset > bufferCount) bufferOffset = bufferCount;
+//	//printf("size : %d", pos);
 	return pos;
 }
 
@@ -492,7 +502,7 @@ bool DeviceConnection::isListStart(char c){
 
 void DeviceConnection::flush(){
 	for(int a = 0; a < DATA_BUFFER; a++){
-		buffer[a] = 0;
+		buffer[a] = '\0';
 	}
 	bufferCount = 0;
 	numberOfValues = 0;
