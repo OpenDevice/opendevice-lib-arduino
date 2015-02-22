@@ -68,7 +68,7 @@ bool TcpConnection::checkDataAvalible(void) {
 
 	if (client && client->connected()) {
 
-		com = (Stream*) client;
+		conn = (Stream*) client;
 		DeviceConnection::checkDataAvalible(); // Call supper class
 
 	}
