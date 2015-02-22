@@ -160,17 +160,17 @@ public:
 
 	String readString() { return deviceConnection->buffer.readString(); }
 
-	int readInt(){ return deviceConnection->buffer.parseInt(); }
-	long readLong(){ return deviceConnection->buffer.parseInt(); }
-	float readFloat(){ return deviceConnection->buffer.parseFloat(); }
+	inline int readInt(){ return deviceConnection->buffer.parseInt(); }
+	inline long readLong(){ return deviceConnection->buffer.parseInt(); }
+	inline float readFloat(){ return deviceConnection->buffer.parseFloat(); }
 
 	/**
 	 * Can read single value list like: [1,2,3,4]
 	 * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
 	 */
-	int readIntValues(int values[], int max = -1){ return deviceConnection->buffer.readIntValues(values, max); }
-	int readLongValues(long values[], int max = -1){ return deviceConnection->buffer.readLongValues(values, max); }
-	int readFloatValues(float values[], int max = -1){ return deviceConnection->buffer.readFloatValues(values, max); }
+	inline int readIntValues(int values[], int max = -1){ return deviceConnection->buffer.readIntValues(values, max); }
+	inline int readLongValues(long values[], int max = -1){ return deviceConnection->buffer.readLongValues(values, max); }
+	inline int readFloatValues(float values[], int max = -1){ return deviceConnection->buffer.readFloatValues(values, max); }
 };
 
 extern OpenDeviceClass ODev;

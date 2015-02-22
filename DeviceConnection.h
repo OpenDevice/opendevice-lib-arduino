@@ -64,11 +64,6 @@ private:
 
 	int getArrayLength();
 
-	bool isListStart(char c);
-	bool isListEnd(char c);
-	bool isSeparator(char c);
-	int nextEndOffSet();
-
 public: 
 	Stream  *conn;
 	CommandBuffer buffer;
@@ -82,18 +77,24 @@ public:
 
 	void setStream(Stream *stream) { conn = stream; };
 	void setDefaultListener(CommandListener);
-	void addListener(uint8_t,CommandListener);
-	void removeListener(uint8_t);
+//	void addListener(uint8_t,CommandListener);
+//	void removeListener(uint8_t);
 	void getBuffer(uint8_t[]);
 	
-	String readString();
-	int readInt();
-	long readLong();
-	float readFloat();
-	int readIntValues(int values[], int max);
-	int readLongValues(long values[], int max);
-	int readFloatValues(float values[], int max);
+	inline String readString(){ return buffer.readString(); }
+	inline int readInt(){ return buffer.parseInt(); }
+	inline long readLong(){ return buffer.parseInt(); }
+	inline float readFloat(){ return buffer.parseFloat(); }
+
+	/**
+	 * Can read single value list like: [1,2,3,4]
+	 * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
+	 */
+	inline int readIntValues(int values[], int max){ return buffer.readIntValues(values, max); }
+	inline int readLongValues(long values[], int max){ return buffer.readLongValues(values, max); }
+	inline int readFloatValues(float values[], int max){ return buffer.readFloatValues(values, max); }
 	
+
 	#if defined(ARDUINO) && ARDUINO >= 100
 	size_t write(uint8_t);
 	#else

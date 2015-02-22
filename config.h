@@ -2,7 +2,7 @@
 #define OPENDEVICE_CONFIG_H_
 
 #define ENABLE_SERIAL 1
-#define DEBUG_CON	1 // set 1 to enable (receiving debug)
+#define DEBUG_CON	0 // set 1 to enable (receiving debug)
 
 #define API_VERSION   1 // software version of this library
 #define OPENDEVICE_LIBRARY_VERSION 050

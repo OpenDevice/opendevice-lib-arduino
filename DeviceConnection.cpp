@@ -49,19 +49,19 @@ void DeviceConnection::init(){
 }
 
 
-void DeviceConnection::addListener(uint8_t commandType, CommandListener listener ){
+//void DeviceConnection::addListener(uint8_t commandType, CommandListener listener ){
 //	if (commandType >= 0 && commandType < MAX_LISTENERS){
 //		listeners[listenersLength] = listener;
 //		listeners_key[listenersLength] = commandType;
 //		listenersLength++;
 //	}
-}
+//}
 
 void DeviceConnection::setDefaultListener(CommandListener listener ){
 	defaultListener = listener;
 }
 
-void DeviceConnection::removeListener(uint8_t command){
+//void DeviceConnection::removeListener(uint8_t command){
 
 	// Only remove pointers
 //	for (uint8_t i = 0; i < listenersLength; ++i) {
@@ -72,7 +72,7 @@ void DeviceConnection::removeListener(uint8_t command){
 //		}
 //	}
 
-}
+//}
 
 bool DeviceConnection::checkDataAvalible(){
 	uint8_t lastByte;
@@ -112,7 +112,6 @@ bool DeviceConnection::checkDataAvalible(){
 				uint8_t type = buffer.parseInt();
 				parseCommand(type);
 				flush();
-				Serial.print("<flush/end>"); delay(200);
 
 			}else if(processing){
 
@@ -134,7 +133,7 @@ bool DeviceConnection::checkDataAvalible(){
 		if(processing && conn->available() <= 0 && !timeout){
 			if(readTimeout > 0) delay(readTimeout);
 			if(conn->available() <= 0){
-				Serial.print("timeout"); delay(200);
+				Serial.println(F("DB:TIMEOUT"));Serial.write(ACK_BIT);
 				timeout = true;
 			}
 		}
@@ -189,9 +188,6 @@ void DeviceConnection::parseCommand(uint8_t type){
 	#endif
 
 	notifyListeners(cmd);
-
-	Serial.print("<parse/end>"); delay(200);
-
 }
 
 void DeviceConnection::getBuffer(uint8_t buf[]){
@@ -200,19 +196,6 @@ void DeviceConnection::getBuffer(uint8_t buf[]){
 		buf[a] = _buffer[a];
 	}
 }
-
-String DeviceConnection::readString(){ return buffer.readString(); }
-int DeviceConnection::readInt(){ return buffer.parseInt(); }
-long DeviceConnection::readLong(){ return buffer.parseInt(); }
-float DeviceConnection::readFloat(){ return buffer.parseFloat(); }
-
-/**
- * Can read single value list like: [1,2,3,4]
- * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
- */
-int DeviceConnection::readIntValues(int values[], int max = -1){ return buffer.readIntValues(values, max); }
-int DeviceConnection::readLongValues(long values[], int max = -1){ return buffer.readLongValues(values, max); }
-int DeviceConnection::readFloatValues(float values[], int max = -1){ return buffer.readFloatValues(values, max); }
 
 
 //int DeviceConnection::getArrayLength()
@@ -344,7 +327,6 @@ void DeviceConnection::sendln(void){
 
 void DeviceConnection::send(Command cmd, bool complete){
 	if(!conn || processing) return;
-	Serial.print(F("<send/start>")); delay(200);
 
 	conn->write(START_BIT);
 	conn->print(cmd.type);
@@ -358,21 +340,6 @@ void DeviceConnection::send(Command cmd, bool complete){
 		conn->write(ACK_BIT);
 	else
 		conn->write(SEPARATOR);
-
-	Serial.print(F("<send/end>")); delay(200);
-}
-
-
-bool DeviceConnection::isListEnd(char c){
-	return  c==']' || c==')' || c=='}';
-}
-
-bool DeviceConnection::isSeparator(char c){
-	return c==SEPARATOR || c==',';
-}
-
-bool DeviceConnection::isListStart(char c){
-	return c=='[' || c=='(' || c=='{';
 }
 
 void DeviceConnection::flush(){
