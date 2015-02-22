@@ -26,37 +26,35 @@ extern "C" {
 
 
 // public methods
-DeviceConnection::DeviceConnection(){
+DeviceConnection::DeviceConnection() : buffer(_buffer , DATA_BUFFER){
 	init();
 }
 
-DeviceConnection::DeviceConnection(Stream &stream) {
-	com = &stream;
+DeviceConnection::DeviceConnection(Stream &stream) :  buffer(_buffer , DATA_BUFFER){
+	conn = &stream;
 	init();
 }
 
 
 void DeviceConnection::init(){
 
-	numberOfValues = 0;
-	readTimeout = 30; // ms
-	bufferOffset = 0;
-	bufferCount = 0;
+	readTimeout = 1; // ms
+	processing = false;
 
 	defaultListener = NULL;
-	for(int a = 0;a < MAX_LISTENERS;a++){
-		listeners[a] = NULL;
-		listeners_key[a] = NULL;
-	}
+//	for(int a = 0;a < MAX_LISTENERS;a++){
+//		listeners[a] = NULL;
+//		listeners_key[a] = NULL;
+//	}
 }
 
 
 void DeviceConnection::addListener(uint8_t commandType, CommandListener listener ){
-	if (commandType >= 0 && commandType < MAX_LISTENERS){
-		listeners[listenersLength] = listener;
-		listeners_key[listenersLength] = commandType;
-		listenersLength++;
-	}
+//	if (commandType >= 0 && commandType < MAX_LISTENERS){
+//		listeners[listenersLength] = listener;
+//		listeners_key[listenersLength] = commandType;
+//		listenersLength++;
+//	}
 }
 
 void DeviceConnection::setDefaultListener(CommandListener listener ){
@@ -66,76 +64,82 @@ void DeviceConnection::setDefaultListener(CommandListener listener ){
 void DeviceConnection::removeListener(uint8_t command){
 
 	// Only remove pointers
-	for (uint8_t i = 0; i < listenersLength; ++i) {
-		if(listeners_key[i] == command){
-			listeners_key[i] = NULL;
-			listeners[i] = NULL;
-			break;
-		}
-	}
+//	for (uint8_t i = 0; i < listenersLength; ++i) {
+//		if(listeners_key[i] == command){
+//			listeners_key[i] = NULL;
+//			listeners[i] = NULL;
+//			break;
+//		}
+//	}
 
 }
 
 bool DeviceConnection::checkDataAvalible(){
 	uint8_t lastByte;
 	bool timeout = false;
-
 	// non-blocking reading
 	// If the timeout (which is usually very low) occur the loop is finished
-	while(!timeout)
-	{
+	do{
 
 		#if DEBUG_CON
-			delay(500);
-			Serial.print("DB:available=");
-			Serial.println(com->available());
-			Serial.write(ACK_BIT);
+			if(conn->available()){
+				Serial.print(F("DB:available="));Serial.println(conn->available());Serial.write(ACK_BIT);
+			}
 		#endif
 
-		while(com->available() > 0)
-		{
+		// read available data.
+		while(conn->available() > 0){
 
-			lastByte = com->read();
+			lastByte = conn->read();
+
 
 			#if DEBUG_CON
-				Serial.print("DB:READ:");
-				Serial.println(lastByte);
-				Serial.write(ACK_BIT);
+				Serial.print(F("DB:READ:"));Serial.println(lastByte);Serial.write(ACK_BIT);
 			#endif
 
-			if(lastByte == STOP_BIT){
+			// NOTE: Start bit is equals to the SEPARATOR
+			if(lastByte == START_BIT && !processing){
+				processing = true;
+				continue;
+			}
+			else if(lastByte == ACK_BIT){
 
-				flush();
+				#if DEBUG_CON
+					Serial.println(F("DB:END_CMD"));Serial.write(ACK_BIT);
+				#endif
 
-			}else if(lastByte == ACK_BIT){
-
-				char *token = strtok_r(buffer,SEPARATOR_LIST,&bufferPos);
-				if (token == NULL) return false;
-				uint8_t type = atoi(token);
+				processing = false;
+				uint8_t type = buffer.parseInt();
 				parseCommand(type);
 				flush();
+				Serial.print("<flush/end>"); delay(200);
 
-			}else if(bufferCount < DATA_BUFFER){
+			}else if(processing){
 
-				buffer[bufferCount] = lastByte;
-				bufferCount++;
+				uint8_t w = buffer.write(lastByte);
 
-			}else{
-				notifyError(ResponseStatus::BUFFER_OVERFLOW);
-				#if DEBUG_CON
-				Serial.print("DB:BUFFER_OVERFLOW");Serial.write(ACK_BIT);
-				#endif
-				return false;
+				if(!w){
+					notifyError(ResponseStatus::BUFFER_OVERFLOW);
+					#if DEBUG_CON
+					Serial.println(F("DB:BUFFER_OVERFLOW"));Serial.write(ACK_BIT);
+					#endif
+					return false;
+				}
+
 			}
 		}
 		
 		// Wait a bit to read the next byte if not available yet.
 		// If the timeout (which is usually very low) occur the loop is finished
-		if(com->available() <= 0 && !timeout){
-			if(readTimeout > 0) delayMicroseconds(readTimeout);
-			if(com->available() <= 0) timeout = true;
+		if(processing && conn->available() <= 0 && !timeout){
+			if(readTimeout > 0) delay(readTimeout);
+			if(conn->available() <= 0){
+				Serial.print("timeout"); delay(200);
+				timeout = true;
+			}
 		}
-	}
+	} while(processing && !timeout);
+
 	return timeout;
 }
 
@@ -145,12 +149,12 @@ void DeviceConnection::notifyListeners(Command cmd){
 
 	if(defaultListener) (*defaultListener)(cmd);
 	// Notify specific listener
-	for (uint8_t i = 0; i < listenersLength; ++i) {
-		if(listeners_key[i] == cmd.type){ // confirm type
-			(*listeners[i])(cmd);
-			break;
-		}
-	}
+//	for (uint8_t i = 0; i < listenersLength; ++i) {
+//		if(listeners_key[i] == cmd.type){ // confirm type
+//			(*listeners[i])(cmd);
+//			break;
+//		}
+//	}
 
 }
 
@@ -163,10 +167,6 @@ void DeviceConnection::notifyError(ResponseStatus::ResponseStatus status){
 	cmd.value = status;
 	send(cmd, true);
 }
-
-
-
-
 
 void DeviceConnection::parseCommand(uint8_t type){
 
@@ -190,303 +190,178 @@ void DeviceConnection::parseCommand(uint8_t type){
 
 	notifyListeners(cmd);
 
-	memset(buffer, 0, sizeof buffer);
-	bufferOffset = 0;
-	bufferCount = 0;
+	Serial.print("<parse/end>"); delay(200);
 
 }
 
 void DeviceConnection::getBuffer(uint8_t buf[]){
 
-	for(int a = 0;a < bufferCount;a++){
-		buf[a] = buffer[a];
+	for(int a = 0;a < buffer.current_length();a++){
+		buf[a] = _buffer[a];
 	}
 }
 
-char * DeviceConnection::readString(){
-	char *nextToken;
-	nextToken = strtok_r(NULL, SEPARATOR_LIST, &bufferPos);
-	return nextToken;
-}
-
-int DeviceConnection::readInt(){
-	return atoi(readString());
-}
-
-long DeviceConnection::readLong(){
-	return atol(readString());
-}
-
-float DeviceConnection::readFloat()
-{
-	return (float)readDouble();
-}
-
-int DeviceConnection::getArrayLength()
-{
-	if (bufferCount == 1) return 0; // only a flag and ACK_BIT was sent, not data attached
-	numberOfValues = 1;
-	// find the amount of values we got
-	for (int a=1; a<bufferCount;a++){
-		if (buffer[a]==SEPARATOR) numberOfValues++;
-	}
-	return numberOfValues;
-}
-
-void DeviceConnection::readFloatValues(float values[])
-{
-	int t = 0; // counter for each char based array
-	int pos = 0;
-
-	int start = 1; // start of first value
-	for (int end=1; end<bufferCount;end++){
-		// find end of value
-		if (buffer[end]==SEPARATOR) {
-			// now we know start and end of a value
-			char b[(end-start)+1]; // create container for one value plus '\0'
-			t = 0;
-			for(int i = start;i < end;i++){
-				b[t++] = (char)buffer[i];
-			}
-			b[t] = '\0';
-			values[pos++] = atof(b);
-			start = end+1;
-		}
-	}
-	// get the last value
-	char b[(bufferCount-start)+1]; // create container for one value plus '\0'
-	t = 0;
-	for(int i = start;i < bufferCount;i++){
-		b[t++] = (char)buffer[i];
-	}
-	b[t] = '\0';
-	values[pos] = atof(b);
-}
-
-// not tested yet
-void DeviceConnection::readDoubleValues(float values[])
-{
-	readFloatValues(values);
-}
-
+String DeviceConnection::readString(){ return buffer.readString(); }
+int DeviceConnection::readInt(){ return buffer.parseInt(); }
+long DeviceConnection::readLong(){ return buffer.parseInt(); }
+float DeviceConnection::readFloat(){ return buffer.parseFloat(); }
 
 /**
- * Can read single value list: 1;2;3;4 or array like: [1,2,3,4]
+ * Can read single value list like: [1,2,3,4]
  * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
  */
-//int DeviceConnection::readIntValues(int values[], int max)
+int DeviceConnection::readIntValues(int values[], int max = -1){ return buffer.readIntValues(values, max); }
+int DeviceConnection::readLongValues(long values[], int max = -1){ return buffer.readLongValues(values, max); }
+int DeviceConnection::readFloatValues(float values[], int max = -1){ return buffer.readFloatValues(values, max); }
+
+
+//int DeviceConnection::getArrayLength()
 //{
-//	int pos = 0;
-//
-//	for (int end=bufferOffset; end<bufferCount;end++){
-//
-//		// If is a start char '[ , (' skip to next
-//		if(isListStart(buffer[end])){
-//			bufferOffset++;
-//			continue;
-//		}
-//
-//		bool listEnd = isListEnd(buffer[end]) || (end+1 == bufferCount);
-//
-//		// find end of value
-//		if (isSeparator(buffer[end]) || listEnd) {
-//
-//			if(end+1 == bufferCount) end++; // read last value
-//
-//			values[pos++] = readInt();
-//			bufferOffset = end+1; // skip next separator
-//
-//			if((max > 0 && pos == max) || listEnd){
-//				if(listEnd) bufferOffset++; // skip next separator '];'
-//				break;
-//			}
-//
-//		}
-//
+//	if (bufferCount == 1) return 0; // only a flag and ACK_BIT was sent, not data attached
+//	numberOfValues = 1;
+//	// find the amount of values we got
+//	for (int a=1; a<bufferCount;a++){
+//		if (_buffer[a]==SEPARATOR) numberOfValues++;
 //	}
-//
-//	if(bufferOffset > bufferCount) bufferOffset = bufferCount;
-//	//printf("size : %d", pos);
-//	return pos;
+//	return numberOfValues;
 //}
-
-
-int DeviceConnection::readIntValues(int values[], int max)
-{
-	int pos = 0;
-
-//	do {
-//		// If is a start char '[ , (' skip to next
-//		if(isListStart(*bufferPos)){
-//			bufferPos++;
-//			continue;
-//		}
-//
-//		bool listEnd = isListEnd(*bufferPos) || (*(bufferPos+1) == '\0');
-//
-//		// find end of value
-//		if (isSeparator(buffer[end]) || listEnd) {
-//
-//			if(end+1 == bufferCount) end++; // read last value
-//
-//			values[pos++] = readInt();
-//			bufferOffset = end+1; // skip next separator
-//
-//			if((max > 0 && pos == max) || listEnd){
-//				if(listEnd) bufferOffset++; // skip next separator '];'
-//				break;
-//			}
-//
-//		}
-//
-//	} while (bufferPos != '\0');
-//
-//
-//	if(bufferOffset > bufferCount) bufferOffset = bufferCount;
-//	//printf("size : %d", pos);
-	return pos;
-}
-
-
-double DeviceConnection::readDouble()
-{
-	char b[bufferCount];
-	for(int a = 1;a < bufferCount;a++){
-		b[a-1] = (char)buffer[a];
-	}
-
-	b[bufferCount-1] = '\0';
-	return atof(b);
-	
-}
 
 
 #if defined(ARDUINO) && ARDUINO >= 100
 size_t DeviceConnection::write(uint8_t b){
-	return com->write(b);
+	if(!conn || processing) return 0;
+	return conn->write(b);
 }
 #else
 void DeviceConnection::write(uint8_t b){
-	com->write(b);
+	if(!conn || processing) return;
+	conn->write(b);
 }
 #endif
 	
 
 
 void DeviceConnection::doStart(){
-	com->write(START_BIT);
+	write(START_BIT);
 }
 
 void DeviceConnection::doToken(){
-	com->write(SEPARATOR);
+	write(SEPARATOR);
 }
 
 void DeviceConnection::doEnd(){
-	com->write(ACK_BIT);
+	write(ACK_BIT);
 }
 
 
 void DeviceConnection::send(char c ){
-	com->write(START_BIT);
-	com->write(c);
-	com->write(ACK_BIT);
+	write(START_BIT);
+	write(c);
+	write(ACK_BIT);
 }
 
 void DeviceConnection::send(const char str[]){
-	com->write(START_BIT);
-	com->write(str);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	write(START_BIT);
+	conn->write(str);
+	write(ACK_BIT);
 }
 
 void DeviceConnection::send(long values[], int size){
-	com->write(START_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
 	char vbuffer[3];
 	for (int i = 0; i < size; ++i) {
 		ltoa(values[i], vbuffer, 10);
-		com->write(vbuffer);
-		com->write(SEPARATOR);
+		conn->write(vbuffer);
+		conn->write(SEPARATOR);
 	}
-	com->write(ACK_BIT);
+	conn->write(ACK_BIT);
 }
 
 
 void DeviceConnection::send(int values[], int size){
-	com->write(START_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
 	char vbuffer[3]; // 3 digits
 	for (int i = 0; i < size; ++i) {
 		itoa(values[i], vbuffer, 10);
-		com->write(vbuffer);
-		com->write(SEPARATOR);
+		conn->write(vbuffer);
+		conn->write(SEPARATOR);
 	}
-	com->write(ACK_BIT);
+	conn->write(ACK_BIT);
 }
 
 void DeviceConnection::send(uint8_t n){
-	com->write(START_BIT);
-	com->write(n);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->write(n);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(int n){
-	com->write(START_BIT);
-	com->write(n);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->print(n);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(unsigned int n){
-	com->write(START_BIT);
-	com->write(n);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->print(n);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(long n){
-	com->write(START_BIT);
-	com->write(n);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->print(n);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(unsigned long n){
-	com->write(START_BIT);
-	com->write(n);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->print(n);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(long n, int base){
-	com->write(START_BIT);
-	com->print(n, base);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->print(n, base);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(double n){
-	com->write(START_BIT);
-	com->write(n);
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->print(n);
+	conn->write(ACK_BIT);
 }
 void DeviceConnection::sendln(void){
-	com->write(START_BIT);
-	com->println();
-	com->write(ACK_BIT);
+	if(!conn || processing) return;
+	conn->write(START_BIT);
+	conn->println();
+	conn->write(ACK_BIT);
 }
 
 
 void DeviceConnection::send(Command cmd, bool complete){
-	com->write(START_BIT);
-	com->print(cmd.type);
-	com->write(SEPARATOR);
-	com->print(cmd.id);
-	com->write(SEPARATOR);
-	com->print(cmd.deviceID);
-	com->write(SEPARATOR);
-	com->print(cmd.value);
+	if(!conn || processing) return;
+	Serial.print(F("<send/start>")); delay(200);
+
+	conn->write(START_BIT);
+	conn->print(cmd.type);
+	conn->write(SEPARATOR);
+	conn->print(cmd.id);
+	conn->write(SEPARATOR);
+	conn->print(cmd.deviceID);
+	conn->write(SEPARATOR);
+	conn->print(cmd.value);
 	if(complete)
-		com->write(ACK_BIT);
+		conn->write(ACK_BIT);
 	else
-		com->write(SEPARATOR);
+		conn->write(SEPARATOR);
+
+	Serial.print(F("<send/end>")); delay(200);
 }
 
-int DeviceConnection::nextEndOffSet(){
-	int endOffset = bufferOffset;
-	for(int end = bufferOffset;end < bufferCount;end++){
-		if (isSeparator(buffer[end])) break;
-		endOffset++;
-	}
-
-	return endOffset;
-}
 
 bool DeviceConnection::isListEnd(char c){
 	return  c==']' || c==')' || c=='}';
@@ -501,9 +376,5 @@ bool DeviceConnection::isListStart(char c){
 }
 
 void DeviceConnection::flush(){
-	for(int a = 0; a < DATA_BUFFER; a++){
-		buffer[a] = '\0';
-	}
-	bufferCount = 0;
-	numberOfValues = 0;
+	buffer.flush();
 }
