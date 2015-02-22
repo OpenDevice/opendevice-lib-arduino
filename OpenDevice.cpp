@@ -27,25 +27,63 @@ OpenDeviceClass::OpenDeviceClass() {
 	keepAliveEnabled = false;
 	keepAliveTime = 0;
 	debugTarget = 0; // 0 - Default Serial, 1 - Target Connection
-
 	time = 0;
 	deviceLength = 0;
+	commandsLength = 0;
 	for (int i = 0; i < MAX_DEVICE; i++) {
 		devices[i] = NULL;
 	}
 }
 
+byte OpenDeviceClass::mac[6] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};  // TODO: read from EPROM.
 
 //void OpenDeviceClass::begin(Stream &serial) {
 //	OpenDeviceClass::begin(&DeviceConnection(serial));
 //}
 
+//#if defined(ethernet_h)
+//
+//void OpenDeviceClass::begin() {
+//	  // Start the Ethernet connection and the server
+//	  if (Ethernet.begin(mac) == 0) {
+//	    debug("Failed to configure Ethernet using DHCP");
+//	    // no point in carrying on, so do nothing forevermore:
+//	    // try to congifure using IP address instead of DHCP:
+//	    Ethernet.begin(mac, ip);
+//	  }
+//}
+//
+//#else
+void OpenDeviceClass::_begin() {
+	begin(Serial, DEFAULT_BAUD);
+}
+//#endif
+
 void OpenDeviceClass::begin(unsigned long baud) {
-#if(ENABLE_SERIAL)
-	Serial.begin(baud);
-	DeviceConnection *conn =  new DeviceConnection(Serial);
+	#if(ENABLE_SERIAL)
+		begin(Serial, baud);
+	#endif
+}
+
+void OpenDeviceClass::begin(HardwareSerial &serial, unsigned long baud){
+
+	serial.begin(baud);
+
+	// Wait serial if using Leonardo
+	#ifdef __AVR_ATmega32U4__
+		//if(serial == SERIAL_PORT_USBVIRTUAL){
+			while (!Serial){delay(1);}
+		//}
+	#endif
+
+	DeviceConnection *conn =  new DeviceConnection(serial);
 	begin(*conn);
-#endif
+
+}
+
+void OpenDeviceClass::begin(Stream &serial, unsigned long baud){
+	DeviceConnection *conn =  new DeviceConnection(serial);
+	begin(*conn);
 }
 
 void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
@@ -60,91 +98,98 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 		deviceConnection->setDefaultListener(&(OpenDeviceClass::onMessageReceived));
 	}
 
-	OpenDevice.debug("Begin [OK]");
+
+	ODev.debug("Begin [OK]");
+
 }
 
 
+void OpenDeviceClass::_loop() {
 
-
-void OpenDeviceClass::loop() {
-
-	if(deviceConnection){
-		deviceConnection->checkDataAvalible();
-	}
+//	Serial.println("_loop | "); delay(500);
+//	if(deviceConnection && deviceConnection->com){
+//		Serial.print("checkDataAvalible | "); delay(500);
+//		deviceConnection->checkDataAvalible();
+//		Serial.println("checkDataAvalible [ok] "); delay(500);
+//	}
 
 	checkSensorsStatus();
-
-	clear(lastCMD);
 
 	// Send PING/KeepAlive if enabled
 	if(keepAliveEnabled){
 	  unsigned long currentMillis = millis();
 	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
 		keepAliveTime = currentMillis;
-		OpenDevice.send(cmd(CommandType::PING));
+		ODev.send(cmd(CommandType::PING));
 	  }
 	}
 
 }
 
+void OpenDeviceClass::enableKeepAlive(){
+	keepAliveEnabled = true;
+}
+
+void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
+	debugMode = true;
+	debugTarget = _debugTarget;
+}
+
 /** Called when a command is received by the connection */
 void OpenDeviceClass::onMessageReceived(Command cmd) {
-	OpenDevice.lastCMD = cmd;
-	DeviceConnection *deviceConnection = OpenDevice.deviceConnection;
+	ODev.lastCMD = cmd;
+	DeviceConnection *conn = ODev.deviceConnection;
 
 	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
 
 	// Directed to a device (Like On/OFF or more complex)
 	if (cmd.deviceID > 0) {
-
-		Device *foundDevice = OpenDevice.getDevice(cmd.deviceID);
+		Device *foundDevice = ODev.getDevice(cmd.deviceID);
 		if (foundDevice != NULL) {
-			OpenDevice.debugChange(foundDevice->id, cmd.value);
+			ODev.debugChange(foundDevice->id, cmd.value);
 			foundDevice->setValue(cmd.value);
-			foundDevice->deserializeExtraData(&cmd, deviceConnection);
-			OpenDevice.notifyReceived(ResponseStatus::SUCCESS);
+			foundDevice->deserializeExtraData(&cmd, conn);
+			ODev.notifyReceived(ResponseStatus::SUCCESS);
 		} else {
-			OpenDevice.notifyReceived(ResponseStatus::NOT_FOUND);
+			ODev.notifyReceived(ResponseStatus::NOT_FOUND);
 		}
 	// User-defined command, this is an easy way to extend OpenDevice protocol.
 	} else if (cmd.type == CommandType::USER_COMMAND) {
+		String name = conn->readString();
+		for (int i = 0; i < ODev.commandsLength; i++) {
 
-		char *name = deviceConnection->readString();
+			// if(ODev.debugMode){ ODev.debug("Call function:"); ODev.debug(name); }
 
-		Serial.print("name:");Serial.println(name);
-
-
-		for (int i = 0; i < OpenDevice.commandsLength; i++) {
-			if (strncmp(name, OpenDevice.commands[i].command, MAX_COMMAND_STRLEN) == 0) {
-				/**FIXME */ Serial.print("!! MATCH_COMMAND !!");
-				(*OpenDevice.commands[i].function)();
+			if (name.equals(ODev.commands[i].command)) {
+				(*ODev.commands[i].function)();
 			}
 		}
 
 		// Send response Ex: GET_DEVICES_RESPONSE;ID;[ID,PIN,VALUE,...];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
 	} else if (cmd.type == CommandType::GET_DEVICES) {
 
-		deviceConnection->doStart();
-		deviceConnection->print(CommandType::GET_DEVICES_RESPONSE);
-		deviceConnection->doToken();
-		deviceConnection->print(cmd.id);
-		deviceConnection->doToken();
+		conn->doStart();
+		conn->print(CommandType::GET_DEVICES_RESPONSE);
+		conn->doToken();
+		conn->print(cmd.id);
+		conn->doToken();
 
-		for (int i = 0; i < OpenDevice.deviceLength; ++i) {
-			Device *device = OpenDevice.getDeviceAt(i);
+		for (int i = 0; i < ODev.deviceLength; ++i) {
+			Device *device = ODev.getDeviceAt(i);
 			// Write array to connection..
 			char buffer[50]; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
 			device->toString(buffer);
-			deviceConnection->print(buffer);
+			conn->print(buffer);
 
-			if (i < OpenDevice.deviceLength) {
-				deviceConnection->doToken();
+			if (i < ODev.deviceLength) {
+				conn->doToken();
 			}
 		}
 
-		deviceConnection->doEnd();
+		conn->doEnd();
 
 	}
+
 }
 
 
@@ -156,9 +201,9 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 //    if(id < 100) // FIXME: detectar se é o IR.
 //    	value = !value;        // NOTA: Os valores do Swicth sao invertidos
 
-   OpenDevice.debugChange(id, value);
+   ODev.debugChange(id, value);
 
-	if(OpenDevice.autoControl){
+	if(ODev.autoControl){
 		if(device != NULL){
 			// Sepre que uma alteracao for detectada, será invertido o seu estado atual.
 			// Caso o dispositivo seja digital, ele ira reconhecer apenas dois valores, 0..1
@@ -174,16 +219,16 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 
 	// SEND: Command
 	// ==========================
-	Command lastCMD = OpenDevice.lastCMD;
+	Command lastCMD = ODev.lastCMD;
 	lastCMD.id = 0;
 	lastCMD.type = (uint8_t) sensor->type;
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
-	OpenDevice.deviceConnection->send(lastCMD, false);
+	ODev.deviceConnection->send(lastCMD, false);
 	// Check extra data to send.
-	sensor->serializeExtraData(OpenDevice.deviceConnection);
-	OpenDevice.deviceConnection->doEnd();
+	sensor->serializeExtraData(ODev.deviceConnection);
+	ODev.deviceConnection->doEnd();
 }
 
 
@@ -194,10 +239,11 @@ void OpenDeviceClass::send(Command cmd){
 }
 
 Command OpenDeviceClass::cmd(uint8_t type, uint8_t deviceID, unsigned long value){
-	lastCMD.type = type;
-	lastCMD.deviceID = deviceID;
-	lastCMD.value = value;
-	return lastCMD;
+	Command cmd;
+	cmd.type = type;
+	cmd.deviceID = deviceID;
+	cmd.value = value;
+	return cmd;
 }
 
 void OpenDeviceClass::clear(Command cmd){
@@ -403,20 +449,20 @@ Device* OpenDeviceClass::getDeviceAt(uint8_t index){
 // END: DeviceManager
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-void OpenDeviceClass::freeRam() {
+void OpenDeviceClass::showFreeRam() {
 
   extern int __heap_start, *__brkval;
   int v;
 
   
   #if defined (E2END)
-  Serial.print("DB:EPROM:");
+  Serial.print(F("DB:EPROM:"));
   Serial.print(E2END);
   Serial.print("-");
   #endif
 
   #if(ARDUINO)
-  Serial.print("DB:RAM:");
+  Serial.print(F("DB:RAM:"));
   Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
   #endif
 }
@@ -440,17 +486,8 @@ void OpenDeviceClass::debug(const char str[]){
 }
 
 
-void OpenDeviceClass::enableKeepAlive(){
-	keepAliveEnabled = true;
-}
-
-void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
-	debugMode = true;
-	debugTarget = _debugTarget;
-}
-
 #ifdef ARDUINO
-void OpenDeviceClass::debug(String& str){
+void OpenDeviceClass::debug(const String &str){
 	if(debugMode){ // FIXME: a logica não está muito legal não... !
 		if(debugTarget == 1){
 			deviceConnection->doStart();
@@ -469,6 +506,6 @@ void OpenDeviceClass::debug(String& str){
 }
 #endif
 
-OpenDeviceClass OpenDevice;
+OpenDeviceClass ODev;
 
 
