@@ -15,9 +15,9 @@
 #define DeviceConnection_h
 
 #include <Arduino.h>
-#include <inttypes.h>
-#include <string.h>
-#include "Stream.h"
+#include <stddef.h>
+#include <stdint.h>
+
 #include "config.h"
 #include "Command.h"
 #include "CommandBuffer.h"
@@ -70,7 +70,7 @@ private:
 	int nextEndOffSet();
 
 public: 
-	Stream * conn;
+	Stream  *conn;
 	CommandBuffer buffer;
 
 	// public methods

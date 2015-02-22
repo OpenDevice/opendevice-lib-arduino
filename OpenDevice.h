@@ -95,12 +95,12 @@ public:
 
 	#if defined(USING_CUSTOM_CONNECTION)
 		void loop(){
-			custom_connection_loop(deviceConnection);
+			CUSTOM_CONNECTION_CLASS conn = custom_connection_loop(deviceConnection);
+			deviceConnection->setStream(&conn);
 			_loop();
 		}
 	#else
 		void loop(){
-			deviceConnection->checkDataAvalible();
 			_loop();
 		};
 	#endif

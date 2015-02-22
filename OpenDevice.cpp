@@ -106,12 +106,9 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 void OpenDeviceClass::_loop() {
 
-//	Serial.println("_loop | "); delay(500);
-//	if(deviceConnection && deviceConnection->com){
-//		Serial.print("checkDataAvalible | "); delay(500);
-//		deviceConnection->checkDataAvalible();
-//		Serial.println("checkDataAvalible [ok] "); delay(500);
-//	}
+	if(deviceConnection && deviceConnection->conn){
+		deviceConnection->checkDataAvalible();
+	}
 
 	checkSensorsStatus();
 

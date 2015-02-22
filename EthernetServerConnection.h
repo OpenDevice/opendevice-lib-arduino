@@ -30,9 +30,10 @@
 #include "DeviceConnection.h"
 
 #define USING_CUSTOM_CONNECTION 1
+#define CUSTOM_CONNECTION_CLASS EthernetClient
 
 EthernetServer server(80);
-//EthernetClient *client;
+EthernetClient ethclient;
 IPAddress myIP(192, 168, 2, 106);
 
 /** This method is called automatically by the OpenDevice when run: ODev.begin() */
@@ -51,9 +52,11 @@ void custom_connection_begin(){
 }
 
 /** This method is called automatically by the OpenDevice when run: ODev.loop() */
-void custom_connection_loop(DeviceConnection *conn){
+CUSTOM_CONNECTION_CLASS custom_connection_loop(DeviceConnection *conn){
 
 	if (EthernetClient newClient = server.available()) {
+
+		ethclient = newClient;
 
 //		// only if new client.
 //		if (!client || client != &newClient) {
@@ -65,14 +68,15 @@ void custom_connection_loop(DeviceConnection *conn){
 
 			Serial.println("Connected"); delay(200);
 
-			conn->setStream((Stream*) &newClient);
-			conn->checkDataAvalible();
-
+//			conn->setStream((Stream*) &newClient);
+//			conn->checkDataAvalible();
 //		}
 
 	}else{
-		conn->setStream(NULL);
+//		conn->setStream(NULL);
 	}
+
+	return ethclient;
 
 }
 //
