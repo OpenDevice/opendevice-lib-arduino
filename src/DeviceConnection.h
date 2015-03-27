@@ -15,9 +15,6 @@
 #define DeviceConnection_h
 
 #include <Arduino.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include "config.h"
 #include "Command.h"
 #include "CommandBuffer.h"

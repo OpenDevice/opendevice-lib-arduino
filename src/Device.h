@@ -31,9 +31,9 @@ class Device
 public:
 
 	enum DeviceType{
-			ANALOG = 1,
-			DIGITAL = 2,
-			// This constans only used in embeeded side, to mapping to command
+			DIGITAL = 1,
+			ANALOG = 2,
+			// NEXT constants only used in embedded side, to mapping to command
 			INFRA_RED = 7
 	};
 

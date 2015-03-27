@@ -14,6 +14,7 @@
 
 #include "OpenDevice.h"
 
+
 /*
  * OpenDeviceClass.cpp
  *
@@ -33,9 +34,9 @@ OpenDeviceClass::OpenDeviceClass() {
 	for (int i = 0; i < MAX_DEVICE; i++) {
 		devices[i] = NULL;
 	}
-}
 
-byte OpenDeviceClass::mac[6] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};  // TODO: read from EPROM.
+	loadConfig();
+}
 
 //void OpenDeviceClass::begin(Stream &serial) {
 //	OpenDeviceClass::begin(&DeviceConnection(serial));
@@ -171,12 +172,15 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 		conn->print(cmd.id);
 		conn->doToken();
 
+		char buffer[50] = {0};// FIXME: daria para usar o mesmo buffer do deviceConnection ??
+
 		for (int i = 0; i < ODev.deviceLength; ++i) {
 			Device *device = ODev.getDeviceAt(i);
 			// Write array to connection..
-			char buffer[50]; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
 			device->toString(buffer);
 			conn->print(buffer);
+
+			memset(buffer, 0, sizeof(buffer));
 
 			if (i < ODev.deviceLength) {
 				conn->doToken();
@@ -293,15 +297,16 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
+	return addSensor(pin, type, 0);
+}
+
 bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID){
 	bool v = addDevice(pin, type, true, 0);
 	if(v) devices[deviceLength-1]->targetID = targetID;
 	return v;
 }
 
-bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
-	return addSensor(pin, type, -1);
-}
 
 bool OpenDeviceClass::addSensor(Device& sensor){
 	return addDevice(sensor);
@@ -434,13 +439,43 @@ Device* OpenDeviceClass::getDevice(uint8_t id){
 
 Device* OpenDeviceClass::getDeviceAt(uint8_t index){
 
-	if(index > 0 && index <= deviceLength){
-		return devices[index-1];
+	if(index <= deviceLength){
+		return devices[index];
 	}
 
     return NULL;
 }
 
+uint8_t * OpenDeviceClass::generateID(uint8_t apin){
+
+	if (!Config.saved) { // not loaded
+		loadConfig();
+		if (!Config.saved || Config.id[0] == 0) { // not saved
+
+			// The first three octets are the "Organizationally Unique Identifier" or OUI, these are assigned to companies.
+			// I've use the OUI from GHEO Sa, which is the correct one for Arduino Ethernet.
+			// Then the rest of the MAC address or the last three octets is randomly generated.
+			Config.id[0] = 0x90; Config.id[1] = 0xA2; Config.id[2] = 0xDA;
+
+			randomSeed(analogRead(apin));
+			Serial.print("MAC.NOTSAVED -");
+			for (int i = 3; i < 6; i++) {
+				Config.id[i] = random(0, 255);
+			}
+			saveConfig();
+		}
+	}
+
+	Serial.print("MAC.SAVED:");
+	for (int i = 0; i < 6; ++i) {
+		Serial.print(Config.id[i]);
+		Serial.print(".");
+	}
+	Serial.println();
+	delay(200);
+
+	return Config.id;
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // END: DeviceManager

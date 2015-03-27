@@ -20,7 +20,7 @@
 #include "Stream.h"
 #include "Device.h"
 #include "DataUtils.h"
-#include "../IRremote/IRremote.h"
+#include "../../IRremote/IRremote.h"
 
 /*
  * IRSensor.h

@@ -114,10 +114,10 @@ void Device::init(){
 	// Do nothing for now.
 }
 
-
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(char buffer[]){
-	return sprintf (buffer, "[%d,%d,%d,%d,%d,%d]", id, pin, getValue(), targetID, sensor, type);
+	 int itype = type;
+	 return sprintf (buffer, "[%d,%d,%lu,%d,%d,%d]", id, pin, getValue(), targetID, (sensor ? 1 : 0), itype);
 }
 
 

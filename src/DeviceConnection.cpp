@@ -92,9 +92,8 @@ bool DeviceConnection::checkDataAvalible(){
 
 			lastByte = conn->read();
 
-
 			#if DEBUG_CON
-				Serial.print(F("DB:READ:"));Serial.println(lastByte);Serial.write(ACK_BIT);
+				Serial.print(F("DB:READ:"));Serial.println((char)lastByte);Serial.write(ACK_BIT);
 			#endif
 
 			// NOTE: Start bit is equals to the SEPARATOR

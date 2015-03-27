@@ -23,7 +23,7 @@
 
 #include "Device.h"
 #ifndef DEBUG_ON_PC
-#include "../IRremote/IRremote.h"
+#include "../../IRremote/IRremote.h"
 #endif
 
 class IRDevice : public Device  {
