@@ -5,22 +5,18 @@
  * *****************************************************************************
  * 
  */
-//#include <SPI.h> 
-#include <UIPEthernet.h>
+
+//#include <UIPEthernet.h> // Uncomment for use: ENC28J60
+#include <Ethernet.h>
+#include <SPI.h>
 #include <OpenDevice.h>
 
 void setup(){
-
-  Serial.begin(9600);
-  Serial.print("Wait data !");
-  while(!Serial.available()){ break;}
-
-  // It's only required ENC28J60 ( UIPEthernet / arduino_uip  )
-  #if defined (UIPETHERNET_H) && !UIP_CONF_UDP
-  IPAddress myIP(192,168,2,106);
-  Ethernet.begin(ODev.getMAC(A0), myIP);
-  #endif
   
+  ODev.id(ODev.generateID(A0)); // is the MAC (it's saved on EEPROM)
+  ODev.name("Module-Thing1");
+  // ODev.ip(192,168,3,106);
+ 
   ODev.enableDebug();
   ODev.addDevice(13, Device::DIGITAL);
   ODev.addCommand("mycmd1", ledON);
