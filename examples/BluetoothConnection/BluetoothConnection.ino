@@ -4,28 +4,16 @@
  * This example code is in the public domain.
  * *****************************************************************************
  */
-
-
-#include <DeviceConnection.h>
+ 
 #include <OpenDevice.h>
 
-DeviceConnection deviceConnection(Serial);
-
 void setup(){
-    OpenDevice::debugMode = true;
-
-    Serial.begin(9600);
-
-    OpenDevice::addDevice(13, Device::DIGITAL); // ID:1
-    
-    OpenDevice::begin(deviceConnection);
-    OpenDevice::debug("Started!");
-         
+    ODev.enableDebug();
+    ODev.addDevice(13, Device::DIGITAL); // ID:1
+    ODev.begin(); 
+    // ODev.begin(Serial1, 9600); //-- for Leonardo (Rx:0,Tx:1)
 }
 
 void loop(){
-	
-	OpenDevice::loop();
-
+	ODev.loop();
 }
-
