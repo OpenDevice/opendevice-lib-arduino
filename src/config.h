@@ -40,6 +40,12 @@
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
                           Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
 
+// May be better use: https://github.com/mrRobot62/Arduino-logging-library
+enum DebugTarget{
+	DEBUG_SERIAL,
+	DEBUG_CURRENT
+};
+
 namespace od {
 
 	const char server[] = "api.opendevice.io";

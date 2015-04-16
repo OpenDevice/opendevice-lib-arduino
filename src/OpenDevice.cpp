@@ -66,7 +66,7 @@ void OpenDeviceClass::begin(unsigned long baud) {
 	#endif
 }
 
-void OpenDeviceClass::begin(HardwareSerial &serial, unsigned long baud){
+void OpenDeviceClass::begin(SERIAL_CLASS &serial, unsigned long baud){
 
 	serial.begin(baud);
 
@@ -82,7 +82,8 @@ void OpenDeviceClass::begin(HardwareSerial &serial, unsigned long baud){
 
 }
 
-void OpenDeviceClass::begin(Stream &serial, unsigned long baud){
+
+void OpenDeviceClass::begin(Stream &serial){
 	DeviceConnection *conn =  new DeviceConnection(serial);
 	begin(*conn);
 }

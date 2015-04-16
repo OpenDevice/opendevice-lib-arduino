@@ -17,13 +17,6 @@
 #include <inttypes.h>
 
 
-// May be better use: https://github.com/mrRobot62/Arduino-logging-library
-enum DebugTarget{
-	DEBUG_SERIAL,
-	DEBUG_CURRENT
-};
-
-
 namespace CommandType {
 	enum CommandType {
 		ON_OFF = 1,     // Indicates that the values are 0 or 1 (HIGH or LOW)
