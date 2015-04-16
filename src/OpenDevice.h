@@ -27,16 +27,6 @@ using namespace od;
 	#include <EthernetServerConnection.h>
 #endif
 
-// Find out what the default class for USB communication
-#ifdef _SAM3XA_
-  #include <UARTClass.h>  // Arduino Due
-  #define SERIAL_CLASS UARTClass
-#elif defined(HAVE_CDCSERIAL)
-  #define SERIAL_CLASS Serial_
-#else
-  #define SERIAL_CLASS HardwareSerial
- #endif
-
 
 /*
  * OpenDeviceClass.h
@@ -118,15 +108,7 @@ public:
 	#endif
 
 
-	#if defined(SoftwareSerial_h)
-		void begin(unsigned long baud, uint8_t rxpin, uint8_t txpin){
-			static SoftwareSerial soft(rxpin, txpin);
-			soft.begin(baud);
-			Serial.begin(baud);
-			DeviceConnection *conn =  new DeviceConnection(soft);
-			begin(*conn);
-		}
-	#endif
+
 
 	/**
 	 * Sets the ID (formally the MAC) of the device / module. <br/>
@@ -138,19 +120,37 @@ public:
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
 
 
-
     /**
 	 * Setup using the standard serial port
 	 * @param baud - Sets the data rate in bits per second, Values:(300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 115200)
 	 */
 	void begin(unsigned long baud);
 	void begin(Stream &stream);
-	void begin(SERIAL_CLASS &serial, unsigned long baud);
+	void begin(HardwareSerial &serial, unsigned long baud);
 
+#if defined(HAVE_CDCSERIAL)
 
-//	#ifdef SoftwareSerial_h
-//		void begin(SoftwareSerial &stream, unsigned long baud);
-//	#endif
+	void begin(Serial_ &serial, unsigned long baud);
+
+#endif
+
+#if defined(SoftwareSerial_h)
+
+	void begin(unsigned long baud, uint8_t rxpin, uint8_t txpin){
+		static SoftwareSerial soft(rxpin, txpin);
+		soft.begin(baud);
+		Serial.begin(baud);
+		DeviceConnection *conn =  new DeviceConnection(soft);
+		begin(*conn);
+	}
+
+#endif
+
+// TODO: Make compatible with Due
+//	#ifdef _SAM3XA_
+//  #include <UARTClass.h>  // Arduino Due
+//  Class -> UARTClass
+
 
 	// FIXME: add SoftSerial void begin(unsigned long baud, uint8_t rxpin, uint8_t txpin);
 

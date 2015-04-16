@@ -66,7 +66,17 @@ void OpenDeviceClass::begin(unsigned long baud) {
 	#endif
 }
 
-void OpenDeviceClass::begin(SERIAL_CLASS &serial, unsigned long baud){
+void OpenDeviceClass::begin(HardwareSerial &serial, unsigned long baud){
+
+	serial.begin(baud);
+
+	DeviceConnection *conn =  new DeviceConnection(serial);
+	begin(*conn);
+
+}
+
+#if defined(HAVE_CDCSERIAL)
+void OpenDeviceClass::begin(Serial_ &serial, unsigned long baud){
 
 	serial.begin(baud);
 
@@ -79,9 +89,8 @@ void OpenDeviceClass::begin(SERIAL_CLASS &serial, unsigned long baud){
 
 	DeviceConnection *conn =  new DeviceConnection(serial);
 	begin(*conn);
-
 }
-
+#endif
 
 void OpenDeviceClass::begin(Stream &serial){
 	DeviceConnection *conn =  new DeviceConnection(serial);
