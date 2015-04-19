@@ -11,7 +11,7 @@
  * *****************************************************************************
  */
 
-#ifndef ENERGIA // Bypass on Stellaris
+#ifdef IRremote_h
 
 #include "IRSensor.h"
 
