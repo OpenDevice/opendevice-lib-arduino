@@ -1,3 +1,19 @@
+== opendevice-lib-arduino
+
+This library is responsible for communication using the API and protocols supported by OpenDevice.
+
+Please note that the library also requires some other libraries to function properly, when used with other connection types or sensors, like the library for the Enc28j60 chip.
+
+For now, the implementations were ported to Arduino and Energia. 
+
+Check the list of devices tested:
+
+https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices
+=== Dependencies
+
+* IRRemote
+* UIPEthernet - https://github.com/OpenDevice/arduino_uip
+
 == What is OpenDevice?
 
 OpenDevice is a set of tools and APIs to build solutions for the *"Internet of Things"* like home automations systems, robotics, smart city, energy monitoring, security, sensor monitoring. +
