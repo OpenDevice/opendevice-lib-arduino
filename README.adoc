@@ -6,9 +6,8 @@ Please note that the library also requires some other libraries to function prop
 
 For now, the implementations were ported to Arduino and Energia. 
 
-Check the list of devices tested:
+link:Check the list of devices tested[https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices]
 
-https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices
 === Dependencies
 
 * IRRemote
