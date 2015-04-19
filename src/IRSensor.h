@@ -12,7 +12,8 @@
  */
 
 
-#ifndef ENERGIA // Bypass on Stellaris
+// #ifndef ENERGIA // Bypass on Stellaris
+#ifdef IRremote_h
 
 #ifndef IRSENSOR_H_
 #define IRSENSOR_H_
