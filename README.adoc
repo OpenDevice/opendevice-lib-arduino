@@ -6,7 +6,7 @@ Please note that the library also requires some other libraries to function prop
 
 For now, the implementations were ported to Arduino and Energia. 
 
-link:Check the list of devices tested[https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices]
+link:https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices[Check the list of devices tested]
 
 === Dependencies
 
@@ -38,4 +38,5 @@ See documentation and examples at:
 
 http://opendevice.io
 
-https://opendevice.atlassian.net/wiki
+https://opendevice.atlassian.net/wiki/display/DOC/Getting+started
+
