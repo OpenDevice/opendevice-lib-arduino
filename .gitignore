@@ -1,7 +1,4 @@
-/arduino/
-/.settings/
-/.project
-/.cproject
-/lib.index
-/spec.d
-/Release/
+.settings/
+.cproject
+.project
+spec.d
