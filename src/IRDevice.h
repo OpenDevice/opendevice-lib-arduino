@@ -18,6 +18,8 @@
  *      Author: ricardo
  */
 
+#ifdef IRremote_h
+
 #ifndef IRDEVICE_H_
 #define IRDEVICE_H_
 
@@ -40,3 +42,5 @@ private:
 };
 
 #endif /* IRDEVICE_H_ */
+
+#endif
