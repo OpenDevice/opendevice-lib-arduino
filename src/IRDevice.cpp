@@ -11,6 +11,8 @@
  * *****************************************************************************
  */
 
+#ifdef IRremote_h
+
 #include "IRDevice.h"
 
 /*
@@ -74,3 +76,6 @@ void IRDevice::deserializeExtraData(Command *cmd, DeviceConnection *conn){
 #endif
 
 }
+
+
+#endif
