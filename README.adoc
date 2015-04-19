@@ -9,9 +9,10 @@ For now, the implementations were ported to Arduino and Energia.
 link:https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices[Check the list of devices tested]
 
 === Dependencies
+The dependencies are not mandatory, only if you want to use other features as (IR or the ENC28J60 module, etc ..)
 
-* IRRemote
-* UIPEthernet - https://github.com/OpenDevice/arduino_uip
+* IRRemote - (git clone https://github.com/shirriff/Arduino-IRremote IRremote)
+* UIPEthernet - (git clone https://github.com/OpenDevice/arduino_uip UIPEthernet)
 
 == What is OpenDevice?
 
