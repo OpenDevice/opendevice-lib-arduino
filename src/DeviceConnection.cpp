@@ -129,10 +129,10 @@ bool DeviceConnection::checkDataAvalible(){
 		
 		// Wait a bit to read the next byte if not available yet.
 		// If the timeout (which is usually very low) occur the loop is finished
-		if(processing && conn->available() <= 0 && !timeout){
+		if(processing && !timeout){
 			if(readTimeout > 0) delay(readTimeout);
 			if(conn->available() <= 0){
-				Serial.println(F("DB:TIMEOUT"));Serial.write(ACK_BIT);
+				// Serial.println(F("DB:TIMEOUT"));Serial.write(ACK_BIT);
 				timeout = true;
 			}
 		}
