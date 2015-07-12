@@ -64,6 +64,7 @@ private:
 public: 
 	Stream  *conn;
 	CommandBuffer buffer;
+	Command cmd;
 
 	// public methods
 	DeviceConnection();

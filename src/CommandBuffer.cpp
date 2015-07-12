@@ -1,10 +1,11 @@
 #include "CommandBuffer.h"
 
+#define NO_SKIP_CHAR  1  // a magic char not found in a valid ASCII numeric field
+
 CommandBuffer::CommandBuffer(char *buffer, const uint16_t len, bool clean)
 :_buffer(buffer),_len(len), _buffer_overflow(false), _endOffset(0)
 {
   if(clean)	memset(_buffer, 0, _len);
-  setTimeout(0);
 }
 
 size_t CommandBuffer::write(uint8_t byte) {
@@ -116,6 +117,106 @@ String CommandBuffer::readString()
 	  }
 	  return ret;
 }
+
+// returns the first valid (long) integer value from the current position.
+// initial characters that are not digits (or the minus sign) are skipped
+// function is terminated by the first character that is not a digit.
+long CommandBuffer::parseInt()
+{
+  return parseInt(NO_SKIP_CHAR); // terminate on first non-digit character (or timeout)
+}
+
+// as above but a given skipChar is ignored
+// this allows format characters (typically commas) in values to be ignored
+long CommandBuffer::parseInt(char skipChar)
+{
+  bool isNegative = false;
+  long value = 0;
+  int c;
+
+  c = peekNextDigit();
+  // ignore non numeric leading characters
+  if(c < 0)
+    return 0; // zero returned if timeout
+
+  do{
+    if(c == skipChar)
+      ; // ignore this charactor
+    else if(c == '-')
+      isNegative = true;
+    else if(c >= '0' && c <= '9')        // is c a digit?
+      value = value * 10 + c - '0';
+    read();  // consume the character we got with peek
+    c = timedPeek();
+  }
+  while( (c >= '0' && c <= '9') || c == skipChar );
+
+  if(isNegative)
+    value = -value;
+  return value;
+}
+
+
+// as parseInt but returns a floating point value
+float CommandBuffer::parseFloat()
+{
+  return parseFloat(NO_SKIP_CHAR);
+}
+
+// as above but the given skipChar is ignored
+// this allows format characters (typically commas) in values to be ignored
+float CommandBuffer::parseFloat(char skipChar){
+  bool isNegative = false;
+  bool isFraction = false;
+  long value = 0;
+  char c;
+  float fraction = 1.0;
+
+  c = peekNextDigit();
+    // ignore non numeric leading characters
+  if(c < 0)
+    return 0; // zero returned if timeout
+
+  do{
+    if(c == skipChar)
+      ; // ignore
+    else if(c == '-')
+      isNegative = true;
+    else if (c == '.')
+      isFraction = true;
+    else if(c >= '0' && c <= '9')  {      // is c a digit?
+      value = value * 10 + c - '0';
+      if(isFraction)
+         fraction *= 0.1;
+    }
+    read();  // consume the character we got with peek
+    c = timedPeek();
+  }
+  while( (c >= '0' && c <= '9')  || c == '.' || c == skipChar );
+
+  if(isNegative)
+    value = -value;
+  if(isFraction)
+    return value * fraction;
+  else
+    return value;
+}
+
+
+// returns peek of the next digit in the stream or -1 if timeout
+// discards non-numeric characters
+int CommandBuffer::peekNextDigit()
+{
+  int c;
+  while (1) {
+    c = timedPeek();
+    if (c < 0) return c;  // timeout
+    if (c == '-') return c;
+    if (c >= '0' && c <= '9') return c;
+    read();  // discard non-numeric
+  }
+}
+
 
 int CommandBuffer::nextEndOffSet(){
 	int endOffset = _readOffset;

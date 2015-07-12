@@ -92,6 +92,16 @@ void OpenDeviceClass::begin(Serial_ &serial, unsigned long baud){
 }
 #endif
 
+#if defined(DEFAULT_TO_TINY_DEBUG_SERIAL)
+void OpenDeviceClass::begin(TinyDebugSerial &serial, unsigned long baud){
+
+//	serial.begin(baud);
+//	DeviceConnection *conn =  new DeviceConnection(serial);
+//	begin(*conn);
+}
+#endif
+
+
 void OpenDeviceClass::begin(Stream &serial){
 	DeviceConnection *conn =  new DeviceConnection(serial);
 	begin(*conn);
@@ -333,7 +343,12 @@ bool OpenDeviceClass::addDevice(Device& device){
 
 		if (device.sensor) {
 			if (device.type == Device::DIGITAL) {
-				pinMode(device.pin, INPUT_PULLUP); // Enable internal pull-up resistor..
+				#if defined(INPUT_PULLUP)
+				  pinMode (device.pin, INPUT_PULLUP);
+				#else //TODO: not tested !
+				  pinMode (device.pin, INPUT);
+				  digitalWrite (device.pin, HIGH);
+				#endif
 			}
 		} else {
 			pinMode(device.pin, OUTPUT);
@@ -355,7 +370,12 @@ bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool senso
 
 		if (sensor) {
 			if (type == Device::DIGITAL) {
-				pinMode(pin, INPUT_PULLUP); // Enable internal pull-up resistor..
+			#if defined(INPUT_PULLUP)
+			  pinMode (pin, INPUT_PULLUP);
+			#else //TODO: not tested !
+			  pinMode (pin, INPUT);
+			  digitalWrite (pin, HIGH);
+			#endif
 			}
 		} else {
 			pinMode(pin, OUTPUT);

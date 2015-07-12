@@ -108,6 +108,7 @@ bool DeviceConnection::checkDataAvalible(){
 				#endif
 
 				processing = false;
+
 				uint8_t type = buffer.parseInt();
 				parseCommand(type);
 				flush();
@@ -168,7 +169,6 @@ void DeviceConnection::notifyError(ResponseStatus::ResponseStatus status){
 
 void DeviceConnection::parseCommand(uint8_t type){
 
-	Command cmd;
 	cmd.type = type;
 	cmd.id = readInt();
 
@@ -343,4 +343,5 @@ void DeviceConnection::send(Command cmd, bool complete){
 
 void DeviceConnection::flush(){
 	buffer.flush();
+	// conn->flush();
 }

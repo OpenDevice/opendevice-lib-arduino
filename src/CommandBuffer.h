@@ -2,14 +2,18 @@
 #define CommandBuffer_h
 
 #include <inttypes.h>
-#include <Stream.h>
+#include <Print.h>
 #include "Command.h"
 
-class CommandBuffer : public Stream
+class CommandBuffer : public Print
 {
 protected:
 	int timedRead() { return read(); }
 	int timedPeek() { return peek(); }
+	long parseInt(char skipChar); // as above but the given skipChar is ignored
+	float parseFloat(char skipChar);  // as above but the given skipChar is ignored
+	int peekNextDigit(); // returns the next numeric digit in the stream or -1 if timeout
+
 private:
    char * _buffer;
    const uint16_t _len;
@@ -30,10 +34,6 @@ public:
 
   const uint16_t current_length() const { return _endOffset; }
 
-  void begin(long speed) {}
-  bool listen() { return true; }
-  void end() {}
-  bool isListening() { return true; }
   bool overflow() { return _buffer_overflow; }
 
   virtual size_t write(uint8_t byte);
@@ -46,6 +46,10 @@ public:
   int readLongValues(long values[], int max);
   int readIntValues(int values[], int max);
   int readFloatValues(float values[], int max);
+
+  long parseInt(); // returns the first valid (long) integer value from the current position.
+  float parseFloat();               // float version of parseInt
+
 
   int getReadOffset(){ return _readOffset; };
 

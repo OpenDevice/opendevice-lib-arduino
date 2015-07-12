@@ -22,14 +22,19 @@
 
 // #include <EEPROM.h>
 
-#define ENABLE_SERIAL 1
+#define ENABLE_SERIAL 0
 #define DEBUG_CON	0 // set 1 to enable (receiving debug)
 
 #define API_VERSION   1 // software version of this library
 #define OPENDEVICE_LIBRARY_VERSION 050
 
 
+#if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
+#define DATA_BUFFER  16
+#else
 #define DATA_BUFFER  160
+#endif
+
 #define MAX_LISTENERS 10
 #define MAX_DEVICE 10
 #define MAX_COMMAND 10 // this is used for user command callbacks

@@ -146,6 +146,25 @@ public:
 
 #endif
 
+// For: ATtiny/Digispark
+#if defined(SoftSerial_h)
+
+	void begin(unsigned long baud, uint8_t rxpin, uint8_t txpin){
+		static SoftSerial soft(rxpin, txpin);
+		soft.begin(baud);
+		//Serial.begin(baud);
+		DeviceConnection *conn =  new DeviceConnection(soft);
+		begin(*conn);
+	}
+
+#endif
+
+// For: ATtiny/Digispark
+#if defined(DEFAULT_TO_TINY_DEBUG_SERIAL)
+	void begin(TinyDebugSerial &serial, unsigned long baud);
+#endif
+
+
 // TODO: Make compatible with Due
 //	#ifdef _SAM3XA_
 //  #include <UARTClass.h>  // Arduino Due
@@ -171,7 +190,10 @@ public:
 	/** Create a simple command (using lastCMD buffer)*/
 	Command cmd(uint8_t type, uint8_t deviceID = 0, unsigned long value = 0);
 
+#ifdef __FlashStringHelper
 	void debug(const __FlashStringHelper* data);
+#endif
+
 	void debug(const char str[]);
 	#ifdef ARDUINO
 	void debug(const String &s);
