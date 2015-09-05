@@ -49,6 +49,11 @@ private:
 
 	// Debouncing of normal pressing (for Sensor's)
 	long time;
+	bool autoControl; // Changes in the sensor should affect bonded devices..
+	bool keepAliveEnabled;
+	long keepAliveTime;
+	long keepAliveMiss;
+	bool connected;
 
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
@@ -67,9 +72,6 @@ private:
 
 public:
 
-	bool autoControl; // Changes in the sensor should affect bonded devices..
-	bool keepAliveEnabled;
-	long keepAliveTime;
 
 	Command lastCMD; // Command received / send.
 	bool debugMode;
@@ -148,7 +150,6 @@ public:
 
 // For: ATtiny/Digispark
 #if defined(SoftSerial_h)
-
 	void begin(unsigned long baud, uint8_t rxpin, uint8_t txpin){
 		static SoftSerial soft(rxpin, txpin);
 		soft.begin(baud);
@@ -156,7 +157,6 @@ public:
 		DeviceConnection *conn =  new DeviceConnection(soft);
 		begin(*conn);
 	}
-
 #endif
 
 // For: ATtiny/Digispark
@@ -223,19 +223,20 @@ public:
 	void setValue(uint8_t id, unsigned long value);
 	void sendToAll(unsigned long value);
 
-	String readString() { return deviceConnection->buffer.readString(); }
+	inline bool isConnected(){return connected;}
 
-	inline int readInt(){ return deviceConnection->buffer.parseInt(); }
-	inline long readLong(){ return deviceConnection->buffer.parseInt(); }
-	inline float readFloat(){ return deviceConnection->buffer.parseFloat(); }
+	inline String readString() { return deviceConnection->readString(); }
+	inline int readInt(){ return deviceConnection->readInt(); }
+	inline long readLong(){ return deviceConnection->readLong(); }
+	inline float readFloat(){ return deviceConnection->readFloat(); }
 
 	/**
 	 * Can read single value list like: [1,2,3,4]
 	 * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
 	 */
-	inline int readIntValues(int values[], int max = -1){ return deviceConnection->buffer.readIntValues(values, max); }
-	inline int readLongValues(long values[], int max = -1){ return deviceConnection->buffer.readLongValues(values, max); }
-	inline int readFloatValues(float values[], int max = -1){ return deviceConnection->buffer.readFloatValues(values, max); }
+	inline int readIntValues(int values[], int max = -1){ return deviceConnection->readIntValues(values, max); }
+	inline int readLongValues(long values[], int max = -1){ return deviceConnection->readLongValues(values, max); }
+	inline int readFloatValues(float values[], int max = -1){ return deviceConnection->readFloatValues(values, max); }
 };
 
 extern OpenDeviceClass ODev;

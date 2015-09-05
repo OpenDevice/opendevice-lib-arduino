@@ -25,8 +25,10 @@ OpenDeviceClass::OpenDeviceClass() {
 	deviceConnection = NULL;
 	autoControl = false;
 	debugMode = false;
-	keepAliveEnabled = false;
+	keepAliveEnabled = true;
+	connected = false;
 	keepAliveTime = 0;
+	keepAliveMiss = 0;
 	debugTarget = 0; // 0 - Default Serial, 1 - Target Connection
 	time = 0;
 	deviceLength = 0;
@@ -120,7 +122,7 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 	}
 
 
-	ODev.debug("Begin [OK]");
+	// ODev.debug("Begin [OK]");
 
 }
 
@@ -131,15 +133,33 @@ void OpenDeviceClass::_loop() {
 		deviceConnection->checkDataAvalible();
 	}
 
-	checkSensorsStatus();
+	if(connected){
 
-	// Send PING/KeepAlive if enabled
-	if(keepAliveEnabled){
-	  unsigned long currentMillis = millis();
-	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
-		keepAliveTime = currentMillis;
-		ODev.send(cmd(CommandType::PING));
-	  }
+		checkSensorsStatus();
+
+		// Send PING/KeepAlive if enabled
+		if(keepAliveEnabled){
+		  unsigned long currentMillis = millis();
+		  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
+			keepAliveTime = currentMillis;
+			keepAliveMiss++;
+
+			// FIXME REMOVE THIS
+			digitalWrite(13, LOW);
+			delay(500);
+			digitalWrite(13, HIGH);
+
+			ODev.send(cmd(CommandType::PING));
+			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
+				connected = false;
+
+				// FIXME REMOVE THIS
+				pinMode(13, OUTPUT);
+				digitalWrite(13, LOW);
+			}
+		  }
+		}
+		
 	}
 
 }
@@ -157,6 +177,16 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
 void OpenDeviceClass::onMessageReceived(Command cmd) {
 	ODev.lastCMD = cmd;
 	DeviceConnection *conn = ODev.deviceConnection;
+
+	// FIXME REMOVE THIS
+	if(!ODev.connected){
+		pinMode(13, OUTPUT);
+		digitalWrite(13, HIGH);
+	}
+
+	ODev.connected = true;
+	ODev.keepAliveTime = millis();
+	ODev.keepAliveMiss = 0;
 
 	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
 
@@ -179,6 +209,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 			// if(ODev.debugMode){ ODev.debug("Call function:"); ODev.debug(name); }
 
 			if (name.equals(ODev.commands[i].command)) {
+				ODev.notifyReceived(ResponseStatus::SUCCESS);
 				(*ODev.commands[i].function)();
 			}
 		}
@@ -212,6 +243,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 	}
 
 }
+
 
 
 // FIMXE: rename to onSensorChange
@@ -254,9 +286,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 
 
 void OpenDeviceClass::send(Command cmd){
-	if(deviceConnection){
-		deviceConnection->send(cmd, true);
-	}
+	deviceConnection->send(cmd, true);
 }
 
 Command OpenDeviceClass::cmd(uint8_t type, uint8_t deviceID, unsigned long value){
@@ -292,14 +322,14 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 
 		if(debugTarget == 1){
 			deviceConnection->doStart();
-			deviceConnection->print("DB:CHANGE:");
+			//deviceConnection->print("DB:CHANGE:");
 			deviceConnection->print(id);
 			deviceConnection->print("=");
 			deviceConnection->print(value);
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
-			Serial.print("DB:CHANGE:");
+			//Serial.print("DB:CHANGE:");
 			Serial.print(id);
 			Serial.print("=");
 			Serial.println(value);
@@ -370,12 +400,12 @@ bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool senso
 
 		if (sensor) {
 			if (type == Device::DIGITAL) {
-			#if defined(INPUT_PULLUP)
-			  pinMode (pin, INPUT_PULLUP);
-			#else //TODO: not tested !
-			  pinMode (pin, INPUT);
-			  digitalWrite (pin, HIGH);
-			#endif
+				#if defined(INPUT_PULLUP)
+				  pinMode(pin, INPUT_PULLUP);
+				#else //TODO: not tested !
+				  pinMode(pin, INPUT);
+				  digitalWrite (pin, HIGH);
+				#endif
 			}
 		} else {
 			pinMode(pin, OUTPUT);
@@ -488,7 +518,7 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 			Config.id[0] = 0x90; Config.id[1] = 0xA2; Config.id[2] = 0xDA;
 
 			randomSeed(analogRead(apin));
-			Serial.print("MAC.NOTSAVED -");
+			//Serial.print("MAC.NOTSAVED -");
 			for (int i = 3; i < 6; i++) {
 				Config.id[i] = random(0, 255);
 			}
@@ -496,7 +526,7 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 		}
 	}
 
-	Serial.print("MAC.SAVED:");
+	//Serial.print("MAC.SAVED:");
 	for (int i = 0; i < 6; ++i) {
 		Serial.print(Config.id[i]);
 		Serial.print(".");
@@ -518,13 +548,13 @@ void OpenDeviceClass::showFreeRam() {
 
   
   #if defined (E2END)
-  Serial.print(F("DB:EPROM:"));
+  //Serial.print(F("DB:EPROM:"));
   Serial.print(E2END);
   Serial.print("-");
   #endif
 
   #if(ARDUINO)
-  Serial.print(F("DB:RAM:"));
+  //Serial.print(F("DB:RAM:"));
   Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
   #endif
 }
