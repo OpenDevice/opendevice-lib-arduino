@@ -71,7 +71,7 @@ struct Command {
 	uint8_t id;
 	uint8_t deviceID;
 	unsigned long value;
-	size_t length;
+	uint8_t length;
 
 
 	static bool isDeviceCommand( uint8_t type ) {

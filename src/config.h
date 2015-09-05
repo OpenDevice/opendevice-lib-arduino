@@ -31,19 +31,32 @@
 
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
-#else
-#define DATA_BUFFER  160
-#endif
-
-#define MAX_LISTENERS 10
-#define MAX_DEVICE 10
-#define MAX_COMMAND 10 // this is used for user command callbacks
-#define MAX_COMMAND_STRLEN 14
+#define MAX_LISTENERS 2
+#define MAX_DEVICE 5
+#define MAX_COMMAND 5 // this is used for user command callbacks
+#define MAX_COMMAND_STRLEN 5
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 #define KEEP_ALIVE_INTERVAL 1500
 #define DEFAULT_BAUD 9600
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
                           Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
+
+#else
+#define DATA_BUFFER  160
+#define MAX_LISTENERS 10
+#define MAX_DEVICE 10
+#define MAX_COMMAND 10 // this is used for user command callbacks
+#define MAX_COMMAND_STRLEN 14
+#define READING_INTERVAL 100 // sensor reading interval (ms)
+#define KEEP_ALIVE_INTERVAL 5000
+#define KEEP_ALIVE_MAX_MISSING 3
+#define DEFAULT_BAUD 9600
+#define ENABLE_DHCP 1  /* if you need save flash memory disable this
+                          Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
+
+
+#endif
+
 
 // May be better use: https://github.com/mrRobot62/Arduino-logging-library
 enum DebugTarget{

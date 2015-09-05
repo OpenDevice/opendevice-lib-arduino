@@ -23,14 +23,12 @@ extern "C" {
 	#include <stdlib.h>
 }
 
-
-
 // public methods
-DeviceConnection::DeviceConnection() : buffer(_buffer , DATA_BUFFER){
+DeviceConnection::DeviceConnection(){
 	init();
 }
 
-DeviceConnection::DeviceConnection(Stream &stream) :  buffer(_buffer , DATA_BUFFER){
+DeviceConnection::DeviceConnection(Stream &stream){
 	conn = &stream;
 	init();
 }
@@ -42,6 +40,10 @@ void DeviceConnection::init(){
 	processing = false;
 
 	defaultListener = NULL;
+	_buffer_overflow = false;
+	_endOffset = 0;
+
+
 //	for(int a = 0;a < MAX_LISTENERS;a++){
 //		listeners[a] = NULL;
 //		listeners_key[a] = NULL;
@@ -109,13 +111,13 @@ bool DeviceConnection::checkDataAvalible(){
 
 				processing = false;
 
-				uint8_t type = buffer.parseInt();
+				uint8_t type = parseInt();
 				parseCommand(type);
 				flush();
 
 			}else if(processing){
 
-				uint8_t w = buffer.write(lastByte);
+				uint8_t w = store(lastByte);
 
 				if(!w){
 					notifyError(ResponseStatus::BUFFER_OVERFLOW);
@@ -191,7 +193,7 @@ void DeviceConnection::parseCommand(uint8_t type){
 
 void DeviceConnection::getBuffer(uint8_t buf[]){
 
-	for(int a = 0;a < buffer.current_length();a++){
+	for(int a = 0;a < current_length();a++){
 		buf[a] = _buffer[a];
 	}
 }
@@ -316,32 +318,231 @@ void DeviceConnection::send(double n){
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
-void DeviceConnection::sendln(void){
-	if(!conn || processing) return;
-	conn->write(START_BIT);
-	conn->println();
-	conn->write(ACK_BIT);
-}
 
 
 void DeviceConnection::send(Command cmd, bool complete){
 	if(!conn || processing) return;
 
+	long values[] = {cmd.type, cmd.id, cmd.deviceID, cmd.value};
+
 	conn->write(START_BIT);
-	conn->print(cmd.type);
-	conn->write(SEPARATOR);
-	conn->print(cmd.id);
-	conn->write(SEPARATOR);
-	conn->print(cmd.deviceID);
-	conn->write(SEPARATOR);
-	conn->print(cmd.value);
-	if(complete)
-		conn->write(ACK_BIT);
-	else
-		conn->write(SEPARATOR);
+	char vbuffer[3];
+	for (int i = 0; i < 4; ++i) {
+		ltoa(values[i], vbuffer, 10);
+		conn->write(vbuffer);
+		if(complete && i == 3){
+			conn->write(ACK_BIT);
+		}else{
+			conn->write(SEPARATOR);
+		}
+	}
 }
 
-void DeviceConnection::flush(){
-	buffer.flush();
-	// conn->flush();
+
+void DeviceConnection::flush() {
+  memset(_buffer, 0, _len);
+  _endOffset = 0;
+  _readOffset = 0;
+  _buffer_overflow = false;
 }
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+size_t DeviceConnection::store(uint8_t byte) {
+  _buffer_overflow = _endOffset >= _len;
+  _buffer[_endOffset++] = byte;
+  return !_buffer_overflow;
+}
+
+
+int DeviceConnection::available(void){
+
+  return (unsigned int)(_len + _endOffset - _readOffset) % _len;
+
+}
+
+int DeviceConnection::peek(void){
+
+  return (_endOffset != _readOffset ? _buffer[_readOffset] : -1);
+
+}
+
+int DeviceConnection::read(void){
+
+	return (_endOffset != _readOffset ? _buffer[_readOffset++] : -1);
+
+}
+
+int DeviceConnection::readLongValues(long values[], int max){
+	int size = 0;
+	memset(values, 0, max);
+	int lastOffset = _endOffset;
+	_endOffset = nextEndOffSet();
+
+	while(available() && size < max){
+		values[size] = parseInt();
+		size++;
+	}
+
+	_readOffset+=2;// skip separator '];'
+	_endOffset = lastOffset;
+
+	return size;
+}
+
+int DeviceConnection::readIntValues(int values[], int max){
+	int size = 0;
+	memset(values, 0, max);
+	int lastOffset = _endOffset;
+	_endOffset = nextEndOffSet();
+
+	while(available() && size < max){
+		values[size] = parseInt();
+		size++;
+	}
+
+	_readOffset+=2; // skip separator '];'
+	_endOffset = lastOffset;
+
+	return size;
+}
+
+int DeviceConnection::readFloatValues(float values[], int max)
+{
+	int size = 0;
+	memset(values, 0, max);
+	int lastOffset = _endOffset;
+	_endOffset = nextEndOffSet();
+
+	while(available() && size < max){
+		values[size] = parseFloat();
+		size++;
+	}
+
+	_readOffset+=2;// skip separator '];'
+	_endOffset = lastOffset;
+
+	return size;
+}
+
+String DeviceConnection::readString()
+{
+	  String ret;
+	  int c = read();
+
+	  if(c == Command::SEPARATOR || c == ',') c = read(); // skip first
+
+	  while (c >= 0 && c != Command::SEPARATOR && c != ',')
+	  {
+	    ret += (char) c;
+	    c = read();
+	  }
+	  return ret;
+}
+
+// returns the first valid (long) integer value from the current position.
+// initial characters that are not digits (or the minus sign) are skipped
+// function is terminated by the first character that is not a digit.
+long DeviceConnection::parseInt()
+{
+  bool isNegative = false;
+  long value = 0;
+  int c;
+
+  c = peekNextDigit();
+  // ignore non numeric leading characters
+  if(c < 0)
+    return 0; // zero returned if timeout
+
+  do{
+    if(c == '-')
+      isNegative = true;
+    else if(c >= '0' && c <= '9')        // is c a digit?
+      value = value * 10 + c - '0';
+    read();  // consume the character we got with peek
+    c = peek();
+  }
+  while( (c >= '0' && c <= '9'));
+
+  if(isNegative)
+    value = -value;
+  return value;
+}
+
+
+// as parseInt but returns a floating point value
+float DeviceConnection::parseFloat(){
+  bool isNegative = false;
+  bool isFraction = false;
+  long value = 0;
+  char c;
+  float fraction = 1.0;
+
+  c = peekNextDigit();
+    // ignore non numeric leading characters
+  if(c < 0)
+    return 0; // zero returned if timeout
+
+  do{
+    if(c == '-')
+      isNegative = true;
+    else if (c == '.')
+      isFraction = true;
+    else if(c >= '0' && c <= '9')  {      // is c a digit?
+      value = value * 10 + c - '0';
+      if(isFraction)
+         fraction *= 0.1;
+    }
+    read();  // consume the character we got with peek
+    c = peek();
+  }
+  while( (c >= '0' && c <= '9')  || c == '.');
+
+  if(isNegative)
+    value = -value;
+  if(isFraction)
+    return value * fraction;
+  else
+    return value;
+}
+
+
+// returns peek of the next digit in the stream or -1 if timeout
+// discards non-numeric characters
+int DeviceConnection::peekNextDigit()
+{
+  int c;
+  while (1) {
+    c = peek();
+    if (c < 0) return c;  // timeout
+    if (c == '-') return c;
+    if (c >= '0' && c <= '9') return c;
+    read();  // discard non-numeric
+  }
+}
+
+
+int DeviceConnection::nextEndOffSet(){
+	int endOffset = _readOffset;
+	for(int end = _readOffset;end < _endOffset;end++){
+		if (isListEnd(_buffer[end]) && end != _readOffset) break;
+		endOffset++;
+	}
+
+	return endOffset;
+}
+
+bool DeviceConnection::isListEnd(char c){
+	return  c==']' || c==')' || c=='}' || c==Command::SEPARATOR;
+}
+

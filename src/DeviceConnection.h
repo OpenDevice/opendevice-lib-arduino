@@ -17,7 +17,6 @@
 #include <Arduino.h>
 #include "config.h"
 #include "Command.h"
-#include "CommandBuffer.h"
 
 extern "C"
 {
@@ -47,6 +46,12 @@ private:
 
 	bool processing;
 	char _buffer[DATA_BUFFER];
+
+    const uint16_t _len = DATA_BUFFER;
+    bool _buffer_overflow;
+    uint16_t _endOffset;
+	volatile uint8_t _readOffset;
+
 	uint16_t readTimeout; // time in ms to the wait for end command
 
 	CommandListener defaultListener;  			// default listener
@@ -61,9 +66,20 @@ private:
 
 	int getArrayLength();
 
+	long parseInt(); // returns the first valid (long) integer value from the current position.
+	float parseFloat();               // float version of parseInt
+	int peekNextDigit(); // returns the next numeric digit in the stream or -1 if timeout
+	const uint16_t current_length() const { return _endOffset; }
+	bool overflow() { return _buffer_overflow; }
+    size_t store(uint8_t byte);
+    int peek();
+    int read();
+    int available();
+    int nextEndOffSet();
+    bool isListEnd(char c);
+
 public: 
 	Stream  *conn;
-	CommandBuffer buffer;
 	Command cmd;
 
 	// public methods
@@ -79,18 +95,18 @@ public:
 //	void removeListener(uint8_t);
 	void getBuffer(uint8_t[]);
 	
-	inline String readString(){ return buffer.readString(); }
-	inline int readInt(){ return buffer.parseInt(); }
-	inline long readLong(){ return buffer.parseInt(); }
-	inline float readFloat(){ return buffer.parseFloat(); }
+	String readString();
+	inline int readInt(){ return parseInt(); }
+	inline long readLong(){ return parseInt(); }
+	inline float readFloat(){ return parseFloat(); }
 
 	/**
 	 * Can read single value list like: [1,2,3,4]
 	 * If you need to read two different arrays like: [1,2,3];[5,2,3,4] call the method 'readIntValues' twice
 	 */
-	inline int readIntValues(int values[], int max){ return buffer.readIntValues(values, max); }
-	inline int readLongValues(long values[], int max){ return buffer.readLongValues(values, max); }
-	inline int readFloatValues(float values[], int max){ return buffer.readFloatValues(values, max); }
+	int readIntValues(int values[], int max);
+	int readLongValues(long values[], int max);
+	int readFloatValues(float values[], int max);
 	
 
 	#if defined(ARDUINO) && ARDUINO >= 100
@@ -115,7 +131,6 @@ public:
     void send(unsigned long);
     void send(long, int);
     void send(double);
-    void sendln(void);
     void send(Command, bool complete = true);
 
     template < class T > void sendCmdArg (T arg){
