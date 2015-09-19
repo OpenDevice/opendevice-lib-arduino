@@ -6,7 +6,7 @@ Please note that the library also requires some other libraries to function prop
 
 For now, the implementations were ported to Arduino and Energia. 
 
-link:https://opendevice.atlassian.net/wiki/display/DOC/Documentation#Documentation-SupportedDevices[Check the list of devices tested]
+link:https://github.com/OpenDevice/OpenDevice/wiki/Supported-Devices[Check the list of devices tested]
 
 === Dependencies
 The dependencies are not mandatory, only if you want to use other features as (IR or the ENC28J60 module, etc ..)
