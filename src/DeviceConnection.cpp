@@ -177,6 +177,9 @@ void DeviceConnection::parseCommand(uint8_t type){
 	if(Command::isDeviceCommand(type)){
 		cmd.deviceID = readInt();
 		cmd.value = readLong();
+	}else{
+		cmd.deviceID = 0;
+		cmd.value = 0;
 	}
 
 	#if DEBUG_CON || DEBUG_ON_PC
