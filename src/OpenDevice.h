@@ -164,6 +164,15 @@ public:
 	void begin(TinyDebugSerial &serial, unsigned long baud);
 #endif
 
+#if defined(USBserial_h_) // Teensyduino
+void begin(usb_serial_class &serial, unsigned long baud){
+	serial.begin(baud);
+
+	DeviceConnection *conn =  new DeviceConnection(serial);
+	begin(*conn);
+}
+#endif
+
 
 // TODO: Make compatible with Due
 //	#ifdef _SAM3XA_

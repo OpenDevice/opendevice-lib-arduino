@@ -103,6 +103,15 @@ void OpenDeviceClass::begin(TinyDebugSerial &serial, unsigned long baud){
 }
 #endif
 
+#if defined(DEFAULT_TO_TINY_DEBUG_SERIAL)
+void OpenDeviceClass::begin(TinyDebugSerial &serial, unsigned long baud){
+
+//	serial.begin(baud);
+//	DeviceConnection *conn =  new DeviceConnection(serial);
+//	begin(*conn);
+}
+#endif
+
 
 void OpenDeviceClass::begin(Stream &serial){
 	DeviceConnection *conn =  new DeviceConnection(serial);
