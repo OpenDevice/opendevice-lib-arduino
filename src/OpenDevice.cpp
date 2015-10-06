@@ -173,8 +173,9 @@ void OpenDeviceClass::_loop() {
 
 }
 
-void OpenDeviceClass::enableKeepAlive(){
-	keepAliveEnabled = true;
+void OpenDeviceClass::enableKeepAlive(bool val){
+	keepAliveEnabled = val;
+	if(val == false) connected = true;
 }
 
 void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
@@ -187,7 +188,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 	ODev.lastCMD = cmd;
 	DeviceConnection *conn = ODev.deviceConnection;
 
-	// FIXME REMOVE THIS
+	// FIXME ------------------REMOVE THIS---------------------
 	if(!ODev.connected){
 		pinMode(13, OUTPUT);
 		digitalWrite(13, HIGH);
@@ -317,7 +318,7 @@ void OpenDeviceClass::clear(Command cmd){
 
 /** Send reply stating that the command was received successfully */
 void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
-  // Serial.println("DB:notifyReceived");
+  Serial.println("DB:notifyReceived");
   lastCMD.type = CommandType::DEVICE_COMMAND_RESPONSE;
   lastCMD.value = status;
   // FIXME: lastCMD.data =  NULL;

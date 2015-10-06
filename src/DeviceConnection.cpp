@@ -328,6 +328,8 @@ void DeviceConnection::send(Command cmd, bool complete){
 
 	long values[] = {cmd.type, cmd.id, cmd.deviceID, cmd.value};
 
+	conn->flush();
+
 	conn->write(START_BIT);
 	char vbuffer[3];
 	for (int i = 0; i < 4; ++i) {
@@ -344,6 +346,7 @@ void DeviceConnection::send(Command cmd, bool complete){
 
 void DeviceConnection::flush() {
   memset(_buffer, 0, _len);
+  conn->flush();
   _endOffset = 0;
   _readOffset = 0;
   _buffer_overflow = false;

@@ -14,7 +14,11 @@
 #ifndef OPENDEVICE_CONFIG_H_
 #define OPENDEVICE_CONFIG_H_
 
+#include <Arduino.h>
+
+#if defined(__COMPILING_AVR_LIBC__)
 #include <avr/eeprom.h>
+#endif
 
 #ifndef __cplusplus
 #error A C++ compiler is required!
@@ -22,11 +26,20 @@
 
 // #include <EEPROM.h>
 
-#define ENABLE_SERIAL 0
 #define DEBUG_CON	0 // set 1 to enable (receiving debug)
+#define ENABLE_SERIAL 1
 
 #define API_VERSION   1 // software version of this library
 #define OPENDEVICE_LIBRARY_VERSION 050
+
+
+#define DEFAULT_BAUD 9600
+#define DEFAULT_SERVER_PORT 8182
+#define DEFAULT_BAUD 9600
+#define KEEP_ALIVE_INTERVAL 5000
+#define KEEP_ALIVE_MAX_MISSING 3
+#define ENABLE_DHCP 1  /* if you need save flash memory disable this
+                          Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
 
 
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
@@ -36,11 +49,6 @@
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 5
 #define READING_INTERVAL 100 // sensor reading interval (ms)
-#define KEEP_ALIVE_INTERVAL 1500
-#define DEFAULT_BAUD 9600
-#define ENABLE_DHCP 1  /* if you need save flash memory disable this
-                          Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
-
 #else
 #define DATA_BUFFER  160
 #define MAX_LISTENERS 10
@@ -48,13 +56,6 @@
 #define MAX_COMMAND 10 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
-#define KEEP_ALIVE_INTERVAL 5000
-#define KEEP_ALIVE_MAX_MISSING 3
-#define DEFAULT_BAUD 9600
-#define ENABLE_DHCP 1  /* if you need save flash memory disable this
-                          Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
-
-
 #endif
 
 
@@ -77,12 +78,16 @@ namespace od {
 		int devicesEnd = 0;
 
 		void load(){
+			#if defined(__COMPILING_AVR_LIBC__)
 			eeprom_read_block((void*)this, (void*)0, sizeof(this));
+			#endif
 		}
 
 		void save(){
+			#if defined(__COMPILING_AVR_LIBC__)
 			saved = true;
 			eeprom_write_block((void*)this, (void*)0, sizeof(this));
+			#endif
 		}
 
 	} ConfigClass;
@@ -90,11 +95,15 @@ namespace od {
 	extern ConfigClass Config;
 
 	static void loadConfig(){
+		#if defined(__COMPILING_AVR_LIBC__)
 		eeprom_read_block((void*)&Config, (void*)0, sizeof(Config));
+		#endif
 	}
 	static void saveConfig(){
 		Config.saved = true;
+		#if defined(__COMPILING_AVR_LIBC__)
 		eeprom_write_block((void*)&Config, (void*)0, sizeof(Config));
+		#endif
 	}
 }
 

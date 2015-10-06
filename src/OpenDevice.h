@@ -23,9 +23,20 @@
 
 using namespace od;
 
+// ===========================================================
+// Automatic Detection of Connections
+// ===========================================================
+
 #if defined(ethernet_h) || defined (UIPETHERNET_H)
-	#include <EthernetServerConnection.h>
+	#include "EthernetServerConnection.h"
 #endif
+
+// ESP8266 AT Command library
+// Source: https://github.com/itead/ITEADLIB_Arduino_WeeESP8266
+#if defined(__ESP8266_H__)
+	#include "ESP8266ServerConnection.h"
+#endif
+
 
 
 /*
@@ -190,7 +201,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	/** When enabled OpenDevice will be sending a PING message to connection to inform you that everything is OK. <br/>
 	 * Control of the Keep Alive / Ping can be left to the other side of the connection, in this case the "device" would be disabled */
-	void enableKeepAlive();
+	void enableKeepAlive(bool val =  false);
 
 	void enableDebug(uint8_t debugTarget = 0);
 
