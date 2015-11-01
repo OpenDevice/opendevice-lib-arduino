@@ -83,6 +83,11 @@ void custom_connection_begin(){
 		Serial.print("set tcp server timout err\r\n");
 	}
 
+	Serial.print("IP:");
+	Serial.println(WiFi.ESP->getLocalIP());
+	Serial.print("PStatus:");
+	Serial.println(WiFi.ESP->getIPStatus());
+
 	// ODev.debug("ESP8266 Begin [ok]");
 }
 
@@ -93,13 +98,14 @@ CUSTOM_CONNECTION_CLASS custom_connection_loop(DeviceConnection *conn){
 	uint32_t len = WiFi.ESP->recv(&mux_id, buffer, sizeof(buffer), 100);
 	if (len > 0) {
 		client.setData(buffer, len);
-		Serial.print("Received from :");
-		Serial.print(mux_id);
-		Serial.print("[");
+		client.id = mux_id;
+		Serial.print("Received from [");
+		Serial.print(mux_id, DEC);
+		Serial.print("] -> ");
 		for(uint32_t i = 0; i < len; i++) {
 			Serial.print((char)buffer[i]);
 		}
-		Serial.print("]\r\n");
+		Serial.print("\r\n");
 	}
 
 	return client;

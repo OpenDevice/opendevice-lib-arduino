@@ -17,13 +17,15 @@
 
 class ESP8266Client : public Stream {
 public:
+	uint8_t id;
+
 	ESP8266Client();
 	~ESP8266Client() {}
 
     inline int available(){ return buffer.available(); };
     inline int read(){ return buffer.read(); };
     inline int peek(){ return buffer.peek(); };
-    inline void flush(){ buffer.flush(); Serial.println("FLUSH....");};
+    inline void flush(){ buffer.flush(); Serial.println("FLUSH(ESP8266Client.h)");};
     virtual size_t write(uint8_t);
 
     void setData(uint8_t *buffer, const uint16_t len);
@@ -31,6 +33,7 @@ public:
 private:
     uint8_t _buffer[DATA_BUFFER];
 	StreamBuffer buffer;
+
 };
 
 #endif /* ESP8266CLIENT_H_ */

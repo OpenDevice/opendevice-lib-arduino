@@ -1,3 +1,7 @@
+#include "../dependencies.h"
+
+#ifdef __ESP8266_H__
+
 #include "ESP8266WifiConfig.h"
 
 ESP8266WiFiClass::ESP8266WiFiClass(){
@@ -52,3 +56,5 @@ int ESP8266WiFiClass::disconnect(bool wifioff){
 }
 
 ESP8266WiFiClass WiFi;
+
+#endif

@@ -1,9 +1,6 @@
-/*
- * ESP8266Client.cpp
- *
- *  Created on: 05/10/2015
- *      Author: ricardo
- */
+#include "../dependencies.h"
+
+#ifdef __ESP8266_H__
 
 #include <ESP8266Client.h>
 
@@ -22,10 +19,15 @@ void ESP8266Client::setData(uint8_t *data, const uint16_t len){
 size_t ESP8266Client::write(uint8_t v){
 	size_t ret = buffer.write(v);
 	if(v == Command::ACK_BIT){
-		WiFi.ESP->send(0, _buffer, buffer.current_length());
-		buffer.flush();
+		// buffer.write(Command::ACK_BIT);
 		Serial.print("##write:");
-		Serial.println(String((char*)_buffer));
+		Serial.println(String((char*) buffer._buffer));
+		WiFi.ESP->send(id, buffer._buffer, buffer.current_length());
+//		String var = ("/1/1/1/1");
+//		var += '\r';
+//		WiFi.ESP->send(id, (uint8_t*) var.c_str(), 10);
 	}
 	return ret;
 }
+
+#endif

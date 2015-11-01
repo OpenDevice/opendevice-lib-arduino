@@ -1,4 +1,4 @@
-//#ifdef __ESP8266_H__
+
 #ifndef ESP8266WifiConfig_h
 #define ESP8266WifiConfig_h
 
@@ -53,4 +53,3 @@ public:
 extern ESP8266WiFiClass WiFi;
 
 #endif
-//#endif
