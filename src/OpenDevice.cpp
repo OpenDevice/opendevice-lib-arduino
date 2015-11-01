@@ -224,13 +224,15 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 			}
 		}
 
-		// Send response Ex: GET_DEVICES_RESPONSE;ID;[ID,PIN,VALUE,...];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
+		// Send response Ex: GET_DEVICES_RESPONSE;ID;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
 	} else if (cmd.type == CommandType::GET_DEVICES) {
 
 		conn->doStart();
 		conn->print(CommandType::GET_DEVICES_RESPONSE);
 		conn->doToken();
 		conn->print(cmd.id);
+		conn->doToken();
+		conn->print(ODev.deviceLength);
 		conn->doToken();
 
 		char buffer[50] = {0};// FIXME: daria para usar o mesmo buffer do deviceConnection ??
@@ -332,19 +334,17 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 
 		if(debugTarget == 1){
 			deviceConnection->doStart();
-			//deviceConnection->print("DB:CHANGE:");
+			deviceConnection->print("DB:CHANGE:");
 			deviceConnection->print(id);
 			deviceConnection->print("=");
 			deviceConnection->print(value);
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
-			//Serial.print("DB:CHANGE:");
+			Serial.print("DB:CHANGE:");
 			Serial.print(id);
 			Serial.print("=");
 			Serial.println(value);
-			deviceConnection->doEnd(); // FIXME: isso nao era pra estar aqui
-                                       // o problema é que quando é USB a connexão princial..
 			#endif
 		}
 	}
