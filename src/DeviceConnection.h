@@ -86,6 +86,7 @@ public:
 	DeviceConnection();
 	DeviceConnection(Stream &serial);
 	
+	virtual void begin(void);
 	void flush(void);
 	virtual bool checkDataAvalible(void);
 

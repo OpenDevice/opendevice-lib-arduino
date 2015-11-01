@@ -10,14 +10,16 @@
 
 #include <Arduino.h>
 #include <Stream.h>
+#include <ESP8266.h>
+
 #include "config.h"
 #include "Command.h"
-#include "ESP8266WifiConfig.h"
 #include "utility/StreamBuffer.h"
 
 class ESP8266Client : public Stream {
 public:
 	uint8_t id;
+	ESP8266 *ESP;
 
 	ESP8266Client();
 	~ESP8266Client() {}
@@ -25,7 +27,7 @@ public:
     inline int available(){ return buffer.available(); };
     inline int read(){ return buffer.read(); };
     inline int peek(){ return buffer.peek(); };
-    inline void flush(){ buffer.flush(); Serial.println("FLUSH(ESP8266Client.h)");};
+    inline void flush(){ buffer.flush(); };
     virtual size_t write(uint8_t);
 
     void setData(uint8_t *buffer, const uint16_t len);
@@ -33,7 +35,6 @@ public:
 private:
     uint8_t _buffer[DATA_BUFFER];
 	StreamBuffer buffer;
-
 };
 
 #endif /* ESP8266CLIENT_H_ */

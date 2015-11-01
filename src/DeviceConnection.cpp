@@ -34,6 +34,10 @@ DeviceConnection::DeviceConnection(Stream &stream){
 }
 
 
+void DeviceConnection::begin(){
+	// nothing
+}
+
 void DeviceConnection::init(){
 
 	readTimeout = 1; // ms
@@ -77,6 +81,9 @@ void DeviceConnection::setDefaultListener(CommandListener listener ){
 //}
 
 bool DeviceConnection::checkDataAvalible(){
+
+	if(!conn) return false;
+
 	uint8_t lastByte;
 	bool timeout = false;
 	// non-blocking reading

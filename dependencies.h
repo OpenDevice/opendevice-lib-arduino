@@ -18,8 +18,7 @@
 // Configure dependencies used in your project (Please comment unused dependencies)
 // *******************************************************************************************
 
-#include <MFRC522.h>
-
-
+// #include <MFRC522.h>
+#include <ESP8266.h>
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_DEPENDENCIES_H_ */
