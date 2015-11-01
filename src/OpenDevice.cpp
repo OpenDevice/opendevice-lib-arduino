@@ -381,18 +381,22 @@ bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type){
 bool OpenDeviceClass::addDevice(Device& device){
 	if (deviceLength < MAX_DEVICE) {
 
-		if (device.sensor) {
-			if (device.type == Device::DIGITAL) {
-				#if defined(INPUT_PULLUP)
-				  pinMode (device.pin, INPUT_PULLUP);
-				#else //TODO: not tested !
-				  pinMode (device.pin, INPUT);
-				  digitalWrite (device.pin, HIGH);
-				#endif
+		if(device.pin > 0){
+			if (device.sensor) {
+				if (device.type == Device::DIGITAL) {
+					#if defined(INPUT_PULLUP)
+					  pinMode (device.pin, INPUT_PULLUP);
+					#else //TODO: not tested !
+					  pinMode (device.pin, INPUT);
+					  digitalWrite (device.pin, HIGH);
+					#endif
+				}
+			} else {
+				pinMode(device.pin, OUTPUT);
 			}
-		} else {
-			pinMode(device.pin, OUTPUT);
 		}
+
+		if (device.id <= 0) device.id =(deviceLength + 1);
 
 		devices[deviceLength] = &device;
 		deviceLength = deviceLength + 1;

@@ -20,6 +20,7 @@
 #include "Command.h"
 #include "DeviceConnection.h"
 #include "Device.h"
+#include "FuncSensor.h"
 
 using namespace od;
 
@@ -38,6 +39,9 @@ using namespace od;
 #endif
 
 
+#if defined(MFRC522_h)
+	#include <devices/RFIDSensor.h>
+#endif
 
 /*
  * OpenDeviceClass.h
@@ -221,7 +225,11 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	bool addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
 	bool addSensor(uint8_t pin, Device::DeviceType type);
-	bool addSensor(Device& device);
+	bool addSensor(Device& sensor);
+	bool addSensor(unsigned long (*function)()){
+		FuncSensor* func = new FuncSensor(function);
+		return addDevice(*func);
+	}
 
 	bool addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
 	bool addDevice(uint8_t pin, Device::DeviceType type);
