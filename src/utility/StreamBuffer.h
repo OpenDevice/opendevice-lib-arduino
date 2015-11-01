@@ -11,7 +11,6 @@ protected:
 	int timedRead() { return read(); }
 	int timedPeek() { return peek(); }
 private:
-   uint8_t * _buffer;
    const uint16_t _len;
    bool _buffer_overflow;
    uint16_t _endOffset;
@@ -22,6 +21,8 @@ private:
    bool isListEnd(char c);
 
 public:
+   uint8_t * _buffer;
+
   // public methods
   StreamBuffer(uint8_t *buffer, const uint16_t len, bool clean = true);
   ~StreamBuffer() {}
