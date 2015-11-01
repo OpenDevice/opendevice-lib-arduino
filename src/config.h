@@ -76,6 +76,9 @@ namespace od {
 		uint8_t devicesLength = 0;
 		int devicesStart = 0;
 		int devicesEnd = 0;
+		bool debugMode = false;
+		uint8_t debugTarget = DEBUG_SERIAL;
+
 
 		void load(){
 			#if defined(__COMPILING_AVR_LIBC__)

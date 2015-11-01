@@ -24,12 +24,10 @@
 OpenDeviceClass::OpenDeviceClass() {
 	deviceConnection = NULL;
 	autoControl = false;
-	debugMode = false;
 	keepAliveEnabled = true;
 	connected = false;
 	keepAliveTime = 0;
 	keepAliveMiss = 0;
-	debugTarget = 0; // 0 - Default Serial, 1 - Target Connection
 	time = 0;
 	deviceLength = 0;
 	commandsLength = 0;
@@ -121,6 +119,7 @@ void OpenDeviceClass::begin(Stream &serial){
 void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
+	deviceConnection->begin();
 
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
@@ -138,7 +137,7 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 void OpenDeviceClass::_loop() {
 
-	if(deviceConnection && deviceConnection->conn){
+	if(deviceConnection){
 		deviceConnection->checkDataAvalible();
 	}
 
@@ -179,8 +178,8 @@ void OpenDeviceClass::enableKeepAlive(bool val){
 }
 
 void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
-	debugMode = true;
-	debugTarget = _debugTarget;
+	Config.debugMode = true;
+	Config.debugTarget = _debugTarget;
 }
 
 /** Called when a command is received by the connection */
@@ -330,9 +329,9 @@ void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
 
 void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 
-	if(debugMode){
+	if(Config.debugMode){
 
-		if(debugTarget == 1){
+		if(Config.debugTarget == 1){
 			deviceConnection->doStart();
 			deviceConnection->print("DB:CHANGE:");
 			deviceConnection->print(id);
@@ -342,9 +341,9 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 		}else{
 			#if(ENABLE_SERIAL)
 			Serial.print("DB:CHANGE:");
-			Serial.print(id);
+			Serial.print(id, DEC);
 			Serial.print("=");
-			Serial.println(value);
+			Serial.println(value, DEC);
 			#endif
 		}
 	}
@@ -575,8 +574,8 @@ void OpenDeviceClass::showFreeRam() {
 
 
 void OpenDeviceClass::debug(const char str[]){
-	if(debugMode){ // FIXME: a logica não está muito legal não... !
-		if(debugTarget == 1){
+	if(Config.debugMode){ // FIXME: a logica não está muito legal não... !
+		if(Config.debugTarget == 1){
 			deviceConnection->doStart();
 			deviceConnection->print("DB:");
 			deviceConnection->print(str);
@@ -594,8 +593,8 @@ void OpenDeviceClass::debug(const char str[]){
 
 #ifdef ARDUINO
 void OpenDeviceClass::debug(const String &str){
-	if(debugMode){ // FIXME: a logica não está muito legal não... !
-		if(debugTarget == 1){
+	if(Config.debugMode){ // FIXME: a logica não está muito legal não... !
+		if(Config.debugTarget == 1){
 			deviceConnection->doStart();
 			deviceConnection->print("DB:");
 			deviceConnection->print(str);

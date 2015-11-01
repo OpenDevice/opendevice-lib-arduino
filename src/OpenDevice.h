@@ -89,8 +89,6 @@ public:
 
 
 	Command lastCMD; // Command received / send.
-	bool debugMode;
-	uint8_t debugTarget;
 
 	uint8_t deviceLength;
 	uint8_t commandsLength;
