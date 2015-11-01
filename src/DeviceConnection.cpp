@@ -229,6 +229,7 @@ void DeviceConnection::write(uint8_t b){
 
 
 void DeviceConnection::doStart(){
+	flush();
 	write(START_BIT);
 }
 
@@ -238,6 +239,7 @@ void DeviceConnection::doToken(){
 
 void DeviceConnection::doEnd(){
 	write(ACK_BIT);
+	flush();
 }
 
 
@@ -328,7 +330,7 @@ void DeviceConnection::send(Command cmd, bool complete){
 
 	unsigned long values[] = {cmd.type, cmd.id, cmd.deviceID, cmd.value};
 
-	conn->flush();
+	flush();
 
 	conn->write(START_BIT);
 	char vbuffer[3];
