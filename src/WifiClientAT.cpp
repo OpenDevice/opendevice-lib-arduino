@@ -1,8 +1,8 @@
 #include "../dependencies.h"
 
-#ifdef __ESP8266_H__
+#ifdef __ESP8266AT_H__
 
-#include <ESP8266Client.h>
+#include <WifiClientAT.h>
 
 ESP8266Client::ESP8266Client(): buffer(_buffer , DATA_BUFFER) {
 
@@ -19,7 +19,7 @@ size_t ESP8266Client::write(uint8_t v){
 	size_t ret = buffer.write(v);
 	if(v == Command::ACK_BIT){
 		#if DEBUG_CON
-		Logger.debug("ESP8266Client::write", String((char*) buffer._buffer));
+		Logger.debug("ESP8266Client::write", (const char*) buffer._buffer);
 		#endif
 		ESP->send(id, buffer._buffer, buffer.current_length());
 	}

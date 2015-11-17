@@ -18,7 +18,8 @@
 // Configure dependencies used in your project (Please comment unused dependencies)
 // *******************************************************************************************
 
-// #include <MFRC522.h>
-#include <ESP8266.h>
+// #include <MFRC522.h> // RFID
+ #include <ESP8266AT.h> // ESP8266 - AT Firmwware
+//#include <ESP8266WiFi.h>  // ESP8266 - Standalone
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_DEPENDENCIES_H_ */

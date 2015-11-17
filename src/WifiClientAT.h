@@ -10,11 +10,14 @@
 
 #include <Arduino.h>
 #include <Stream.h>
-#include <ESP8266.h>
+#include <ESP8266AT.h>
 
 #include "config.h"
 #include "Command.h"
+#include "utility/Logger.h"
 #include "utility/StreamBuffer.h"
+
+using namespace od;
 
 class ESP8266Client : public Stream {
 public:
