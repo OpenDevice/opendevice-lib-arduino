@@ -14,7 +14,7 @@ namespace od {
 
 typedef struct{
 
-		void debug(const char title[], const char str[], bool newLine = true){
+		void debug(const char title[], const char str[] = "", bool newLine = true){
 			if(Config.debugMode){
 				if(Config.debugTarget == 1){
 //					deviceConnection->doStart();
@@ -25,9 +25,13 @@ typedef struct{
 					#if(ENABLE_SERIAL)
 					Serial.print("DB:");
 					Serial.print(title);
-					Serial.print(" :: ");
-					if(newLine) Serial.println(str);
-					else Serial.print(str);
+					if(str && strlen(str) > 0){
+						Serial.print(" :: ");
+						if(newLine) Serial.println(str);
+						else Serial.print(str);
+					}else{
+						Serial.println();
+					}
 					#endif
 				}
 			}
