@@ -1,9 +1,16 @@
 /*
- * ESP8266Client.h
+ * ******************************************************************************
+ *  Copyright (c) 2013-2014 CriativaSoft (www.criativasoft.com.br)
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
  *
- *  Created on: 05/10/2015
- *      Author: ricardo
+ *  Contributors:
+ *  Ricardo JL Rufino - Initial API and Implementation
+ * *****************************************************************************
  */
+
 
 #ifndef ESP8266CLIENT_H_
 #define ESP8266CLIENT_H_
@@ -19,6 +26,12 @@
 
 using namespace od;
 
+/*
+ * ESP8266Client
+ *
+ *  Created on: 05/10/2015
+ *  Author: Ricardo JL Rufino
+ */
 class ESP8266Client : public Stream {
 public:
 	uint8_t id;
