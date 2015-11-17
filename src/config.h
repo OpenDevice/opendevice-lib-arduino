@@ -26,7 +26,7 @@
 
 // #include <EEPROM.h>
 
-#define DEBUG_CON	0 // set 1 to enable (receiving debug)
+#define DEBUG_CON	  0 // set 1 to enable (receiving debug)
 #define ENABLE_SERIAL 1
 
 #define API_VERSION   1 // software version of this library
@@ -35,12 +35,17 @@
 
 #define DEFAULT_BAUD 9600
 #define DEFAULT_SERVER_PORT 8182
-#define DEFAULT_BAUD 9600
+#define DISCOVERY_PORT 6142
 #define KEEP_ALIVE_INTERVAL 5000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
                           Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
 
+#define ENABLE_REMOTE_WIFI_SETUP 1   // disable to reduce flash usage
+
+#if defined(ESP8266)
+	#define DEFAULT_BAUD 115200
+#endif
 
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
@@ -65,20 +70,26 @@ enum DebugTarget{
 	DEBUG_CURRENT
 };
 
+enum ConnectionMode{
+	CONNECTION_MODE_CLIENT,
+	CONNECTION_MODE_SERVER
+};
+
 namespace od {
 
 	const char server[] = "api.opendevice.io";
 
 	typedef struct{
 		bool saved =  false;
-		uint8_t id[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+		const char * moduleName = "OpenDevice";
+		uint8_t id[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; // MAC
 		uint8_t ip[4] = { 0, 0, 0, 0 };
 		uint8_t devicesLength = 0;
 		int devicesStart = 0;
 		int devicesEnd = 0;
 		bool debugMode = false;
 		uint8_t debugTarget = DEBUG_SERIAL;
-
+		ConnectionMode connectionMode = CONNECTION_MODE_SERVER;
 
 		void load(){
 			#if defined(__COMPILING_AVR_LIBC__)
