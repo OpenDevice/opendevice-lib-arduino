@@ -122,6 +122,8 @@ bool DeviceConnection::checkDataAvalible(){
 				parseCommand(type);
 				flush();
 
+				return true;
+
 			}else if(processing){
 
 				uint8_t w = store(lastByte);
@@ -148,7 +150,7 @@ bool DeviceConnection::checkDataAvalible(){
 		}
 	} while(processing && !timeout);
 
-	return timeout;
+	return !timeout;
 }
 
 
@@ -184,6 +186,8 @@ void DeviceConnection::parseCommand(uint8_t type){
 	if(Command::isDeviceCommand(type)){
 		cmd.deviceID = readInt();
 		cmd.value = readLong();
+	}else if(Command::isSimpleCommand(type)){
+		cmd.value = readLong();
 	}else{
 		cmd.deviceID = 0;
 		cmd.value = 0;
@@ -198,6 +202,10 @@ void DeviceConnection::parseCommand(uint8_t type){
 		Serial.write(ACK_BIT);
 	#endif
 
+	onMessageReceived(cmd);
+}
+
+void DeviceConnection::onMessageReceived(Command cmd) {
 	notifyListeners(cmd);
 }
 
@@ -207,18 +215,6 @@ void DeviceConnection::getBuffer(uint8_t buf[]){
 		buf[a] = _buffer[a];
 	}
 }
-
-
-//int DeviceConnection::getArrayLength()
-//{
-//	if (bufferCount == 1) return 0; // only a flag and ACK_BIT was sent, not data attached
-//	numberOfValues = 1;
-//	// find the amount of values we got
-//	for (int a=1; a<bufferCount;a++){
-//		if (_buffer[a]==SEPARATOR) numberOfValues++;
-//	}
-//	return numberOfValues;
-//}
 
 
 #if defined(ARDUINO) && ARDUINO >= 100
@@ -240,11 +236,11 @@ void DeviceConnection::doStart(){
 	write(START_BIT);
 }
 
-void DeviceConnection::doToken(){
+void DeviceConnection::doToken(){ // FIXME: change name to putToken();
 	write(SEPARATOR);
 }
 
-void DeviceConnection::doEnd(){
+void DeviceConnection::doEnd(){ // FIXME: change name to putEnd();
 	write(ACK_BIT);
 	flush();
 }

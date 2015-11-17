@@ -36,6 +36,7 @@ class DeviceConnection{
 
 protected:
 	virtual void init();
+	virtual void onMessageReceived(Command);
 private:
 	
 	// Alias
