@@ -33,11 +33,16 @@ using namespace od;
 #endif
 
 // ESP8266 AT Command library
-// Source: https://github.com/itead/ITEADLIB_Arduino_WeeESP8266
-#if defined(__ESP8266_H__)
-	#include "ESP8266ServerConnection.h"
+#if defined(__ESP8266AT_H__)
+	#include <WifiConnetionEspAT.h>
 #endif
 
+// ESP8266 Standalone
+#if defined(ESP8266)
+	#include "stdlib_noniso.h"
+	#include <ESP8266WiFi.h>
+	#include <WifiConnection.h>
+#endif
 
 #if defined(MFRC522_h)
 	#include <devices/RFIDSensor.h>
@@ -58,7 +63,6 @@ private:
 				void (*function)();
 	} CommandCallback;
 
-	const char * moduleName;
 	Device* devices[MAX_DEVICE];
 	CommandCallback commands[MAX_COMMAND];
 
@@ -131,7 +135,8 @@ public:
 	 */
 	void id(uint8_t *pid) { memcpy(Config.id, pid, sizeof(Config.id)); }
 
-	void name(const char *pname) { moduleName = pname; }
+	void name(const char *pname) { Config.moduleName = pname; }
+	const char* name() { return Config.moduleName; }
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
 
 
@@ -186,6 +191,14 @@ void begin(usb_serial_class &serial, unsigned long baud){
 }
 #endif
 
+#if defined(ESP8266)
+void begin(ESP8266WiFiClass &wifi){
+
+	WifiConnection *conn =  new WifiConnection();
+	begin(*conn);
+}
+#endif
+
 
 // TODO: Make compatible with Due
 //	#ifdef _SAM3XA_
@@ -205,7 +218,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 * Control of the Keep Alive / Ping can be left to the other side of the connection, in this case the "device" would be disabled */
 	void enableKeepAlive(bool val =  false);
 
-	void enableDebug(uint8_t debugTarget = 0);
+	void enableDebug(uint8_t debugTarget = DEBUG_SERIAL);
 
 	void send(Command cmd);
 

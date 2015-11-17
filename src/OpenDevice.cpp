@@ -180,6 +180,7 @@ void OpenDeviceClass::enableKeepAlive(bool val){
 void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
 	Config.debugMode = true;
 	Config.debugTarget = _debugTarget;
+	if(_debugTarget == DEBUG_SERIAL) Serial.begin(DEFAULT_BAUD);
 }
 
 /** Called when a command is received by the connection */
@@ -251,6 +252,10 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 
 		conn->doEnd();
 
+	}else{
+
+		// TODO: Send response: UNKNOW_COMMAND
+
 	}
 
 }
@@ -309,8 +314,8 @@ Command OpenDeviceClass::cmd(uint8_t type, uint8_t deviceID, unsigned long value
 }
 
 void OpenDeviceClass::clear(Command cmd){
-	lastCMD.id = 0;
 	lastCMD.type = 0;
+	lastCMD.id = 0;
 	lastCMD.deviceID = 0;
 	lastCMD.value = 0;
 	lastCMD.length = 0;
@@ -319,7 +324,6 @@ void OpenDeviceClass::clear(Command cmd){
 
 /** Send reply stating that the command was received successfully */
 void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
-  Serial.println("DB:notifyReceived");
   lastCMD.type = CommandType::DEVICE_COMMAND_RESPONSE;
   lastCMD.value = status;
   // FIXME: lastCMD.data =  NULL;
@@ -541,7 +545,7 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 
 	//Serial.print("MAC.SAVED:");
 	for (int i = 0; i < 6; ++i) {
-		Serial.print(Config.id[i]);
+		Serial.print(Config.id[i], DEC);
 		Serial.print(".");
 	}
 	Serial.println();
@@ -556,20 +560,30 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 
 void OpenDeviceClass::showFreeRam() {
 
-  extern int __heap_start, *__brkval;
-  int v;
+	#if(ARDUINO && !defined(ESP8266))
+	  extern int __heap_start, *__brkval;
 
-  
-  #if defined (E2END)
-  //Serial.print(F("DB:EPROM:"));
-  Serial.print(E2END);
-  Serial.print("-");
+	  int v;
+
+
+	  #if defined (E2END)
+	  //Serial.print(F("DB:EPROM:"));
+	  Serial.print(E2END);
+	  Serial.print("-");
+	  #endif
+
+
+	  //Serial.print(F("DB:RAM:"));
+	  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval), DEC);
   #endif
 
-  #if(ARDUINO)
-  //Serial.print(F("DB:RAM:"));
-  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+  #if defined(ESP8266)
+	  Serial.print(F("DB:RAM:"));
+	  Serial.println(ESP.getFreeHeap());
+	  Serial.print(F("DB:EPROM:"));
+	  Serial.println(ESP.getFlashChipSize());
   #endif
+
 }
 
 

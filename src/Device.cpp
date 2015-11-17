@@ -15,7 +15,7 @@
  * Device.cpp
  *
  *  Created on: 05/02/2013
- *      Author: Ricardo JL Rufino
+ *  Author: Ricardo JL Rufino
  */
 
 #include "Device.h"
