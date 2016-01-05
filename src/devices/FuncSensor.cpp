@@ -11,7 +11,7 @@
  * *****************************************************************************
  */
 
-#include <FuncSensor.h>
+#include "FuncSensor.h"
 
 FuncSensor::FuncSensor(CommandFunction func) : Device(0, 0, Device::ANALOG, true) , fgetValue(func) {
 

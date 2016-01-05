@@ -19,7 +19,7 @@
 // *******************************************************************************************
 
 // #include <MFRC522.h> // RFID
- #include <ESP8266AT.h> // ESP8266 - AT Firmwware
-//#include <ESP8266WiFi.h>  // ESP8266 - Standalone
+// #include <ESP8266AT.h> // ESP8266 - AT Firmwware
+// #include <ESP8266WiFi.h>  // ESP8266 - Standalone
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_DEPENDENCIES_H_ */
