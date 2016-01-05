@@ -38,7 +38,7 @@ void setup() {
 
 void loop() {
 
-  // Send using console
+  // Send AT using console
   if(Serial.available()){
     readAndSendAT();
   }

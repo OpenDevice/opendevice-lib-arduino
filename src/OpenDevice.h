@@ -20,7 +20,7 @@
 #include "Command.h"
 #include "DeviceConnection.h"
 #include "Device.h"
-#include "FuncSensor.h"
+#include "devices/FuncSensor.h"
 
 using namespace od;
 
