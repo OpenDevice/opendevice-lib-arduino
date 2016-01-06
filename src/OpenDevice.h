@@ -21,6 +21,7 @@
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/FuncSensor.h"
+#include "../dependencies.h"
 
 using namespace od;
 
@@ -46,6 +47,15 @@ using namespace od;
 
 #if defined(MFRC522_h)
 	#include <devices/RFIDSensor.h>
+#endif
+
+
+extern volatile uint8_t* PIN_INTERRUPT;
+
+#if(ENABLE_DEVICE_INTERRUPTION) // if config.h
+#define EI_ARDUINO_INTERRUPTED_PIN
+#define LIBCALL_ENABLEINTERRUPT
+#include <EnableInterrupt.h>
 #endif
 
 /*
@@ -77,6 +87,7 @@ private:
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
 	static void onMessageReceived(Command cmd);
+
 	void onSensorChanged(uint8_t id, unsigned long value);
 
 	void notifyReceived(ResponseStatus::ResponseStatus status);
@@ -111,7 +122,9 @@ public:
 			custom_connection_begin();
 		}
 	#else
-		void begin(){ _begin(); };
+		void begin(){
+			_begin();
+		};
 	#endif
 
 	#if defined(USING_CUSTOM_CONNECTION)
@@ -214,6 +227,8 @@ void begin(ESP8266WiFiClass &wifi){
 
 	void checkSensorsStatus();
 
+	static void onInterruptReceived();
+
 	/** When enabled OpenDevice will be sending a PING message to connection to inform you that everything is OK. <br/>
 	 * Control of the Keep Alive / Ping can be left to the other side of the connection, in this case the "device" would be disabled */
 	void enableKeepAlive(bool val =  false);
@@ -234,17 +249,17 @@ void begin(ESP8266WiFiClass &wifi){
 	void debug(const String &s);
 	#endif
 
-	bool addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	bool addSensor(uint8_t pin, Device::DeviceType type);
-	bool addSensor(Device& sensor);
-	bool addSensor(unsigned long (*function)()){
+	Device* addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
+	Device* addSensor(uint8_t pin, Device::DeviceType type);
+	Device* addSensor(Device& sensor);
+	Device* addSensor(unsigned long (*function)()){
 		FuncSensor* func = new FuncSensor(function);
 		return addDevice(*func);
 	}
 
-	bool addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
-	bool addDevice(uint8_t pin, Device::DeviceType type);
-	bool addDevice(Device& device);
+	Device* addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
+	Device* addDevice(uint8_t pin, Device::DeviceType type);
+	Device* addDevice(Device& device);
 
 	bool addCommand(const char * name, void (*function)());
 

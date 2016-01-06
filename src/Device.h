@@ -25,7 +25,6 @@
 #include "Command.h"
 #include "DeviceConnection.h"
 
-
 class Device
 {
 public:
@@ -44,9 +43,14 @@ public:
 	unsigned long currentValue;
 	DeviceType type;
 
+
 	bool sensor;
 	uint8_t targetID; // associated device (used in sensors)
 	
+	// for interrupt mode
+	volatile bool needSync;
+	bool interruptEnabled; // only for sensor
+	uint8_t interruptMode;
 
 	Device();
 	Device(uint8_t iid, uint8_t ipin, DeviceType type);
@@ -67,6 +71,12 @@ public:
 	virtual void deserializeExtraData(Command *cmd, DeviceConnection *conn);
 
 	virtual bool hasChanged();
+
+	/**
+	 * Enable to read value using interruptions. <br/>
+	 * NOTE: It is necessary to enable support in the general settings.
+	 */
+	Device* enableInterrupt(uint8_t mode = CHANGE);
 
 	virtual void init();
 

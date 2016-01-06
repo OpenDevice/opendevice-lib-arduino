@@ -43,6 +43,9 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	type = _type;
 	sensor = _sensor;
 	targetID = 0;
+	needSync = false;
+	interruptEnabled = false;
+	interruptMode = CHANGE;
 
 	if(_sensor){
 		currentValue = LOW;
@@ -113,6 +116,15 @@ bool Device::hasChanged(){
 void Device::init(){
 	// Do nothing for now.
 }
+
+Device* Device::enableInterrupt(uint8_t mode){
+	if(sensor){
+		interruptEnabled = true;
+		interruptMode = mode;
+	}
+	return this;
+}
+
 
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(char buffer[]){

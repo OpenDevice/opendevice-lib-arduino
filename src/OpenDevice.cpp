@@ -14,6 +14,7 @@
 
 #include "OpenDevice.h"
 
+volatile uint8_t* PIN_INTERRUPT = 0;
 
 /*
  * OpenDeviceClass.cpp
@@ -123,6 +124,12 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
+		if(devices[i]->interruptEnabled){
+			#if(ENABLE_DEVICE_INTERRUPTION)
+				PIN_INTERRUPT = &arduinoInterruptedPin;
+				enableInterrupt(devices[i]->pin, &(OpenDeviceClass::onInterruptReceived), devices[i]->interruptMode);
+			#endif
+		}
 	}
 
 	if(deviceConnection){
@@ -152,18 +159,9 @@ void OpenDeviceClass::_loop() {
 			keepAliveTime = currentMillis;
 			keepAliveMiss++;
 
-			// FIXME REMOVE THIS
-			digitalWrite(13, LOW);
-			delay(500);
-			digitalWrite(13, HIGH);
-
 			ODev.send(cmd(CommandType::PING));
 			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
 				connected = false;
-
-				// FIXME REMOVE THIS
-				pinMode(13, OUTPUT);
-				digitalWrite(13, LOW);
 			}
 		  }
 		}
@@ -261,6 +259,26 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 }
 
 
+void OpenDeviceClass::onInterruptReceived(){
+
+//#ifdef EnableInterrupt_h
+    for (int i = 0; i < ODev.deviceLength; i++) {
+    	Device *device = ODev.getDeviceAt(i);
+
+    	uint8_t pinChange = *(uint8_t *) PIN_INTERRUPT;
+
+    	if(device->sensor && device->pin == pinChange){
+    		if(device->hasChanged()){
+    			device->needSync = true;
+    		}
+    	}
+    }
+
+    // FIXME: remove this... DEBUG
+    digitalWrite(13, HIGH);
+//#endif
+
+}
 
 // FIMXE: rename to onSensorChange
 void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
@@ -360,28 +378,28 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
+Device* OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
 	return addSensor(pin, type, 0);
 }
 
-bool OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID){
-	bool v = addDevice(pin, type, true, 0);
+Device* OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID){
+	Device* v = addDevice(pin, type, true, 0);
 	if(v) devices[deviceLength-1]->targetID = targetID;
 	return v;
 }
 
 
-bool OpenDeviceClass::addSensor(Device& sensor){
+Device* OpenDeviceClass::addSensor(Device& sensor){
 	return addDevice(sensor);
 }
 
 
-bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type){
+Device* OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type){
 	return addDevice(pin, type, false, 0);
 }
 
 
-bool OpenDeviceClass::addDevice(Device& device){
+Device* OpenDeviceClass::addDevice(Device& device){
 	if (deviceLength < MAX_DEVICE) {
 
 		if(device.pin > 0){
@@ -404,7 +422,7 @@ bool OpenDeviceClass::addDevice(Device& device){
 		devices[deviceLength] = &device;
 		deviceLength = deviceLength + 1;
 
-		return true;
+		return &device;
 	} else{
 		return false;
 	}
@@ -412,7 +430,7 @@ bool OpenDeviceClass::addDevice(Device& device){
 }
 
 
-bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
+Device* OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
 	if (deviceLength < MAX_DEVICE) {
 
 		if (sensor) {
@@ -433,7 +451,7 @@ bool OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool senso
 		devices[deviceLength] = new Device(id, pin, type, sensor);
 		deviceLength++;
 
-		return true;
+		return devices[deviceLength-1];
 	} else{
 		return false;
 	}
@@ -461,17 +479,34 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 	if(time == 0) time = millis();
 
-	if (millis() - time > READING_INTERVAL){ // don't sample analog/digital more than XXXms
-	    for (int i = 0; i < deviceLength; i++) {
+	// don't sample analog/digital more than XXXms
+	bool pollingReady = millis() - time > READING_INTERVAL;
 
-	    	if(devices[i]->sensor && devices[i]->hasChanged()){
-	    		onSensorChanged(devices[i]->id, devices[i]->currentValue);
-	    	}
+	for (int i = 0; i < deviceLength; i++) {
 
-	    }
+		if(! devices[i]->sensor ) continue;
 
-	    time = millis();
+		bool syncCurrent = false;
+
+		// polling mode
+		if(devices[i]->interruptEnabled == false && devices[i]->hasChanged() ){
+			syncCurrent = true;
+		// interrupt mode
+		}else if(devices[i]->interruptEnabled == true && devices[i]->needSync  ){
+			syncCurrent = true;
+		}
+
+		if(syncCurrent){
+			onSensorChanged(devices[i]->id, devices[i]->currentValue);
+			devices[i]->needSync = false;
+			Serial.println("Sync...");
+		}
+
 	}
+
+	if(pollingReady) time = millis(); // reset
+
+
 
 }
 
