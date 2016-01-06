@@ -39,7 +39,7 @@ using namespace od;
 #define CUSTOM_CONNECTION_CLASS EthernetClient
 
 // TODO: move to private
-EthernetServer ethserver(80);
+EthernetServer ethserver(DEFAULT_SERVER_PORT);
 EthernetClient ethclient;
 
 /** This method is called automatically by the OpenDevice when run: ODev.begin() */
