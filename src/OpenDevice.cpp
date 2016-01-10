@@ -479,7 +479,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 	if(time == 0) time = millis();
 
-	// don't sample analog/digital more than XXXms
+	// don't sample analog/digital more than {READING_INTERVAL} ms
 	bool pollingReady = millis() - time > READING_INTERVAL;
 
 	for (int i = 0; i < deviceLength; i++) {
@@ -489,7 +489,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 		bool syncCurrent = false;
 
 		// polling mode
-		if(devices[i]->interruptEnabled == false && devices[i]->hasChanged() ){
+		if(pollingReady && devices[i]->interruptEnabled == false && devices[i]->hasChanged() ){
 			syncCurrent = true;
 		// interrupt mode
 		}else if(devices[i]->interruptEnabled == true && devices[i]->needSync  ){
