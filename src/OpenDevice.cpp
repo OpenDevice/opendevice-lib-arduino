@@ -186,11 +186,10 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 	ODev.lastCMD = cmd;
 	DeviceConnection *conn = ODev.deviceConnection;
 
-	// FIXME ------------------REMOVE THIS---------------------
-	if(!ODev.connected){
-		pinMode(13, OUTPUT);
-		digitalWrite(13, HIGH);
-	}
+//	if(!ODev.connected){
+//		pinMode(13, OUTPUT);
+//		digitalWrite(13, HIGH);
+//	}
 
 	ODev.connected = true;
 	ODev.keepAliveTime = millis();
@@ -499,7 +498,6 @@ void OpenDeviceClass::checkSensorsStatus(){
 		if(syncCurrent){
 			onSensorChanged(devices[i]->id, devices[i]->currentValue);
 			devices[i]->needSync = false;
-			Serial.println("Sync...");
 		}
 
 	}

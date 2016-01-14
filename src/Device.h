@@ -32,8 +32,10 @@ public:
 	enum DeviceType{
 			DIGITAL = 1,
 			ANALOG = 2,
+			NUMERIC = 3,
 			// NEXT constants only used in embedded side, to mapping to command
-			INFRA_RED = 7
+//			RFID 					= 7,
+//			RF	 					= 8,
 	};
 
 	const static uint8_t MAX_ANALOG_VALUE = 255;

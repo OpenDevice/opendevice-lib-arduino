@@ -21,11 +21,11 @@ namespace CommandType {
 	enum CommandType {
 		ON_OFF 					= 1, // Indicates that the values are 0 or 1 (HIGH or LOW)
 		ANALOG 					= 2,
-		ANALOG_REPORT 			= 3,
+		NUMERIC		 			= 3, // Similar to ANALOG , but launches the event 'onChange' every time a reading is taken
 		GPIO_DIGITAL 			= 4, // Commands sent directly to the pins (digitalWrite)
 		GPIO_ANALOG 			= 5, //  Commands sent directly to the pins (analogWrite)
-		PWM 					= 6,
-		INFRA_RED 				= 7,
+		INFRA_RED 				= 6,
+
 		DEVICE_COMMAND_RESPONSE = 10, // Response to commands like: ON_OFF, POWER_LEVEL, INFRA RED
 		// ---
 	    PING                    = 20,
@@ -99,7 +99,6 @@ struct Command {
 		switch (type) {
 		case CommandType::ON_OFF: return true;
 		case CommandType::ANALOG: return true;
-		case CommandType::ANALOG_REPORT: return true;
 		default:
 			return false;
 		}

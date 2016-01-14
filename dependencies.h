@@ -19,6 +19,7 @@
 // *******************************************************************************************
 
 // #include <MFRC522.h> // RFID
+ #include <RCSwitch.h> // RF
 // #include <ESP8266AT.h> // ESP8266 - AT Firmwware
 // #include <ESP8266WiFi.h>  // ESP8266 - Standalone
 

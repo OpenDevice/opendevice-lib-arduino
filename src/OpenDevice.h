@@ -49,6 +49,9 @@ using namespace od;
 	#include <devices/RFIDSensor.h>
 #endif
 
+#if defined(_RCSwitch_h)
+	#include <devices/RFSensor.h>
+#endif
 
 extern volatile uint8_t* PIN_INTERRUPT;
 
