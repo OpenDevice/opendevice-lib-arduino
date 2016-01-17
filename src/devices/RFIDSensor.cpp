@@ -19,14 +19,15 @@
 
 RFIDSensor::RFIDSensor(byte chipSelectPin, byte resetPin) :
 		Device(0, 0, Device::NUMERIC, true), mfrc522(chipSelectPin, resetPin) {
-
-	SPI.begin();
-	mfrc522.PCD_Init();
-
 }
 
 RFIDSensor::~RFIDSensor() {
 
+}
+
+void RFIDSensor::init(){
+	SPI.begin();
+	mfrc522.PCD_Init();
 }
 
 bool RFIDSensor::hasChanged(){
