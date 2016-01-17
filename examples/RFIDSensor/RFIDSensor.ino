@@ -1,6 +1,7 @@
 /*
   This is a simple example of the integrated RFID Support.
   NOTE: Please enable MFRC522 dependency in "OpenDevice/dependencies.h"
+  Library download: https://github.com/miguelbalboa/rfid
  */
 
 #include <RCSwitch.h>
