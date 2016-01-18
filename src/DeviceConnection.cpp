@@ -333,7 +333,7 @@ void DeviceConnection::send(Command cmd, bool complete){
 
 	unsigned long values[] = {cmd.type, cmd.id, cmd.deviceID, cmd.value};
 
-	flush();
+	conn->flush();
 
 	conn->write(START_BIT);
 	char vbuffer[3];
