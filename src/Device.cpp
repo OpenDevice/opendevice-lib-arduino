@@ -63,6 +63,8 @@ bool Device::setValue(unsigned long value){
 		}else{
 			analogWrite(pin, value);
 		}
+
+		notifyListeners();
 	}
 
 	return true;
@@ -123,6 +125,15 @@ Device* Device::enableInterrupt(uint8_t mode){
 		interruptMode = mode;
 	}
 	return this;
+}
+
+void Device::onChange(DeviceListener listener){
+	changeListener = listener;
+}
+
+bool Device::notifyListeners(){
+	if(changeListener) return (*changeListener)(currentValue);
+	else return true;
 }
 
 

@@ -25,6 +25,12 @@
 #include "Command.h"
 #include "DeviceConnection.h"
 
+extern "C"
+{
+  // Definition of the listener function
+  typedef bool (*DeviceListener) (unsigned long value);
+}
+
 class Device
 {
 public:
@@ -82,9 +88,18 @@ public:
 
 	virtual void init();
 
-	void _init(uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
+	void onChange(DeviceListener);
+
+	bool notifyListeners();
 
 	int toString(char buffer[]);
+
+private:
+
+	DeviceListener changeListener;
+
+	void _init(uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
+
 };
 
 

@@ -272,9 +272,6 @@ void OpenDeviceClass::onInterruptReceived(){
     		}
     	}
     }
-
-    // FIXME: remove this... DEBUG
-    digitalWrite(13, HIGH);
 //#endif
 
 }
@@ -496,7 +493,9 @@ void OpenDeviceClass::checkSensorsStatus(){
 		}
 
 		if(syncCurrent){
-			onSensorChanged(devices[i]->id, devices[i]->currentValue);
+			if(devices[i]->notifyListeners()){
+				onSensorChanged(devices[i]->id, devices[i]->currentValue);
+			}
 			devices[i]->needSync = false;
 		}
 
