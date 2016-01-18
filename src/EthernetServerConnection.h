@@ -25,6 +25,10 @@
 
 #if defined (UIPETHERNET_H)
 	#include <UIPEthernet.h>
+#elif defined(_YUN_SERVER_H_)
+	#include <Bridge.h>
+	#include <YunServer.h>
+	#include <YunClient.h>
 #else
 	#include <Ethernet.h>
 #endif
@@ -36,21 +40,34 @@
 using namespace od;
 
 #define USING_CUSTOM_CONNECTION 1
-#define CUSTOM_CONNECTION_CLASS EthernetClient
 
-// TODO: move to private
-EthernetServer ethserver(DEFAULT_SERVER_PORT);
-EthernetClient ethclient;
+// AVR_YUN
+#if defined(_YUN_SERVER_H_)
+	YunServer ethserver;
+	YunClient ethclient;
+	#define CUSTOM_CONNECTION_CLASS YunClient
+#else
+	EthernetServer ethserver;
+	Ethernet ethclient;
+	#define CUSTOM_CONNECTION_CLASS EthernetClient
+#endif
 
 /** This method is called automatically by the OpenDevice when run: ODev.begin() */
 void custom_connection_begin(){
-	Serial.println(" - Setup EthernetServer");
+	// Serial.println(" - Setup EthernetServer");
 
+#if defined(_YUN_SERVER_H_)
+	Bridge.begin();
+//	ethserver.listenOnLocalhost();
+	ethserver.begin();
+#else
 	uint8_t *mac = Config.id;
 
 	if(!Config.saved){
 		loadConfig();
 	}
+
+	// FIXME: remove logic to save IP, implement discovery service;
 
 	// Using saved IP (Sketch or EEPROM)
 	if(Config.ip[0] != 0){
@@ -77,8 +94,6 @@ void custom_connection_begin(){
 			Serial.println(F("Please define a IP or enable DHCP"));
 		#endif
 	}
-
-
 	//TODO: A configuração se é IP fixo ou DHCP deve ser informada em algum lugar.
 //	if (Ethernet.begin(mac) == 0) {
 
@@ -86,13 +101,17 @@ void custom_connection_begin(){
 //	}
 	Serial.print("Server is at: "); Serial.println(Ethernet.localIP());
 	ethserver.begin();
+#endif
+
+
+
 
 }
 
 /** This method is called automatically by the OpenDevice when run: ODev.loop() */
 CUSTOM_CONNECTION_CLASS custom_connection_loop(DeviceConnection *conn){
 
-	if (EthernetClient newClient = ethserver.available()) {
+	if (CUSTOM_CONNECTION_CLASS newClient = ethserver.accept()) {
 		ethclient = newClient;
 	}
 

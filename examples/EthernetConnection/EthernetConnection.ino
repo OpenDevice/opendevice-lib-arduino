@@ -7,6 +7,7 @@
  */
 
 //#include <UIPEthernet.h> // Uncomment for use: ENC28J60
+//#include <YunServer.h> //  Uncomment for: Arduino Yun Bridge(port: 5555)
 #include <Ethernet.h>
 #include <SPI.h>
 #include <OpenDevice.h>

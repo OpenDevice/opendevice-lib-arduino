@@ -29,9 +29,10 @@ using namespace od;
 // Automatic Detection of Connections
 // ===========================================================
 
-#if defined(ethernet_h) || defined (UIPETHERNET_H)
+#if defined(ethernet_h) || defined (UIPETHERNET_H) || defined(_YUN_SERVER_H_)
 	#include "EthernetServerConnection.h"
 #endif
+
 
 // ESP8266 AT Command library
 #if defined(__ESP8266AT_H__)
