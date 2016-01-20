@@ -116,20 +116,6 @@ public:
 	OpenDeviceClass();
 	// virtual ~OpenDeviceClass();
 
-	/**
-	 * Setup connection using default settings <br/>
-	 * Thus the connection settings are detected according to the active libraries
-	 */
-	#if defined(USING_CUSTOM_CONNECTION)
-		void begin(){
-			_begin();
-			custom_connection_begin();
-		}
-	#else
-		void begin(){
-			_begin();
-		};
-	#endif
 
 	#if defined(USING_CUSTOM_CONNECTION)
 		void loop(){
@@ -164,6 +150,30 @@ public:
 	void begin(unsigned long baud);
 	void begin(Stream &stream);
 	void begin(HardwareSerial &serial, unsigned long baud);
+
+/**
+ * Setup connection using default settings <br/>
+ * Thus the connection settings are detected according to the active libraries
+ */
+#if defined(USING_CUSTOM_CONNECTION)
+	void begin(){
+		_begin();
+		custom_connection_begin();
+	}
+#else
+	/**
+	 * No parameters, user Serial by default
+	 */
+	void begin(){
+
+		// Wait serial if using Leonardo / YUN
+		#if defined(HAVE_CDCSERIAL) && defined(__AVR_ATmega32U4__)
+			while (!Serial){delay(1);}
+		#endif
+
+		_begin();
+	};
+#endif
 
 #if defined(HAVE_CDCSERIAL)
 

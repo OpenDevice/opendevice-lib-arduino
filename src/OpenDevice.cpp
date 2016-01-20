@@ -81,13 +81,6 @@ void OpenDeviceClass::begin(Serial_ &serial, unsigned long baud){
 
 	serial.begin(baud);
 
-	// Wait serial if using Leonardo
-	#ifdef __AVR_ATmega32U4__
-		//if(serial == SERIAL_PORT_USBVIRTUAL){
-			while (!Serial){delay(1);}
-		//}
-	#endif
-
 	DeviceConnection *conn =  new DeviceConnection(serial);
 	begin(*conn);
 }
@@ -159,7 +152,7 @@ void OpenDeviceClass::_loop() {
 			keepAliveTime = currentMillis;
 			keepAliveMiss++;
 
-			ODev.send(cmd(CommandType::PING));
+			ODev.send(cmd(CommandType::PING_REQUEST));
 			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
 				connected = false;
 			}
@@ -212,9 +205,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 	} else if (cmd.type == CommandType::USER_COMMAND) {
 		String name = conn->readString();
 		for (int i = 0; i < ODev.commandsLength; i++) {
-
 			// if(ODev.debugMode){ ODev.debug("Call function:"); ODev.debug(name); }
-
 			if (name.equals(ODev.commands[i].command)) {
 				ODev.notifyReceived(ResponseStatus::SUCCESS);
 				(*ODev.commands[i].function)();
