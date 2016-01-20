@@ -95,7 +95,7 @@ bool WifiConnetionEspAT::checkDataAvalible(void){
 		client.setData(buffer, len);
 		client.id = mux_id;
 
-//				#if DEBUG_CON
+		#if DEBUG_CON
 			Serial.print("Received from [");
 			Serial.print(mux_id, DEC);
 			Serial.print("] -> ");
@@ -103,7 +103,7 @@ bool WifiConnetionEspAT::checkDataAvalible(void){
 				Serial.print((char)buffer[i]);
 			}
 			Serial.print("\r\n");
-//				#endif
+		#endif
 
 		setStream(&client);
 		return DeviceConnection::checkDataAvalible();

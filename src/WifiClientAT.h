@@ -12,8 +12,8 @@
  */
 
 
-#ifndef ESP8266CLIENT_H_
-#define ESP8266CLIENT_H_
+#ifndef WifiClientAT_H_
+#define WifiClientAT_H_
 
 #include <Arduino.h>
 #include <Stream.h>
@@ -27,18 +27,18 @@
 using namespace od;
 
 /*
- * ESP8266Client
+ * WifiClientAT
  *
  *  Created on: 05/10/2015
  *  Author: Ricardo JL Rufino
  */
-class ESP8266Client : public Stream {
+class WifiClientAT : public Stream {
 public:
 	uint8_t id;
 	ESP8266 *ESP;
 
-	ESP8266Client();
-	~ESP8266Client() {}
+	WifiClientAT();
+	~WifiClientAT() {}
 
     inline int available(){ return buffer.available(); };
     inline int read(){ return buffer.read(); };
@@ -53,4 +53,4 @@ private:
 	StreamBuffer buffer;
 };
 
-#endif /* ESP8266CLIENT_H_ */
+#endif /* WifiClientAT_H_ */
