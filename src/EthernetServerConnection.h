@@ -25,10 +25,6 @@
 
 #if defined (UIPETHERNET_H)
 	#include <UIPEthernet.h>
-#elif defined(_YUN_SERVER_H_)
-	#include <Bridge.h>
-	#include <YunServer.h>
-	#include <YunClient.h>
 #else
 	#include <Ethernet.h>
 #endif
@@ -40,27 +36,16 @@
 using namespace od;
 
 #define USING_CUSTOM_CONNECTION 1
+#define CUSTOM_CONNECTION_CLASS EthernetClient
 
-// AVR_YUN
-#if defined(_YUN_SERVER_H_)
-	YunServer ethserver;
-	YunClient ethclient;
-	#define CUSTOM_CONNECTION_CLASS YunClient
-#else
-	EthernetServer ethserver;
-	Ethernet ethclient;
-	#define CUSTOM_CONNECTION_CLASS EthernetClient
-#endif
+EthernetServer ethserver(DEFAULT_SERVER_PORT);
+EthernetClient ethclient;
+
 
 /** This method is called automatically by the OpenDevice when run: ODev.begin() */
 void custom_connection_begin(){
 	// Serial.println(" - Setup EthernetServer");
 
-#if defined(_YUN_SERVER_H_)
-	Bridge.begin();
-//	ethserver.listenOnLocalhost();
-	ethserver.begin();
-#else
 	uint8_t *mac = Config.id;
 
 	if(!Config.saved){
@@ -101,7 +86,6 @@ void custom_connection_begin(){
 //	}
 	Serial.print("Server is at: "); Serial.println(Ethernet.localIP());
 	ethserver.begin();
-#endif
 
 
 
@@ -109,9 +93,9 @@ void custom_connection_begin(){
 }
 
 /** This method is called automatically by the OpenDevice when run: ODev.loop() */
-CUSTOM_CONNECTION_CLASS custom_connection_loop(DeviceConnection *conn){
+EthernetClient custom_connection_loop(DeviceConnection *conn){
 
-	if (CUSTOM_CONNECTION_CLASS newClient = ethserver.accept()) {
+	if (EthernetClient newClient = ethserver.available()) {
 		ethclient = newClient;
 	}
 
