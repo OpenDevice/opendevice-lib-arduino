@@ -28,7 +28,7 @@ namespace CommandType {
 
 		DEVICE_COMMAND_RESPONSE = 10, // Response to commands like: ON_OFF, POWER_LEVEL, INFRA RED
 		// ---
-	    PING                    = 20,
+		PING_REQUEST            = 20,
 	    PING_RESPONSE           = 21,
 	    DISCOVERY_REQUEST       = 22,
 	    DISCOVERY_RESPONSE      = 23,
@@ -108,7 +108,7 @@ struct Command {
 			if (type == 0) return false;
 			switch (type) {
 			case CommandType::DISCOVERY_REQUEST: return true;
-			case CommandType::PING: return true;
+			case CommandType::PING_REQUEST: return true;
 			case CommandType::PING_RESPONSE: return true;
 			default:
 				return false;
