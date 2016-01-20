@@ -78,11 +78,12 @@ enum ConnectionMode{
 
 namespace od {
 
-	const char server[] = "api.opendevice.io";
 
 	typedef struct{
 		bool saved =  false;
-		const char * moduleName = "OpenDevice";
+		char * moduleName = "OpenDevice";
+		char * server = "api.opendevice.io";
+		char * appID = "*";
 		uint8_t id[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; // MAC
 		uint8_t ip[4] = { 0, 0, 0, 0 };
 		uint8_t devicesLength = 0;
