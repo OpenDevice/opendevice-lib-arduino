@@ -46,6 +46,7 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	needSync = false;
 	interruptEnabled = false;
 	interruptMode = CHANGE;
+	changeListener = 0;
 
 	if(_sensor){
 		currentValue = LOW;
