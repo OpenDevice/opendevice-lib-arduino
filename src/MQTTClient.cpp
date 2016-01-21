@@ -5,6 +5,10 @@
  *      Author: ricardo
  */
 
+#include "../dependencies.h"
+
+#ifdef PubSubClient_h
+
 #include <MQTTClient.h>
 
 namespace od {
@@ -42,3 +46,5 @@ size_t MQTTClient::write(uint8_t v){
 
 
 } /* namespace od */
+
+#endif

@@ -19,9 +19,10 @@
 // *******************************************************************************************
 
 // #include <MFRC522.h> // RFID
- #include <RCSwitch.h> // RF
+// #include <RCSwitch.h> // RF 433Mhz
 // #include <ESP8266AT.h> // ESP8266 - AT Firmwware
 // #include <ESP8266WiFi.h>  // ESP8266 - Standalone
+
 
 //#if defined(EnableInterrupt_h)
 //#define EI_ARDUINO_INTERRUPTED_PIN
