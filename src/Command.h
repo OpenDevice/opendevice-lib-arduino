@@ -27,6 +27,10 @@ namespace CommandType {
 		INFRA_RED 				= 6,
 
 		DEVICE_COMMAND_RESPONSE = 10, // Response to commands like: ON_OFF, POWER_LEVEL, INFRA RED
+		COMMAND_RESPONSE 		= 11, // TODO: not implemented
+		SET_PROPERTY			= 12, // TODO: not implemented
+		ACTION					= 13, // TODO: not implemented
+
 		// ---
 		PING_REQUEST            = 20,
 	    PING_RESPONSE           = 21,
@@ -38,20 +42,16 @@ namespace CommandType {
 		// ---
 		GET_DEVICES 			= 30,
 		GET_DEVICES_RESPONSE 	= 31,
-		CLEAR_DEVICES 			= 32,
-		CLEAR_DEVICES_RESPONSE  = 33,
-	    DEVICE_ADD 				= 34,
-	    DEVICE_ADD_RESPONSE		= 35,
-	    DEVICE_DEL 				= 36,
-	    DEVICE_DEL_RESPONSE		= 37,
+	    DEVICE_ADD 				= 32,
+	    DEVICE_ADD_RESPONSE		= 33,
+	    DEVICE_DEL 				= 34,
+		CLEAR_DEVICES 			= 35,
+		GET_CONNECTIONS 		= 36,
+		GET_CONNECTIONS_RESPONSE   = 37,
 	    CONNECTION_ADD 			= 38,
-	    CONNECTION_ADD_RESPONSE	= 39,
+	    CONNECTION_ADD_RESPONSE = 39, // Return IP
 	    CONNECTION_DEL 			= 40,
-	    CONNECTION_DEL_RESPONSE = 41,
-		GET_CONNECTIONS 		= 42,
-		GET_CONNECTIONS_RESPONSE   = 43,
-		CLEAR_CONNECTIONS 		   = 34,
-		CLEAR_ONNECTIONS_RESPONSE  = 35,
+		CLEAR_CONNECTIONS 		= 41,
 		// ---
 		USER_COMMAND 			= 99
 	};
