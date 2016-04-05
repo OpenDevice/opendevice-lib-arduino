@@ -15,6 +15,7 @@
 #define LIBRARIES_OPENDEVICE_BASEWIFICONNECTION_H_
 
 #include "config.h"
+#include "Device.h"
 #include "utility/Logger.h"
 #include "DeviceConnection.h"
 

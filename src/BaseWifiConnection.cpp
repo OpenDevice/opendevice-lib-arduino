@@ -81,7 +81,6 @@ void BaseWifiConnection::onMessageReceived(Command cmd){
 		}
 		#endif
 	} else if (cmd.type == CommandType::DISCOVERY_REQUEST) {
-
 		doStart();
 		print(CommandType::DISCOVERY_RESPONSE);
 		doToken();
@@ -89,17 +88,9 @@ void BaseWifiConnection::onMessageReceived(Command cmd){
 		doToken();
 		print(Config.moduleName);
 		doToken();
-		print(DEFAULT_SERVER_PORT);
+		print(Device::NODE); // ModuleType: NODE
 		doToken();
-		doEnd();
-
-		delay(1000);
-		doStart();
-		print(CommandType::DISCOVERY_RESPONSE);
-		doToken();
-		print(cmd.id);
-		doToken();
-		print(Config.moduleName);
+		print(Config.devicesLength);
 		doToken();
 		print(DEFAULT_SERVER_PORT);
 		doToken();
