@@ -44,23 +44,29 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	sensor = _sensor;
 	targetID = 0;
 	needSync = false;
+	inverted = false;
 	interruptEnabled = false;
 	interruptMode = CHANGE;
 	changeListener = 0;
 
-	if(_sensor){
+	//if(_sensor){
 		currentValue = LOW;
-	}else{
-		currentValue = HIGH; // TODO: isso deve ser definido, pois tomada é HIGHT e lanpada deve ser LOW
-	}
+	//}else{
+	//	currentValue = LOW; // TODO: isso deve ser definido, pois tomada é HIGHT e lanpada deve ser LOW
+	//}
+
+	
 }
 
 bool Device::setValue(unsigned long value){
 	currentValue = value;
 
-	if(!sensor){
+	if(sensor == false){
 		if(type == Device::DIGITAL){
-			digitalWrite(pin, (value == 1 ? HIGH : LOW));
+
+			if(inverted) value = ! value;
+
+			digitalWrite(pin, (value == 0 ? LOW : HIGH));
 		}else{
 			analogWrite(pin, value);
 		}
@@ -77,7 +83,12 @@ unsigned long Device::getValue(){
 		return currentValue; // return last filtered value... (see: hasChanged)
 	}else{
 		if(type == Device::DIGITAL){
-			return digitalRead(pin);
+
+			uint8_t value = digitalRead(pin);
+
+			if(inverted) value = ! value;
+
+			return value;
 		}else{
 			return analogRead(pin);
 		}
@@ -99,7 +110,7 @@ bool Device::hasChanged(){
 	unsigned long v = 0;
 
 	if(type == Device::DIGITAL){
-		v = ! digitalRead(pin); // READ and Invert state because is a INPUT_PULLUP
+		v = ! digitalRead(pin); // READ and Invert state because (sensor) is a INPUT_PULLUP
 	}else{
 		v = analogRead(pin);
 		//if(currentValue != v){
@@ -125,6 +136,12 @@ Device* Device::enableInterrupt(uint8_t mode){
 		interruptEnabled = true;
 		interruptMode = mode;
 	}
+	return this;
+}
+
+Device* Device::invertedState(){
+	inverted = true;
+	digitalWrite(pin, (currentValue == LOW ? HIGH : LOW));
 	return this;
 }
 

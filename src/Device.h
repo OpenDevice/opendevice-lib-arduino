@@ -42,6 +42,10 @@ public:
 			// NEXT constants only used in embedded side, to mapping to command
 //			RFID 					= 7,
 //			RF	 					= 8,
+
+			NODE = 10,  	  // Hold Multiple Devices
+			MANAGER = 11, // Middleware/Server
+
 	};
 
 	const static uint8_t MAX_ANALOG_VALUE = 255;
@@ -54,6 +58,8 @@ public:
 
 	bool sensor;
 	uint8_t targetID; // associated device (used in sensors)
+
+	bool inverted; // It allows to operate in an inverted logic (only DIGITAL)
 	
 	// for interrupt mode
 	volatile bool needSync;
@@ -85,6 +91,11 @@ public:
 	 * NOTE: It is necessary to enable support in the general settings.
 	 */
 	Device* enableInterrupt(uint8_t mode = CHANGE);
+
+	/**
+	 * It allows device operate in an inverted logic (the 'ON' command will generate a LOW LEVEL)
+	 */
+	Device* invertedState();
 
 	virtual void init();
 
