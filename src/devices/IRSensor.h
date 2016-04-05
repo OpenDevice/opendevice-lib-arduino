@@ -13,15 +13,20 @@
 
 
 // #ifndef ENERGIA // Bypass on Stellaris
-#ifdef IRremote_h
 
 #ifndef IRSENSOR_H_
 #define IRSENSOR_H_
 
 #include "Stream.h"
 #include "Device.h"
-#include "DataUtils.h"
-#include "../../IRremote/IRremote.h"
+#include "utility/DataUtils.h"
+
+#if defined(ESP8266)
+#include "IRremoteESP8266.h"
+#else
+#include "IRremote.h"
+#endif
+
 
 /*
  * IRSensor.h
@@ -46,4 +51,3 @@ private:
 
 #endif /* IRSENSOR_H_ */
 
-#endif

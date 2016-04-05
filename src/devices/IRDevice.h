@@ -24,8 +24,11 @@
 #define IRDEVICE_H_
 
 #include "Device.h"
-#ifndef DEBUG_ON_PC
-#include "../../IRremote/IRremote.h"
+
+#if defined(ESP8266)
+#include "IRremoteESP8266.h"
+#else
+#include "IRremote.h"
 #endif
 
 class IRDevice : public Device  {

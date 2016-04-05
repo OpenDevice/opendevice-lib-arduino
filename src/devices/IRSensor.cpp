@@ -11,7 +11,9 @@
  * *****************************************************************************
  */
 
-#ifdef IRremote_h
+#include "../dependencies.h"
+
+#if defined(IRremote_h)
 
 #include "IRSensor.h"
 
@@ -23,7 +25,7 @@
  */
 IRSensor::IRSensor(uint8_t iid, uint8_t ipin) :
 	irrecv(IRrecv(ipin)),
-	Device(iid, ipin, Device::INFRA_RED, true){
+	Device(iid, ipin, Device::NUMERIC, true){
 }
 
 

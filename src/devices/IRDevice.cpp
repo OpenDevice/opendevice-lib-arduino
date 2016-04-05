@@ -11,7 +11,10 @@
  * *****************************************************************************
  */
 
-#ifdef IRremote_h
+
+#include "../dependencies.h"
+
+#if defined(IRremote_h)
 
 #include "IRDevice.h"
 
@@ -21,11 +24,9 @@
  *  Created on: 30/01/2015
  *      Author: ricardo
  */
-IRDevice::IRDevice() {
-}
-
 IRDevice::IRDevice(uint8_t iid, uint8_t ipin) :
-	Device(iid, ipin, Device::INFRA_RED, false){
+	irsend(IRsend(ipin)),
+	Device(iid, ipin, Device::NUMERIC, false){
 }
 
 IRDevice::~IRDevice() {
