@@ -86,6 +86,16 @@ void OpenDeviceClass::begin(Serial_ &serial, unsigned long baud){
 }
 #endif
 
+#if defined (__arm__) && defined (__SAM3X8E__) // Arduino Due compatible
+void OpenDeviceClass::begin(Serial_ &serial, unsigned long baud){
+
+	serial.begin(baud);
+
+	DeviceConnection *conn =  new DeviceConnection(serial);
+	begin(*conn);
+}
+#endif
+
 #if defined(DEFAULT_TO_TINY_DEBUG_SERIAL)
 void OpenDeviceClass::begin(TinyDebugSerial &serial, unsigned long baud){
 
@@ -141,31 +151,28 @@ void OpenDeviceClass::_loop() {
 		deviceConnection->checkDataAvalible();
 	}
 
-	if(connected){
+	checkSensorsStatus();
 
-		checkSensorsStatus();
+	// Send PING/KeepAlive if enabled
+	if(connected && keepAliveEnabled){
+	  unsigned long currentMillis = millis();
+	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
+		keepAliveTime = currentMillis;
+		keepAliveMiss++;
 
-		// Send PING/KeepAlive if enabled
-		if(keepAliveEnabled){
-		  unsigned long currentMillis = millis();
-		  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
-			keepAliveTime = currentMillis;
-			keepAliveMiss++;
-
-			ODev.send(cmd(CommandType::PING_REQUEST));
-			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
-				connected = false;
-			}
-		  }
+		ODev.send(cmd(CommandType::PING_REQUEST));
+		if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
+			connected = false;
 		}
-		
+	  }
 	}
+	
+	
 
 }
 
 void OpenDeviceClass::enableKeepAlive(bool val){
 	keepAliveEnabled = val;
-	if(val == false) connected = true;
 }
 
 void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
@@ -190,6 +197,9 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 
 	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
 
+	ODev.debug("Rec:", cmd.type);
+	// ODev.showFreeRam();
+
 	// Directed to a device (Like On/OFF or more complex)
 	if (cmd.deviceID > 0) {
 		Device *foundDevice = ODev.getDevice(cmd.deviceID);
@@ -211,6 +221,9 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 				(*ODev.commands[i].function)();
 			}
 		}
+	} else if (cmd.type == CommandType::PING_REQUEST) {
+
+		ODev.send(ODev.resp(CommandType::PING_RESPONSE, 0, ResponseStatus::SUCCESS));
 
 		// Send response Ex: GET_DEVICES_RESPONSE;ID;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
 	} else if (cmd.type == CommandType::GET_DEVICES) {
@@ -267,7 +280,7 @@ void OpenDeviceClass::onInterruptReceived(){
 
 }
 
-// FIMXE: rename to onSensorChange
+
 void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 	Device* sensor = getDevice(id);
 	Device* device = getDevice(sensor->targetID);
@@ -299,23 +312,33 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
-	ODev.deviceConnection->send(lastCMD, false);
-	// Check extra data to send.
-	sensor->serializeExtraData(ODev.deviceConnection);
-	ODev.deviceConnection->doEnd();
+	if(ODev.connected){
+		ODev.deviceConnection->send(lastCMD, false);
+		// Check extra data to send.
+		sensor->serializeExtraData(ODev.deviceConnection);
+		ODev.deviceConnection->doEnd();	
+	}
+
 }
 
 
 void OpenDeviceClass::send(Command cmd){
-	deviceConnection->send(cmd, true);
+	if(ODev.connected) deviceConnection->send(cmd, true);
 }
 
-Command OpenDeviceClass::cmd(uint8_t type, uint8_t deviceID, unsigned long value){
+Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, unsigned long value){
 	Command cmd;
 	cmd.type = type;
 	cmd.deviceID = deviceID;
 	cmd.value = value;
 	return cmd;
+}
+
+Command OpenDeviceClass::resp(CommandType::CommandType type, uint8_t deviceID, unsigned long value){
+	lastCMD.type = type;
+	lastCMD.deviceID = deviceID;
+	lastCMD.value = value;
+	return lastCMD;
 }
 
 void OpenDeviceClass::clear(Command cmd){
@@ -424,7 +447,7 @@ Device* OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool se
 			if (type == Device::DIGITAL) {
 				#if defined(INPUT_PULLUP)
 				  pinMode(pin, INPUT_PULLUP);
-				#else //TODO: not tested !
+				#else // Aternative INPUT_PULLUP - TODO: not tested !
 				  pinMode(pin, INPUT);
 				  digitalWrite (pin, HIGH);
 				#endif
@@ -499,12 +522,27 @@ void OpenDeviceClass::checkSensorsStatus(){
 }
 
 void OpenDeviceClass::setValue(uint8_t id, unsigned long value){
+	
+	Command lastCMD = ODev.lastCMD;
+
     for (int i = 0; i < deviceLength; i++) {
     	if(devices[i]->id == id){
     		devices[i]->setValue(value);
+
+			lastCMD.id = 0;
+			lastCMD.type = (uint8_t) devices[i]->type;
+			lastCMD.deviceID = devices[i]->id;
+			lastCMD.value = value;
+			deviceConnection->send(lastCMD, true);
+
     		break;
     	}
     }
+}
+
+void OpenDeviceClass::toggle(uint8_t id){
+	Device* device = ODev.getDevice(id);
+	setValue(device->id, !device->getValue());
 }
 
 void OpenDeviceClass::sendToAll(unsigned long value){
@@ -610,17 +648,20 @@ void OpenDeviceClass::showFreeRam() {
 }
 
 
-void OpenDeviceClass::debug(const char str[]){
+void OpenDeviceClass::debug(const char str[], unsigned long value){
 	if(Config.debugMode){ // FIXME: a logica não está muito legal não... !
 		if(Config.debugTarget == 1){
 			deviceConnection->doStart();
 			deviceConnection->print("DB:");
 			deviceConnection->print(str);
+			if(value >= 0) deviceConnection->print(value);	
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
 			Serial.print("DB:");
 			Serial.print(str);
+			if(value >= 0) Serial.print(value);
+			if(deviceConnection->conn != &Serial) Serial.println();
 			Serial.write(Command::ACK_BIT);
 			#endif
 		}
