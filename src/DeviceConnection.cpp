@@ -97,9 +97,11 @@ bool DeviceConnection::checkDataAvalible(){
 		#endif
 
 		// read available data.
-		while(conn->available() > 0){
+	    uint8_t available = 0;
+		while( available > 0 || (available = conn->available()) ){
 
 			lastByte = conn->read();
+			available--;
 
 			#if DEBUG_CON
 				Serial.print(F("DB:READ:"));Serial.println((char)lastByte);Serial.write(ACK_BIT);
@@ -108,6 +110,8 @@ bool DeviceConnection::checkDataAvalible(){
 			// NOTE: Start bit is equals to the SEPARATOR
 			if(lastByte == START_BIT && !processing){
 				processing = true;
+				//digitalWrite(11,HIGH);
+				//digitalWrite(10,HIGH);
 				continue;
 			}
 			else if(lastByte == ACK_BIT){
@@ -119,6 +123,7 @@ bool DeviceConnection::checkDataAvalible(){
 				processing = false;
 
 				uint8_t type = parseInt();
+				// digitalWrite(11,LOW);
 				parseCommand(type);
 				flush();
 
@@ -127,6 +132,7 @@ bool DeviceConnection::checkDataAvalible(){
 			}else if(processing){
 
 				uint8_t w = store(lastByte);
+				// digitalWrite(10, !digitalRead(10));
 
 				if(!w){
 					notifyError(ResponseStatus::BUFFER_OVERFLOW);
@@ -139,15 +145,15 @@ bool DeviceConnection::checkDataAvalible(){
 			}
 		}
 		
-		// Wait a bit to read the next byte if not available yet.
-		// If the timeout (which is usually very low) occur the loop is finished
-		if(processing && !timeout){
-			if(readTimeout > 0) delay(readTimeout);
-			if(conn->available() <= 0){
-				// Serial.println(F("DB:TIMEOUT"));Serial.write(ACK_BIT);
-				timeout = true;
-			}
-		}
+		// // Wait a bit to read the next byte if not available yet.
+		// // If the timeout (which is usually very low) occur the loop is finished
+		// if(processing && !timeout){
+		// 	if(readTimeout > 0) delay(readTimeout);
+		// 	if(conn->available() <= 0){
+		// 		// Serial.println(F("DB:TIMEOUT"));Serial.write(ACK_BIT);
+		// 		timeout = true;
+		// 	}
+		// }
 	} while(processing && !timeout);
 
 	return !timeout;
@@ -188,6 +194,7 @@ void DeviceConnection::parseCommand(uint8_t type){
 		cmd.value = readLong();
 	}else if(Command::isSimpleCommand(type)){
 		cmd.value = readLong();
+		cmd.deviceID = 0;
 	}else{
 		cmd.deviceID = 0;
 		cmd.value = 0;
@@ -330,7 +337,7 @@ void DeviceConnection::send(double n){
 
 void DeviceConnection::send(Command cmd, bool complete){
 	if(!conn || processing) return;
-
+    // digitalWrite(10, LOW);
 	unsigned long values[] = {cmd.type, cmd.id, cmd.deviceID, cmd.value};
 
 	conn->flush();
@@ -346,6 +353,8 @@ void DeviceConnection::send(Command cmd, bool complete){
 			conn->write(SEPARATOR);
 		}
 	}
+
+
 }
 
 
