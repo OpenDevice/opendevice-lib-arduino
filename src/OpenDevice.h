@@ -64,6 +64,12 @@ using namespace od;
 	#include <devices/RFSensor.h>
 #endif
 
+#if defined(IRremote_h)
+	#include <devices/IRSensor.h>
+	#include <devices/IRDevice.h>
+#endif
+
+
 extern volatile uint8_t* PIN_INTERRUPT;
 
 #if(ENABLE_DEVICE_INTERRUPTION) // if config.h
@@ -191,6 +197,12 @@ public:
 
 #endif
 
+#if defined (__arm__) && defined (__SAM3X8E__) // Arduino Due compatible
+
+	void begin(Serial_ &serial, unsigned long baud);
+
+#endif
+
 #if defined(SoftwareSerial_h)
 
 	void begin(unsigned long baud, uint8_t rxpin, uint8_t txpin){
@@ -262,13 +274,14 @@ void begin(ESP8266WiFiClass &wifi){
 	void send(Command cmd);
 
 	/** Create a simple command (using lastCMD buffer)*/
-	Command cmd(uint8_t type, uint8_t deviceID = 0, unsigned long value = 0);
+	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, unsigned long value = 0);
+	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, unsigned long value = 0);
 
 #ifdef __FlashStringHelper
 	void debug(const __FlashStringHelper* data);
 #endif
 
-	void debug(const char str[]);
+	void debug(const char str[], unsigned long value = -1);
 	#ifdef ARDUINO
 	void debug(const String &s);
 	#endif
@@ -299,9 +312,11 @@ void begin(ESP8266WiFiClass &wifi){
 	void setDefaultListener(void (*pt2Func)(uint8_t, unsigned long));
 
 	void setValue(uint8_t id, unsigned long value);
+	void toggle(uint8_t id);
 	void sendToAll(unsigned long value);
 
 	inline bool isConnected(){return connected;}
+	inline void setConnected(bool val){connected = val;}
 
 	inline String readString() { return deviceConnection->readString(); }
 	inline int readInt(){ return deviceConnection->readInt(); }

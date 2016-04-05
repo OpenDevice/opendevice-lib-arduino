@@ -39,7 +39,7 @@ void WifiConnection::begin(void){
 	WiFiMode mode = WiFi.getMode();
 	if(mode == WIFI_STA || mode == WIFI_AP_STA){
 		WiFi.softAP(Config.moduleName);
-		Serial.println("SoftAP OK");
+		Logger.debug("SoftAP", "OK");
 	}
 
 	// has saved last STA connections settings
@@ -59,14 +59,14 @@ void WifiConnection::begin(void){
 //	Logger.debug("WifiConnection.Begin", (const char*) WiFi.localIP().raw_address());
 	Logger.debug("WifiConnection.Begin", "OK");
 
-//    // Print the IP address
-	Serial.print("STA is at: ");
-    Serial.println(WiFi.localIP());
+    if(Config.debugMode) WiFi.printDiag(Serial);
 
-    Serial.print("AP is at: ");
-    Serial.println(WiFi.softAPIP());
+    // Print the IP address
+	Logger.debug("STA is at: ");
+    if(Config.debugMode) Serial.println(WiFi.localIP());
 
-    WiFi.printDiag(Serial);
+    Logger.debug("AP is at: ");
+    if(Config.debugMode) Serial.println(WiFi.softAPIP());
 
     isStartup = false;
 }
@@ -115,8 +115,10 @@ bool WifiConnection::checkDataAvalible(void){
 	}
 
 	if(client.connected()){
+		//ODev.setConnected(true);
 		return DeviceConnection::checkDataAvalible();
 	}else{
+		//ODev.setConnected(false);
 		return false;
 	}
 

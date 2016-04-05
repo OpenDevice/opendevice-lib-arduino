@@ -39,8 +39,11 @@
 #define KEEP_ALIVE_INTERVAL 5000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
+
+#ifndef ENABLE_DHCP
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
                           Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
+#endif
 
 #define ENABLE_REMOTE_WIFI_SETUP 1   // disable to reduce flash usage
 
