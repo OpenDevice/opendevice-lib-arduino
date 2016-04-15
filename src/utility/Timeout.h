@@ -21,6 +21,7 @@ public:
 	void reset();
 	void enable();
 	void disable();
+	bool isEnabled() { return enabled;}
 private:
 	uint16_t _timeout;
 	bool enabled;
