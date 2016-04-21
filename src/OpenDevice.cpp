@@ -197,7 +197,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 
 	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
 
-	ODev.debug("Rec:", cmd.type);
+	ODev.debug("CType:", cmd.type);
 	// ODev.showFreeRam();
 
 	// Directed to a device (Like On/OFF or more complex)
@@ -224,6 +224,11 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 	} else if (cmd.type == CommandType::PING_REQUEST) {
 
 		ODev.send(ODev.resp(CommandType::PING_RESPONSE, 0, ResponseStatus::SUCCESS));
+
+	} else if (cmd.type == CommandType::RESET) {
+
+		pinMode(Config.pinReset, OUTPUT);
+		digitalWrite(Config.pinReset, LOW);
 
 		// Send response Ex: GET_DEVICES_RESPONSE;ID;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
 	} else if (cmd.type == CommandType::GET_DEVICES) {
