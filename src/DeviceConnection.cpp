@@ -360,7 +360,7 @@ void DeviceConnection::send(Command cmd, bool complete){
 
 void DeviceConnection::flush() {
   memset(_buffer, 0, _len);
-  conn->flush();
+  if(conn) conn->flush();
   _endOffset = 0;
   _readOffset = 0;
   _buffer_overflow = false;
