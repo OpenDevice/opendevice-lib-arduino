@@ -39,6 +39,8 @@ namespace CommandType {
 	    MEMORY_REPORT           = 24, // Report the amount of memory = displays the current and maximum).
 	    CPU_TEMPERATURE_REPORT  = 25,
 	    CPU_USAGE_REPORT        = 26,
+		RESET 		        	= 27, // Reset Microcontroller
+
 		// ---
 		GET_DEVICES 			= 30,
 		GET_DEVICES_RESPONSE 	= 31,
