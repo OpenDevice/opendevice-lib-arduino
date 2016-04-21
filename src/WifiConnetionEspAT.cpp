@@ -24,6 +24,7 @@ WifiConnetionEspAT::WifiConnetionEspAT()
 	_statusTcp = WL_DISCONNECTED;
 	_mode = WIFI_AP_STA;
 	ESP = 0;
+	clientID = 0;
 	softAPEnabled = false;
 	;
 	memset(ipaddress, 0, 15);
@@ -35,31 +36,30 @@ WifiConnetionEspAT::~WifiConnetionEspAT() {
 
 void WifiConnetionEspAT::init(ESP8266 *impl){
 	ESP = impl;
-	client.ESP = impl;
 }
 
 void WifiConnetionEspAT::begin(){
-	tcpTimeout.reset();
-	statusTimeout.reset();
+	tcpTimeout.enable();
+	statusTimeout.enable();
 	memset(ipaddress, 0, 15);
 
-	if(!softAPEnabled && (_mode == WIFI_AP || _mode == WIFI_AP_STA)){
+	if((_mode == WIFI_AP || _mode == WIFI_AP_STA) && !softAPEnabled /* => Avoid duplicate config*/ ){
 		softAP(Config.moduleName, ""); // no password
 	}
 
 	bool status = ESP->enableMUX();
 
-	#if DEBUG_CON
-		Logger.debug("enableMUX", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
-	#endif
-
+#if DEBUG_SETUP
+	Logger.debug("MUX", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
+#endif
+	
 	status = ESP->startTCPServer(DEFAULT_SERVER_PORT);
 
-	if(status) ESP->setTCPServerTimeout(20000);
+#if DEBUG_SETUP
+	Logger.debug("TCP", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
+#endif
 
-	#if DEBUG_CON
-		Logger.debug("TCP Server", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
-	#endif
+	if(status) ESP->setTCPServerTimeout(20000);
 
 	if(status){
 		_statusTcp = WL_CONNECTED;
@@ -70,12 +70,13 @@ void WifiConnetionEspAT::begin(){
 	}else{
 		_statusTcp = WL_CONNECT_FAILED;
 	}
-
-	#if DEBUG_CON
-		Logger.debug("ESP8266Server.Begin", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
-	#endif
-
+	
 	DeviceConnection::begin();
+
+#if DEBUG_SETUP
+	Logger.debug("Begin", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
+#endif
+
 }
 
 bool WifiConnetionEspAT::checkDataAvalible(void){
@@ -84,29 +85,46 @@ bool WifiConnetionEspAT::checkDataAvalible(void){
 	// NOTA: os firmwares já tem implementado , mais é bem ruim a interação com ele.
 
 	// Used to check if has reseted
-	if(tcpTimeout.expired() && statusTcp(true) == WL_CONNECTION_LOST){
-		Logger.debug(">>> CONNECTION_LOST <<<");
-		begin(); // setup configurations
-	}
+	//if(tcpTimeout.expired() && statusTcp(true) == WL_CONNECTION_LOST){
+	//	Logger.debug(">>> CONNECTION_LOST <<<");
+	//	begin(); // setup configurations
+	//}
 
 	uint8_t mux_id;
-	uint32_t len = ESP->recv(&mux_id, buffer, sizeof(buffer), 100); // 100ms (TODO: make slow the rest of code)
+	uint32_t len = ESP->recv(&mux_id, (uint8_t*)_buffer, DATA_BUFFER, 100); // 100ms (TODO: make slow the rest of code)
 	if (len > 0) {
-		client.setData(buffer, len);
-		client.id = mux_id;
+
+		tcpTimeout.reset(); //TODO: o firmware ja tem um timeout interno.
+
+		for (int i = 0 ; i < len; i++){
+			store(_buffer[i]);
+		}
+
+		clientID = mux_id;
 
 		#if DEBUG_CON
 			Serial.print("Received from [");
 			Serial.print(mux_id, DEC);
 			Serial.print("] -> ");
 			for(uint32_t i = 0; i < len; i++) {
-				Serial.print((char)buffer[i]);
+				Serial.print((char)_buffer[i]);
 			}
 			Serial.print("\r\n");
 		#endif
 
-		setStream(&client);
-		return DeviceConnection::checkDataAvalible();
+		uint8_t type = parseInt();
+		parseCommand(type);
+		flush();
+
+//		setStream(&client);
+//
+//		uint8_t ret = DeviceConnection::checkDataAvalible();
+//
+//		// está demorando para retornar nos comandos normais...
+//		Serial.print("ret:");
+//		Serial.println(ret);
+
+		return true;
 	}else{
 		return false;
 	}
@@ -154,18 +172,27 @@ void WifiConnetionEspAT::restart(){
 }
 
 void WifiConnetionEspAT::disconnect(bool wifioff){
+#if DEBUG_SETUP
 	Logger.debug("Disconnecting...");
+#endif
 	ESP->leaveAP();
 	memset(ipaddress, 0, 15);
 	_status = WL_DISCONNECTED;
 	_statusTcp = WL_DISCONNECTED;
 }
 
+/**
+ * Connect to AP 
+ */
 bool WifiConnetionEspAT::begin(const char* ssid, const char *passphrase){
 
 	memset(ipaddress, 0, 15);
 
 	bool status = ESP->joinAP(ssid, passphrase);
+
+#if DEBUG_SETUP
+	Logger.debug("Join AP : ", (status ? "OK" : "FAIL"));
+#endif
 
 	if(status) _status = WL_CONNECTED;
 
@@ -182,7 +209,19 @@ void WifiConnetionEspAT::softAP(const char* ssid, const char* passphrase, int ch
 	softAPEnabled = true;
 	uint8_t enc = 4; // WPA_WPA2_PSK
 	if(!passphrase || strlen(passphrase) == 0 ) enc = 0;
-	ESP->setSoftAPParam(ssid, passphrase, channel, enc);
+	
+	bool status = ESP->enableDHCP(0);
+
+#if DEBUG_SETUP
+	Logger.debug("DHCP", (status ? "OK" : "FAIL"));
+#endif
+
+	status = ESP->setSoftAPParam(ssid, passphrase, channel, enc);
+
+#if DEBUG_SETUP
+	Logger.debug("softAP", (status ? "OK" : "FAIL"));
+#endif
+
 }
 
 char* WifiConnetionEspAT::getIP(){
@@ -195,6 +234,25 @@ char* WifiConnetionEspAT::getIP(){
 	}
 
 	return ipaddress;
+}
+
+void WifiConnetionEspAT::doStart(){
+	flush();
+	write(START_BIT);
+}
+
+void WifiConnetionEspAT::doEnd(){
+	Serial.print(">>");
+	Serial.println((char*)_buffer);
+
+	write('\n');write('\r');
+	ESP->send(clientID, (uint8_t*)_buffer, _endOffset);
+	flush();
+}
+
+
+size_t WifiConnetionEspAT::write(uint8_t b){
+	store(b);
 }
 
 WifiConnetionEspAT WiFi;

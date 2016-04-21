@@ -16,7 +16,6 @@
 #define LIBRARIES_OPENDEVICE_SRC_WIFICONNETIONESPAT_H_
 
 #include <ESP8266AT.h>
-#include <WifiClientAT.h>
 
 #include "config.h"
 #include "utility/Timeout.h"
@@ -65,8 +64,15 @@ public:
 
 	virtual char* getIP();
 
+	virtual size_t write(uint8_t);
+
+	virtual void doStart();
+
+	virtual void doEnd();
+
 private:
 	const uint8_t DISCOVERY_ID = 3;
+	uint8_t clientID;
 //	int stateFlags;
 	WiFiMode _mode;
 	bool softAPEnabled;
@@ -74,9 +80,6 @@ private:
 	wl_status_t _statusTcp; // used to check if has reseted or wifi lost/reconnected
 	Timeout statusTimeout;
 	Timeout tcpTimeout;
-
-	ESP8266Client client;
-	uint8_t buffer[DATA_BUFFER] = {0};
 
 	wl_status_t statusTcp(bool force = false);
 
