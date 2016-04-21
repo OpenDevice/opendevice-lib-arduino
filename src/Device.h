@@ -75,6 +75,10 @@ public:
 	 */
 	bool setValue(unsigned long value);
 
+	void on();
+
+	void off();
+
 	/**
 	 * Get current value.
 	 */

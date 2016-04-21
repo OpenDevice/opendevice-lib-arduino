@@ -58,6 +58,15 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	
 }
 
+
+void Device::on(){
+	setValue(HIGH);
+}
+
+void  Device::off(){
+	setValue(LOW);
+}
+
 bool Device::setValue(unsigned long value){
 	currentValue = value;
 
