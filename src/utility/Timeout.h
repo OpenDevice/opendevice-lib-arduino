@@ -15,7 +15,7 @@ namespace od {
 
 class Timeout {
 public:
-	Timeout(uint16_t timeout, bool enabled =  true);
+	Timeout(uint16_t timeout, bool enabled =  false);
 	virtual ~Timeout();
 	bool expired();
 	void reset();

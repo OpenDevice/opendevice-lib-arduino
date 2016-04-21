@@ -37,6 +37,25 @@ typedef struct{
 			}
 		}
 
+		void debug(const char title[], int val, bool newLine = true){
+			if(Config.debugMode){
+				if(Config.debugTarget == 1){
+//					deviceConnection->doStart();
+//					deviceConnection->print("DB:");
+//					deviceConnection->print(str);
+//					deviceConnection->doEnd();
+				}else{
+					#if(ENABLE_SERIAL)
+					Serial.print("DB:");
+					Serial.print(title);
+					Serial.print(" :: ");
+					Serial.print(val, DEC);
+					Serial.println();
+					#endif
+				}
+			}
+		}
+
 	} LoggerClass;
 
 	extern LoggerClass Logger;

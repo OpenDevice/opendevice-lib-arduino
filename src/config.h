@@ -26,6 +26,7 @@
 
 // #include <EEPROM.h>
 
+#define DEBUG_SETUP	  0 // set 1 to enable (receiving debug)
 #define DEBUG_CON	  0 // set 1 to enable (receiving debug)
 #define ENABLE_SERIAL 1
 
@@ -39,13 +40,13 @@
 #define KEEP_ALIVE_INTERVAL 5000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
+#define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 
 #ifndef ENABLE_DHCP
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
                           Another important config to save flash memory is disable UDP of UIPEthernet (UIPEthernet/utility/uipethernet-conf.h) */
 #endif
 
-#define ENABLE_REMOTE_WIFI_SETUP 1   // disable to reduce flash usage
 
 #if defined(ESP8266)
 	#define DEFAULT_BAUD 115200
@@ -92,6 +93,7 @@ namespace od {
 		uint8_t devicesLength = 0;
 		int devicesStart = 0;
 		int devicesEnd = 0;
+		uint8_t pinReset = 2;
 		bool debugMode = false;
 		uint8_t debugTarget = DEBUG_SERIAL;
 		ConnectionMode connectionMode = CONNECTION_MODE_SERVER;
