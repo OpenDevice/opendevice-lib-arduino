@@ -18,7 +18,7 @@
 // Configure dependencies used in your project (Please comment unused dependencies)
 // *******************************************************************************************
 
-// #include <MFRC522.h> // RFID
+//#include <MFRC522.h> // RFID
 // #include <RCSwitch.h> // RF 433Mhz
 // #include <ESP8266AT.h> // ESP8266 - AT Firmwware
 #include <ESP8266WiFi.h>  // ESP8266 - Standalone
@@ -30,12 +30,16 @@
 //#include <EnableInterrupt.h>
 //#endif
 
+//#include <TaskSchedulerDeclarations.h>
+
+
+
 // --- IR DEVICE
-// #if defined(ESP8266)
-// #include "IRremoteESP8266.h"
-// #else
-// #include "IRremote.h"
-// #endif
+//#if defined(ESP8266)
+//#include "IRremoteESP8266.h"
+//#else
+//#include "IRremote.h"
+//#endif
 // -- END
 
 
