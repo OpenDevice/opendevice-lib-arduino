@@ -13,7 +13,7 @@
  */
 
 
-#include <ESP8266AT.h> // to: AT Firmware
+//#include <ESP8266AT.h> // to: AT Firmware
 
 #include <OpenDevice.h>
 #include <utility/Timeout.h>
@@ -28,7 +28,7 @@ void setup() {
 
   ODev.addDevice(2, Device::DIGITAL);
 
-  WiFi.init(new ESP8266(Serial1, 115200)); // to: AT Firmware
+  // WiFi.init(new ESP8266(Serial1, 115200)); // to: AT Firmware
   WiFi.mode(WIFI_AP_STA);
   WiFi.begin(ssid, password);
   ODev.begin(WiFi);

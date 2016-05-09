@@ -1,22 +1,23 @@
 /*
   This is a simple example of the integrated RFID Support.
   NOTE: Please enable MFRC522 dependency in "OpenDevice/dependencies.h"
-  Library Used: https://github.com/miguelbalboa/rfid
+  Library download: https://github.com/miguelbalboa/rfid
  */
 
-#include <MFRC522.h>
-#include <SPI.h>
-
+#include <RCSwitch.h>
 #include <OpenDevice.h>
 
-RFIDSensor rfid(10, 9);
+RFSensor rf(0);
 
 void setup(){
     ODev.enableDebug();
-    ODev.addSensor(rfid); // ID:1
+    ODev.enableKeepAlive(false);
+    ODev.addSensor(rf); // ID:1
     ODev.begin();
 }
 
 void loop(){
   ODev.loop();
 }
+
+

@@ -25,6 +25,11 @@
 #include "Command.h"
 #include "DeviceConnection.h"
 
+extern "C"
+{
+  // Definition of the listener function
+  typedef bool (*DeviceListener) (uint8_t iid, unsigned long value);
+}
 
 class Device
 {
@@ -33,8 +38,14 @@ public:
 	enum DeviceType{
 			DIGITAL = 1,
 			ANALOG = 2,
+			NUMERIC = 3,
 			// NEXT constants only used in embedded side, to mapping to command
-			INFRA_RED = 7
+//			RFID 					= 7,
+//			RF	 					= 8,
+
+			NODE = 10,  	  // Hold Multiple Devices
+			MANAGER = 11, // Middleware/Server
+
 	};
 
 	const static uint8_t MAX_ANALOG_VALUE = 255;
@@ -44,18 +55,33 @@ public:
 	unsigned long currentValue;
 	DeviceType type;
 
+
 	bool sensor;
 	uint8_t targetID; // associated device (used in sensors)
+
+	bool inverted; // It allows to operate in an inverted logic (only DIGITAL)
 	
+	// for interrupt mode
+	volatile bool needSync;
+	bool interruptEnabled; // only for sensor
+	uint8_t interruptMode;
 
 	Device();
+	Device(uint8_t ipin);
+	Device(uint8_t ipin, DeviceType type);
+	Device(uint8_t ipin, DeviceType type, bool sensor);
 	Device(uint8_t iid, uint8_t ipin, DeviceType type);
 	Device(uint8_t iid, uint8_t ipin, DeviceType type, bool sensor);
 
 	/**
 	 * Change value / state of Device
+	 * @param sync - sync with server
 	 */
-	bool setValue(unsigned long value);
+	bool setValue(unsigned long value, bool sync = true);
+
+	void on();
+
+	void off();
 
 	/**
 	 * Get current value.
@@ -68,11 +94,34 @@ public:
 
 	virtual bool hasChanged();
 
+	/**
+	 * Enable to read value using interruptions. <br/>
+	 * NOTE: It is necessary to enable support in the general settings.
+	 */
+	Device* enableInterrupt(uint8_t mode = CHANGE);
+
+	/**
+	 * It allows device operate in an inverted logic (the 'ON' command will generate a LOW LEVEL)
+	 */
+	Device* invertedState();
+
 	virtual void init();
+
+	void onChange(DeviceListener);
+
+	void setSyncListener(DeviceListener listener);
+
+	bool notifyListeners();
+
+	int toString(char buffer[]);
+
+private:
+
+	DeviceListener changeListener;
+	DeviceListener syncListerner;
 
 	void _init(uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
 
-	int toString(char buffer[]);
 };
 
 

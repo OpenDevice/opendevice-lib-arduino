@@ -28,6 +28,19 @@ Device::Device(){
 	_init(0, 0, DIGITAL, false);
 }
 
+Device::Device(uint8_t ipin){
+	_init(0, ipin, DIGITAL, false);
+}
+
+Device::Device(uint8_t ipin, DeviceType type){
+	_init(0, ipin, type, false);
+}
+
+Device::Device(uint8_t ipin, DeviceType type, bool sensor){
+	_init(0, ipin, type, sensor);
+}
+
+
 Device::Device(uint8_t _id, uint8_t _pin, DeviceType _type){
 	_init(_id, _pin, _type, false);
 }
@@ -43,22 +56,47 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	type = _type;
 	sensor = _sensor;
 	targetID = 0;
+	needSync = false;
+	inverted = false;
+	interruptEnabled = false;
+	interruptMode = CHANGE;
+	changeListener = 0;
 
-	if(_sensor){
+	//if(_sensor){
 		currentValue = LOW;
-	}else{
-		currentValue = HIGH; // TODO: isso deve ser definido, pois tomada é HIGHT e lanpada deve ser LOW
-	}
+	//}else{
+	//	currentValue = LOW; // TODO: isso deve ser definido, pois tomada é HIGHT e lanpada deve ser LOW
+	//}
+
+	
 }
 
-bool Device::setValue(unsigned long value){
+
+void Device::on(){
+	setValue(HIGH);
+}
+
+void  Device::off(){
+	setValue(LOW);
+}
+
+bool Device::setValue(unsigned long value, bool sync){
 	currentValue = value;
 
-	if(!sensor){
+	if(sensor == false){
 		if(type == Device::DIGITAL){
-			digitalWrite(pin, (value == 1 ? HIGH : LOW));
+
+			if(inverted) value = ! value;
+
+			digitalWrite(pin, (value == 0 ? LOW : HIGH));
 		}else{
 			analogWrite(pin, value);
+		}
+
+		notifyListeners();
+
+		if(sync){
+			if(syncListerner) (*syncListerner)(id, currentValue);
 		}
 	}
 
@@ -71,7 +109,12 @@ unsigned long Device::getValue(){
 		return currentValue; // return last filtered value... (see: hasChanged)
 	}else{
 		if(type == Device::DIGITAL){
-			return digitalRead(pin);
+
+			uint8_t value = digitalRead(pin);
+
+			if(inverted) value = ! value;
+
+			return value;
 		}else{
 			return analogRead(pin);
 		}
@@ -93,7 +136,8 @@ bool Device::hasChanged(){
 	unsigned long v = 0;
 
 	if(type == Device::DIGITAL){
-		v = ! digitalRead(pin); // READ and Invert state because is a INPUT_PULLUP
+		v = digitalRead(pin); // READ and Invert state because (sensor) is a INPUT_PULLUP
+		if(inverted) v = !v;
 	}else{
 		v = analogRead(pin);
 		//if(currentValue != v){
@@ -111,8 +155,50 @@ bool Device::hasChanged(){
 }
 
 void Device::init(){
-	// Do nothing for now.
+
+	if(inverted && type == Device::DIGITAL){
+
+		if(sensor){
+			#if defined(INPUT_PULLUP)
+			  pinMode (pin, INPUT_PULLUP);
+			#else //TODO: not tested !
+			  pinMode (device.pin, INPUT);
+			  digitalWrite (device.pin, HIGH);
+			#endif
+		}else{
+			digitalWrite(pin, (currentValue == LOW ? HIGH : LOW));
+		}
+	}
+
 }
+
+Device* Device::enableInterrupt(uint8_t mode){
+	if(sensor){
+		interruptEnabled = true;
+		interruptMode = mode;
+	}
+	return this;
+}
+
+Device* Device::invertedState(){
+	inverted = true;
+	return this;
+}
+
+void Device::onChange(DeviceListener listener){
+	changeListener = listener;
+}
+
+void Device::setSyncListener(DeviceListener listener){
+	syncListerner = listener;
+}
+
+bool Device::notifyListeners(){
+	bool ret = true;
+	if(changeListener) ret = (*changeListener)(id, currentValue);
+	return ret;
+}
+
 
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(char buffer[]){

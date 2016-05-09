@@ -21,37 +21,39 @@ namespace CommandType {
 	enum CommandType {
 		ON_OFF 					= 1, // Indicates that the values are 0 or 1 (HIGH or LOW)
 		ANALOG 					= 2,
-		ANALOG_REPORT 			= 3,
+		NUMERIC		 			= 3, // Similar to ANALOG , but launches the event 'onChange' every time a reading is taken
 		GPIO_DIGITAL 			= 4, // Commands sent directly to the pins (digitalWrite)
 		GPIO_ANALOG 			= 5, //  Commands sent directly to the pins (analogWrite)
-		PWM 					= 6,
-		INFRA_RED 				= 7,
+		INFRA_RED 				= 6,
+
 		DEVICE_COMMAND_RESPONSE = 10, // Response to commands like: ON_OFF, POWER_LEVEL, INFRA RED
+		COMMAND_RESPONSE 		= 11, // TODO: not implemented
+		SET_PROPERTY			= 12, // TODO: not implemented
+		ACTION					= 13, // TODO: not implemented
+
 		// ---
-	    PING                    = 20,
+		PING_REQUEST            = 20,
 	    PING_RESPONSE           = 21,
 	    DISCOVERY_REQUEST       = 22,
 	    DISCOVERY_RESPONSE      = 23,
 	    MEMORY_REPORT           = 24, // Report the amount of memory = displays the current and maximum).
 	    CPU_TEMPERATURE_REPORT  = 25,
 	    CPU_USAGE_REPORT        = 26,
+		RESET 		        	= 27, // Reset Microcontroller
+
 		// ---
 		GET_DEVICES 			= 30,
 		GET_DEVICES_RESPONSE 	= 31,
-		CLEAR_DEVICES 			= 32,
-		CLEAR_DEVICES_RESPONSE  = 33,
-	    DEVICE_ADD 				= 34,
-	    DEVICE_ADD_RESPONSE		= 35,
-	    DEVICE_DEL 				= 36,
-	    DEVICE_DEL_RESPONSE		= 37,
+	    DEVICE_ADD 				= 32,
+	    DEVICE_ADD_RESPONSE		= 33,
+	    DEVICE_DEL 				= 34,
+		CLEAR_DEVICES 			= 35,
+		GET_CONNECTIONS 		= 36,
+		GET_CONNECTIONS_RESPONSE   = 37,
 	    CONNECTION_ADD 			= 38,
-	    CONNECTION_ADD_RESPONSE	= 39,
+	    CONNECTION_ADD_RESPONSE = 39, // Return IP
 	    CONNECTION_DEL 			= 40,
-	    CONNECTION_DEL_RESPONSE = 41,
-		GET_CONNECTIONS 		= 42,
-		GET_CONNECTIONS_RESPONSE   = 43,
-		CLEAR_CONNECTIONS 		   = 34,
-		CLEAR_ONNECTIONS_RESPONSE  = 35,
+		CLEAR_CONNECTIONS 		= 41,
 		// ---
 		USER_COMMAND 			= 99
 	};
@@ -99,7 +101,6 @@ struct Command {
 		switch (type) {
 		case CommandType::ON_OFF: return true;
 		case CommandType::ANALOG: return true;
-		case CommandType::ANALOG_REPORT: return true;
 		default:
 			return false;
 		}
@@ -109,7 +110,7 @@ struct Command {
 			if (type == 0) return false;
 			switch (type) {
 			case CommandType::DISCOVERY_REQUEST: return true;
-			case CommandType::PING: return true;
+			case CommandType::PING_REQUEST: return true;
 			case CommandType::PING_RESPONSE: return true;
 			default:
 				return false;

@@ -15,6 +15,7 @@
 #define LIBRARIES_OPENDEVICE_BASEWIFICONNECTION_H_
 
 #include "config.h"
+#include "Device.h"
 #include "utility/Logger.h"
 #include "DeviceConnection.h"
 
@@ -75,6 +76,8 @@ protected:
 	bool waitForClient(uint32_t timeout);
 
 	bool waitForConnected(uint32_t timeout);
+
+	void sendDiscoveryResponse();
 
 };
 

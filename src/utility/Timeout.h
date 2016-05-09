@@ -15,12 +15,16 @@ namespace od {
 
 class Timeout {
 public:
-	Timeout(uint16_t timeout);
+	Timeout(uint16_t timeout, bool enabled =  false);
 	virtual ~Timeout();
 	bool expired();
 	void reset();
+	void enable();
+	void disable();
+	bool isEnabled() { return enabled;}
 private:
 	uint16_t _timeout;
+	bool enabled;
 	unsigned long lastCheck;
 };
 

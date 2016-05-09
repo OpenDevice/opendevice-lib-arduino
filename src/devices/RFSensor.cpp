@@ -13,30 +13,41 @@
 
 #include "../dependencies.h"
 
-#ifdef __ESP8266AT_H__
+#if defined(_RCSwitch_h)
 
-#include <WifiClientAT.h>
+#include "RFSensor.h"
 
-ESP8266Client::ESP8266Client(): buffer(_buffer , DATA_BUFFER) {
+RFSensor::RFSensor(byte interruptPinPort) :
+		Device(0, 0, Device::NUMERIC, true), rf() {
+
+	rf.enableReceive(interruptPinPort);
 
 }
 
-void ESP8266Client::setData(uint8_t *data, const uint16_t len){
-	buffer.flush();
-	for(uint32_t i = 0; i < len; i++) {
-		buffer.write(data[i]);
-	}
+RFSensor::~RFSensor() {
+
 }
 
-size_t ESP8266Client::write(uint8_t v){
-	size_t ret = buffer.write(v);
-	if(v == Command::ACK_BIT){
-		#if DEBUG_CON
-		Logger.debug("ESP8266Client::write", (const char*) buffer._buffer);
-		#endif
-		ESP->send(id, buffer._buffer, buffer.current_length());
+bool RFSensor::hasChanged(){
+
+	if (rf.available()) {
+
+		int value = rf.getReceivedValue();
+
+		if (value == 0) {
+			return false;
+		}
+
+		currentValue = (unsigned long) value;
+
+		rf.resetAvailable();
+
+		return true;
 	}
-	return ret;
+
+
+	return false;
+
 }
 
 #endif

@@ -38,19 +38,21 @@ using namespace od;
 #define USING_CUSTOM_CONNECTION 1
 #define CUSTOM_CONNECTION_CLASS EthernetClient
 
-// TODO: move to private
-EthernetServer ethserver(80);
+EthernetServer ethserver(DEFAULT_SERVER_PORT);
 EthernetClient ethclient;
+
 
 /** This method is called automatically by the OpenDevice when run: ODev.begin() */
 void custom_connection_begin(){
-	Serial.println(" - Setup EthernetServer");
+	// Serial.println(" - Setup EthernetServer");
 
 	uint8_t *mac = Config.id;
 
 	if(!Config.saved){
 		loadConfig();
 	}
+
+	// FIXME: remove logic to save IP, implement discovery service;
 
 	// Using saved IP (Sketch or EEPROM)
 	if(Config.ip[0] != 0){
@@ -77,8 +79,6 @@ void custom_connection_begin(){
 			Serial.println(F("Please define a IP or enable DHCP"));
 		#endif
 	}
-
-
 	//TODO: A configuração se é IP fixo ou DHCP deve ser informada em algum lugar.
 //	if (Ethernet.begin(mac) == 0) {
 
@@ -87,10 +87,13 @@ void custom_connection_begin(){
 	Serial.print("Server is at: "); Serial.println(Ethernet.localIP());
 	ethserver.begin();
 
+
+
+
 }
 
 /** This method is called automatically by the OpenDevice when run: ODev.loop() */
-CUSTOM_CONNECTION_CLASS custom_connection_loop(DeviceConnection *conn){
+EthernetClient custom_connection_loop(DeviceConnection *conn){
 
 	if (EthernetClient newClient = ethserver.available()) {
 		ethclient = newClient;

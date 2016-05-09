@@ -11,43 +11,22 @@
  * *****************************************************************************
  */
 
+#ifndef RFSensor_H_
+#define RFSensor_H_
 
-// #ifndef ENERGIA // Bypass on Stellaris
-
-#ifndef IRSENSOR_H_
-#define IRSENSOR_H_
-
-#include "Stream.h"
 #include "Device.h"
-#include "utility/DataUtils.h"
+#include <RCSwitch.h>
 
-#if defined(ESP8266)
-#include "IRremoteESP8266.h"
-#else
-#include "IRremote.h"
-#endif
-
-
-/*
- * IRSensor.h
- *
- *  Created on: 29/04/2013
- *  Author: Ricardo JL Rufino
- */
-class IRSensor : public Device {
+class RFSensor : public Device  {
 public:
-	IRSensor();
-	IRSensor(uint8_t iid, uint8_t ipin);
-	virtual void init();
-	virtual bool hasChanged();
-	virtual size_t serializeExtraData(DeviceConnection *conn);
-	virtual ~IRSensor();
+	RFSensor(byte interruptPinPort);
+	virtual ~RFSensor();
+	bool hasChanged();
 
 private:
-	IRrecv irrecv;
-	decode_results results;
-
+	RCSwitch rf;
 };
 
-#endif /* IRSENSOR_H_ */
+#endif /* RFSensor_H_ */
+
 

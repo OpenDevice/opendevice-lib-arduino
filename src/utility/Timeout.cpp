@@ -9,7 +9,7 @@
 
 namespace od {
 
-Timeout::Timeout(uint16_t time) : _timeout(time), lastCheck(0) {
+Timeout::Timeout(uint16_t time, bool enabled) : _timeout(time), lastCheck(0), enabled(enabled) {
 
 }
 
@@ -20,7 +20,18 @@ void Timeout::reset(){
 	lastCheck = millis();
 }
 
+void Timeout::enable() {
+	enabled = true;
+	reset();
+}
+
+void Timeout::disable() {
+	enabled = false;
+}
+
 bool Timeout::expired(){
+
+	if(!enabled) return false;
 
 	unsigned long currentMillis = millis();
 

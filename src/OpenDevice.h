@@ -21,6 +21,7 @@
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/FuncSensor.h"
+#include "../dependencies.h"
 
 using namespace od;
 
@@ -31,6 +32,17 @@ using namespace od;
 #if defined(ethernet_h) || defined (UIPETHERNET_H)
 	#include "EthernetServerConnection.h"
 #endif
+
+// Arduino YUN Wifi/Ethernet bridge
+#if defined(_YUN_SERVER_H_) && !defined(PubSubClient_h)
+	#include "YunServerConnection.h"
+#endif
+
+
+#if defined(PubSubClient_h)
+	#include "MQTTConnection.h"
+#endif
+
 
 // ESP8266 AT Command library
 #if defined(__ESP8266AT_H__)
@@ -47,6 +59,26 @@ using namespace od;
 #if defined(MFRC522_h)
 	#include <devices/RFIDSensor.h>
 #endif
+
+#if defined(_RCSwitch_h)
+	#include <devices/RFSensor.h>
+#endif
+
+#if defined(IRremote_h)
+	#include <devices/IRSensor.h>
+	#include <devices/IRDevice.h>
+#endif
+
+
+extern volatile uint8_t* PIN_INTERRUPT;
+
+#if(ENABLE_DEVICE_INTERRUPTION) // if config.h
+#define EI_ARDUINO_INTERRUPTED_PIN
+#define LIBCALL_ENABLEINTERRUPT
+#include <EnableInterrupt.h>
+#endif
+
+
 
 /*
  * OpenDeviceClass.h
@@ -77,6 +109,8 @@ private:
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
 	static void onMessageReceived(Command cmd);
+	static bool onDeviceChanged(uint8_t iid, unsigned long value);
+
 	void onSensorChanged(uint8_t id, unsigned long value);
 
 	void notifyReceived(ResponseStatus::ResponseStatus status);
@@ -87,7 +121,8 @@ private:
 	void debugChange(uint8_t id, unsigned long value);
 
 	void _loop();
-	void _begin();
+
+	void beginDefault();
 
 public:
 
@@ -98,31 +133,35 @@ public:
 	uint8_t commandsLength;
 	DeviceConnection *deviceConnection;
 
+#ifdef _TASKSCHEDULER_H_
+	Scheduler scheduler;
+#endif
+
+
 	OpenDeviceClass();
 	// virtual ~OpenDeviceClass();
 
-	/**
-	 * Setup connection using default settings <br/>
-	 * Thus the connection settings are detected according to the active libraries
-	 */
-	#if defined(USING_CUSTOM_CONNECTION)
-		void begin(){
-			_begin();
-			custom_connection_begin();
-		}
-	#else
-		void begin(){ _begin(); };
-	#endif
 
 	#if defined(USING_CUSTOM_CONNECTION)
 		void loop(){
 			CUSTOM_CONNECTION_CLASS conn = custom_connection_loop(deviceConnection);
 			deviceConnection->setStream(&conn);
+
 			_loop();
+
+			#ifdef _TASKSCHEDULER_H_
+				scheduler.execute();
+			#endif
 		}
 	#else
 		void loop(){
+
 			_loop();
+
+			#ifdef _TASKSCHEDULER_H_
+				scheduler.execute();
+			#endif
+
 		};
 	#endif
 
@@ -135,7 +174,7 @@ public:
 	 */
 	void id(uint8_t *pid) { memcpy(Config.id, pid, sizeof(Config.id)); }
 
-	void name(const char *pname) { Config.moduleName = pname; }
+	void name(char *pname) { Config.moduleName = pname; }
 	const char* name() { return Config.moduleName; }
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
 
@@ -148,7 +187,52 @@ public:
 	void begin(Stream &stream);
 	void begin(HardwareSerial &serial, unsigned long baud);
 
+	/**
+	 * Allow custom #preprocessor macros
+	 */
+	void _afterBegin(){
+
+		//#ifdef _TASKSCHEDULER_H_
+		//		Serial.println("scheduler.init()");
+		//		scheduler.init();
+		//#endif
+
+	}
+
+/**
+ * Setup connection using default settings <br/>
+ * Thus the connection settings are detected according to the active libraries
+ */
+#if defined(USING_CUSTOM_CONNECTION)
+	void begin(){
+
+		beginDefault();
+
+		custom_connection_begin();
+	}
+#else
+	/**
+	 * No parameters, user Serial by default
+	 */
+	void begin(){
+
+		// Wait serial if using Leonardo / YUN
+		#if defined(HAVE_CDCSERIAL) && defined(__AVR_ATmega32U4__)
+			while (!Serial){delay(1);}
+		#endif
+
+		beginDefault();
+
+	};
+#endif
+
 #if defined(HAVE_CDCSERIAL)
+
+	void begin(Serial_ &serial, unsigned long baud);
+
+#endif
+
+#if defined (__arm__) && defined (__SAM3X8E__) // Arduino Due compatible
 
 	void begin(Serial_ &serial, unsigned long baud);
 
@@ -214,6 +298,8 @@ void begin(ESP8266WiFiClass &wifi){
 
 	void checkSensorsStatus();
 
+	static void onInterruptReceived();
+
 	/** When enabled OpenDevice will be sending a PING message to connection to inform you that everything is OK. <br/>
 	 * Control of the Keep Alive / Ping can be left to the other side of the connection, in this case the "device" would be disabled */
 	void enableKeepAlive(bool val =  false);
@@ -223,30 +309,39 @@ void begin(ESP8266WiFiClass &wifi){
 	void send(Command cmd);
 
 	/** Create a simple command (using lastCMD buffer)*/
-	Command cmd(uint8_t type, uint8_t deviceID = 0, unsigned long value = 0);
+	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, unsigned long value = 0);
+	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, unsigned long value = 0);
 
 #ifdef __FlashStringHelper
 	void debug(const __FlashStringHelper* data);
 #endif
 
-	void debug(const char str[]);
+	void debug(const char str[], unsigned long value = -1);
 	#ifdef ARDUINO
 	void debug(const String &s);
 	#endif
 
-	bool addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	bool addSensor(uint8_t pin, Device::DeviceType type);
-	bool addSensor(Device& sensor);
-	bool addSensor(unsigned long (*function)()){
+	Device* addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
+	Device* addSensor(uint8_t pin, Device::DeviceType type);
+	Device* addSensor(Device& sensor);
+	Device* addSensor(unsigned long (*function)()){
 		FuncSensor* func = new FuncSensor(function);
 		return addDevice(*func);
 	}
 
-	bool addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
-	bool addDevice(uint8_t pin, Device::DeviceType type);
-	bool addDevice(Device& device);
+	Device* addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
+	Device* addDevice(uint8_t pin, Device::DeviceType type);
+	Device* addDevice(Device& device);
 
 	bool addCommand(const char * name, void (*function)());
+
+#ifdef _TASKSCHEDULER_H_
+
+	void addTask(Task& aTask, void (*aCallback)());
+
+	void deleteTask(Task& aTask);
+
+#endif
 
 	Device* getDevice(uint8_t);
 	Device* getDeviceAt(uint8_t);
@@ -260,9 +355,13 @@ void begin(ESP8266WiFiClass &wifi){
 	void setDefaultListener(void (*pt2Func)(uint8_t, unsigned long));
 
 	void setValue(uint8_t id, unsigned long value);
+	void sendValue(Device* device);
+
+	void toggle(uint8_t id);
 	void sendToAll(unsigned long value);
 
 	inline bool isConnected(){return connected;}
+	inline void setConnected(bool val){connected = val;}
 
 	inline String readString() { return deviceConnection->readString(); }
 	inline int readInt(){ return deviceConnection->readInt(); }

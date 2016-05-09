@@ -21,6 +21,7 @@ class RFIDSensor : public Device  {
 public:
 	RFIDSensor(byte chipSelectPin, byte resetPin);
 	virtual ~RFIDSensor();
+	void init();
 	bool hasChanged();
 
 private:
