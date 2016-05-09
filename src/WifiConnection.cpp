@@ -37,13 +37,13 @@ void WifiConnection::begin(void){
 	// TODO: verificar se softAP não foi chamado anteriormente e se ele gera um WL_CONNECTED
 
 	WiFiMode mode = WiFi.getMode();
-	if(mode == WIFI_STA || mode == WIFI_AP_STA){
+	if(mode == WIFI_AP || mode == WIFI_AP_STA){
 		WiFi.softAP(Config.moduleName);
 		Logger.debug("SoftAP", "OK");
 	}
 
 	// has saved last STA connections settings
-	if(wifi_station_get_auto_connect() && isStartup){
+	if(wifi_station_get_auto_connect() && isStartup ){
 		Logger.debug("Automatic STA Reconnect");
 		if(WiFi.waitForConnectResult() != WL_CONNECTED){ // need wait..
 			Logger.debug("Automatic STA Reconnect", "FAIL");
@@ -56,16 +56,15 @@ void WifiConnection::begin(void){
 
 	Udp.begin(DISCOVERY_PORT);
 
-//	Logger.debug("WifiConnection.Begin", (const char*) WiFi.localIP().raw_address());
-	Logger.debug("WifiConnection.Begin", "OK");
+	Logger.debug("TCPServer", "OK");
 
     if(Config.debugMode) WiFi.printDiag(Serial);
 
     // Print the IP address
-	Logger.debug("STA is at: ");
+	Logger.debug("IP STA: ");
     if(Config.debugMode) Serial.println(WiFi.localIP());
 
-    Logger.debug("AP is at: ");
+    Logger.debug("IP softAP: ");
     if(Config.debugMode) Serial.println(WiFi.softAPIP());
 
     isStartup = false;
@@ -154,7 +153,12 @@ void WifiConnection::mode(WiFiMode mode){
 }
 
 bool WifiConnection::begin(const char* ssid, const char *passphrase){
-	return WiFi.begin(ssid, passphrase);
+
+	bool s = WiFi.begin(ssid, passphrase);
+
+	if(!s) Logger.debug("Connect", "Fail");
+
+	return s;
 }
 
 char* WifiConnection::getIP(){
