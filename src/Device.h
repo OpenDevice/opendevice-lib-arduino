@@ -28,7 +28,7 @@
 extern "C"
 {
   // Definition of the listener function
-  typedef bool (*DeviceListener) (unsigned long value);
+  typedef bool (*DeviceListener) (uint8_t iid, unsigned long value);
 }
 
 class Device
@@ -67,13 +67,17 @@ public:
 	uint8_t interruptMode;
 
 	Device();
+	Device(uint8_t ipin);
+	Device(uint8_t ipin, DeviceType type);
+	Device(uint8_t ipin, DeviceType type, bool sensor);
 	Device(uint8_t iid, uint8_t ipin, DeviceType type);
 	Device(uint8_t iid, uint8_t ipin, DeviceType type, bool sensor);
 
 	/**
 	 * Change value / state of Device
+	 * @param sync - sync with server
 	 */
-	bool setValue(unsigned long value);
+	bool setValue(unsigned long value, bool sync = true);
 
 	void on();
 
@@ -105,6 +109,8 @@ public:
 
 	void onChange(DeviceListener);
 
+	void setSyncListener(DeviceListener listener);
+
 	bool notifyListeners();
 
 	int toString(char buffer[]);
@@ -112,6 +118,7 @@ public:
 private:
 
 	DeviceListener changeListener;
+	DeviceListener syncListerner;
 
 	void _init(uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
 
