@@ -78,6 +78,8 @@ extern volatile uint8_t* PIN_INTERRUPT;
 #include <EnableInterrupt.h>
 #endif
 
+
+
 /*
  * OpenDeviceClass.h
  *
@@ -107,6 +109,7 @@ private:
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
 	static void onMessageReceived(Command cmd);
+	static bool onDeviceChanged(uint8_t iid, unsigned long value);
 
 	void onSensorChanged(uint8_t id, unsigned long value);
 
@@ -118,7 +121,8 @@ private:
 	void debugChange(uint8_t id, unsigned long value);
 
 	void _loop();
-	void _begin();
+
+	void beginDefault();
 
 public:
 
@@ -129,6 +133,11 @@ public:
 	uint8_t commandsLength;
 	DeviceConnection *deviceConnection;
 
+#ifdef _TASKSCHEDULER_H_
+	Scheduler scheduler;
+#endif
+
+
 	OpenDeviceClass();
 	// virtual ~OpenDeviceClass();
 
@@ -137,11 +146,22 @@ public:
 		void loop(){
 			CUSTOM_CONNECTION_CLASS conn = custom_connection_loop(deviceConnection);
 			deviceConnection->setStream(&conn);
+
 			_loop();
+
+			#ifdef _TASKSCHEDULER_H_
+				scheduler.execute();
+			#endif
 		}
 	#else
 		void loop(){
+
 			_loop();
+
+			#ifdef _TASKSCHEDULER_H_
+				scheduler.execute();
+			#endif
+
 		};
 	#endif
 
@@ -167,13 +187,27 @@ public:
 	void begin(Stream &stream);
 	void begin(HardwareSerial &serial, unsigned long baud);
 
+	/**
+	 * Allow custom #preprocessor macros
+	 */
+	void _afterBegin(){
+
+		//#ifdef _TASKSCHEDULER_H_
+		//		Serial.println("scheduler.init()");
+		//		scheduler.init();
+		//#endif
+
+	}
+
 /**
  * Setup connection using default settings <br/>
  * Thus the connection settings are detected according to the active libraries
  */
 #if defined(USING_CUSTOM_CONNECTION)
 	void begin(){
-		_begin();
+
+		beginDefault();
+
 		custom_connection_begin();
 	}
 #else
@@ -187,7 +221,8 @@ public:
 			while (!Serial){delay(1);}
 		#endif
 
-		_begin();
+		beginDefault();
+
 	};
 #endif
 
@@ -300,6 +335,14 @@ void begin(ESP8266WiFiClass &wifi){
 
 	bool addCommand(const char * name, void (*function)());
 
+#ifdef _TASKSCHEDULER_H_
+
+	void addTask(Task& aTask, void (*aCallback)());
+
+	void deleteTask(Task& aTask);
+
+#endif
+
 	Device* getDevice(uint8_t);
 	Device* getDeviceAt(uint8_t);
 
@@ -312,6 +355,8 @@ void begin(ESP8266WiFiClass &wifi){
 	void setDefaultListener(void (*pt2Func)(uint8_t, unsigned long));
 
 	void setValue(uint8_t id, unsigned long value);
+	void sendValue(Device* device);
+
 	void toggle(uint8_t id);
 	void sendToAll(unsigned long value);
 

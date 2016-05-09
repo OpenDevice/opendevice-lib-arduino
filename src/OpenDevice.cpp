@@ -56,7 +56,7 @@ OpenDeviceClass::OpenDeviceClass() {
 //}
 //
 //#else
-void OpenDeviceClass::_begin() {
+void OpenDeviceClass::beginDefault() {
 	begin(Serial, DEFAULT_BAUD);
 }
 //#endif
@@ -123,7 +123,6 @@ void OpenDeviceClass::begin(Stream &serial){
 void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
-	deviceConnection->begin();
 
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
@@ -135,10 +134,14 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 		}
 	}
 
+
 	if(deviceConnection){
 		deviceConnection->setDefaultListener(&(OpenDeviceClass::onMessageReceived));
 	}
 
+	deviceConnection->begin();
+
+	_afterBegin();
 
 	// ODev.debug("Begin [OK]");
 
@@ -166,7 +169,6 @@ void OpenDeviceClass::_loop() {
 		}
 	  }
 	}
-	
 	
 
 }
@@ -205,7 +207,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 		Device *foundDevice = ODev.getDevice(cmd.deviceID);
 		if (foundDevice != NULL) {
 			ODev.debugChange(foundDevice->id, cmd.value);
-			foundDevice->setValue(cmd.value);
+			foundDevice->setValue(cmd.value, false);
 			foundDevice->deserializeExtraData(&cmd, conn);
 			ODev.notifyReceived(ResponseStatus::SUCCESS);
 		} else {
@@ -264,6 +266,15 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 
 	}
 
+}
+
+/**
+ * Fired by Device when user change device state in Sketch
+ */
+bool OpenDeviceClass::onDeviceChanged(uint8_t iid, unsigned long value) {
+	ODev.debugChange(iid, value);
+	ODev.sendValue(ODev.getDevice(iid)); // sync with server
+	return true;
 }
 
 
@@ -419,14 +430,7 @@ Device* OpenDeviceClass::addDevice(Device& device){
 
 		if(device.pin > 0){
 			if (device.sensor) {
-				if (device.type == Device::DIGITAL) {
-					#if defined(INPUT_PULLUP)
-					  pinMode (device.pin, INPUT_PULLUP);
-					#else //TODO: not tested !
-					  pinMode (device.pin, INPUT);
-					  digitalWrite (device.pin, HIGH);
-					#endif
-				}
+				// default is INPUT.
 			} else {
 				pinMode(device.pin, OUTPUT);
 			}
@@ -436,6 +440,7 @@ Device* OpenDeviceClass::addDevice(Device& device){
 
 		devices[deviceLength] = &device;
 		deviceLength = deviceLength + 1;
+		device.setSyncListener(&(OpenDeviceClass::onDeviceChanged));
 
 		return &device;
 	} else{
@@ -486,6 +491,20 @@ bool OpenDeviceClass::addCommand(const char * name, void (*function)()){
 		}
 }
 
+#ifdef _TASKSCHEDULER_H_
+
+	void OpenDeviceClass::addTask(Task& aTask, void (*aCallback)()){
+		scheduler.addTask(aTask);
+		aTask.setCallback(aCallback);
+	}
+
+
+	void OpenDeviceClass::deleteTask(Task& aTask){
+		scheduler.deleteTask(aTask);
+	}
+
+#endif
+
 
 void OpenDeviceClass::checkSensorsStatus(){
 
@@ -532,18 +551,21 @@ void OpenDeviceClass::setValue(uint8_t id, unsigned long value){
 
     for (int i = 0; i < deviceLength; i++) {
     	if(devices[i]->id == id){
-    		devices[i]->setValue(value);
-
-			lastCMD.id = 0;
-			lastCMD.type = (uint8_t) devices[i]->type;
-			lastCMD.deviceID = devices[i]->id;
-			lastCMD.value = value;
-			deviceConnection->send(lastCMD, true);
-
+    		devices[i]->setValue(value, false);
+    		sendValue(devices[i]);
     		break;
     	}
     }
 }
+
+void OpenDeviceClass::sendValue(Device* device){
+	lastCMD.id = 0;
+	lastCMD.type = (uint8_t) device->type;
+	lastCMD.deviceID = device->id;
+	lastCMD.value = device->currentValue;
+	deviceConnection->send(lastCMD, true);
+}
+
 
 void OpenDeviceClass::toggle(uint8_t id){
 	Device* device = ODev.getDevice(id);

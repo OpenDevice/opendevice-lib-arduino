@@ -29,7 +29,7 @@ extern "C"
 ******************************************************************************/
 
 /**
- * Class que implements the application level protocol of the OpenDevice.
+ * Implements the application level protocol of the OpenDevice.
  */
 class DeviceConnection : public Print{
 
