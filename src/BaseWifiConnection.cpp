@@ -81,24 +81,30 @@ void BaseWifiConnection::onMessageReceived(Command cmd){
 		}
 		#endif
 	} else if (cmd.type == CommandType::DISCOVERY_REQUEST) {
-		doStart();
-		print(CommandType::DISCOVERY_RESPONSE);
-		doToken();
-		print(cmd.id);
-		doToken();
-		print(Config.moduleName);
-		doToken();
-		print(Device::NODE); // ModuleType: NODE
-		doToken();
-		print(Config.devicesLength);
-		doToken();
-		print(DEFAULT_SERVER_PORT);
-		doToken();
-		doEnd();
+		sendDiscoveryResponse();
+		delay(1000);
+		sendDiscoveryResponse();
 	} else {
 		DeviceConnection::onMessageReceived(cmd);
 	}
 
+}
+
+void BaseWifiConnection::sendDiscoveryResponse(){
+	doStart();
+	print(CommandType::DISCOVERY_RESPONSE);
+	doToken();
+	print(cmd.id);
+	doToken();
+	print(Config.moduleName);
+	doToken();
+	print(Device::NODE); // ModuleType: NODE
+	doToken();
+	print(Config.devicesLength);
+	doToken();
+	print(DEFAULT_SERVER_PORT);
+	doToken();
+	doEnd();
 }
 
 bool BaseWifiConnection::waitForClient(uint32_t timeout)

@@ -77,6 +77,8 @@ protected:
 
 	bool waitForConnected(uint32_t timeout);
 
+	void sendDiscoveryResponse();
+
 };
 
 #endif /* LIBRARIES_OPENDEVICE_BASEWIFICONNECTION_H_ */
