@@ -11,13 +11,12 @@
  * *****************************************************************************
  */
 
+#ifndef OPENDEVICE_MQTTConnection
+#define OPENDEVICE_MQTTConnection
+
 /*
- * EthernetServerConnection.h
- * This implementation is designed to run both the Ethernet Arduino native library when the "arduino_uip" used to work with the ENC28J60 module.<br/>
- * This include will be used automatically when the Ethernet or UIPEthernet library is declared in main sketch
+ * This MQTT implementation is designed to run both on Ethernet and Wifi (ESP8266)
  *
- * Created on: 22/06/2014
- * Update: 23/02/2015
  * Author: Ricardo JL Rufino
  */
 #include <Arduino.h>
@@ -27,6 +26,7 @@
 
 // NOTE: Please do not include OpenDevice.h this will break the preprocessors / macros
 #include "config.h"
+#include "utility/Logger.h"
 #include "DeviceConnection.h"
 #include "MQTTClient.h"
 
@@ -35,11 +35,19 @@ using namespace od;
 #define USING_CUSTOM_CONNECTION 1
 #define CUSTOM_CONNECTION_CLASS MQTTClient
 
-YunClient ethclient;
-PubSubClient mqtt(ethclient);
-MQTTClient mqttClient(mqtt);
+#if defined(_YUN_SERVER_H_)
+static YunClient ethclient;
+#endif
 
-void pubSubClientReconnect() {
+// ESP8266 Standalone
+#if defined(ESP8266)
+static WiFiClient ethclient;
+#endif
+
+static PubSubClient mqtt(ethclient);
+static MQTTClient mqttClient(mqtt);
+
+static void pubSubClientReconnect() {
   // Loop until we're reconnected
   while (!mqtt.connected()) {
 	String clientID = String(Config.appID);
@@ -50,35 +58,38 @@ void pubSubClientReconnect() {
 	subscribe+= "/in/";
 	subscribe+= Config.moduleName;
 
-    Serial.print("Attempting MQTT connection...");
+    Serial.print("Connecting...");
     // Attempt to connect
     if (mqtt.connect(clientID.c_str())) { /// ---> NAME.
       Serial.println("connected");
       mqtt.subscribe(subscribe.c_str());
     } else {
-      Serial.print("failed, rc=");
+      Serial.print("failed (#");
       Serial.print(mqtt.state());
-      Serial.println(" try again in 5 seconds");
+      Serial.println(")");
       // Wait 5 seconds before retrying
       delay(5000);
     }
   }
 }
 
-void pubSubClientCallback(char* topic, byte* payload, unsigned int length) {
+static void pubSubClientCallback(char* topic, byte* payload, unsigned int length) {
 	mqttClient.setData(payload, length);
 }
 
 
 /** This method is called automatically by the OpenDevice when run: ODev.begin() */
-void custom_connection_begin(){
+static void custom_connection_begin(){
+	Logger.debug("MQTT", "BEGIN");
 	mqtt.setServer(Config.server, 1883);
 	mqtt.setCallback(pubSubClientCallback);
+#if defined(_YUN_SERVER_H_)
 	Bridge.begin();
+#endif
 }
 
 /** This method is called automatically by the OpenDevice when run: ODev.loop() */
-MQTTClient custom_connection_loop(DeviceConnection *conn){
+static MQTTClient custom_connection_loop(DeviceConnection *conn){
 
 	  if (!mqtt.connected()) {
 		  pubSubClientReconnect();
@@ -89,5 +100,7 @@ MQTTClient custom_connection_loop(DeviceConnection *conn){
 	  return mqttClient;
 
 }
+
+#endif
 
 

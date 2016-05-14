@@ -50,11 +50,12 @@ using namespace od;
 #endif
 
 // ESP8266 Standalone
-#if defined(ESP8266)
+#if defined(ESP8266) && !defined(PubSubClient_h)
 	#include "stdlib_noniso.h"
 	#include <ESP8266WiFi.h>
 	#include <WifiConnection.h>
 #endif
+
 
 #if defined(MFRC522_h)
 	#include <devices/RFIDSensor.h>
@@ -275,7 +276,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 }
 #endif
 
-#if defined(ESP8266)
+#if defined(ESP8266) && !defined(PubSubClient_h)
 void begin(ESP8266WiFiClass &wifi){
 
 	WifiConnection *conn =  new WifiConnection();
@@ -283,6 +284,22 @@ void begin(ESP8266WiFiClass &wifi){
 }
 #endif
 
+
+#if defined(ESP8266) && defined(PubSubClient_h)
+void begin(ESP8266WiFiClass &wifi){
+	enableKeepAlive(false); // on MQTT is not required
+    while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print("#");
+    }
+
+	Serial.println("");
+	Serial.println("WiFi connected");
+	Serial.println("IP address: ");
+	Serial.println(WiFi.localIP());
+	begin(); // custom connection, call begin
+}
+#endif
 
 // TODO: Make compatible with Due
 //	#ifdef _SAM3XA_

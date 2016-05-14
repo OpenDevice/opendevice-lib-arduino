@@ -44,7 +44,7 @@ using namespace od;
  */
 class WifiConnection : public BaseWifiConnection {
 
-static WiFiClient client;
+static WiFiClient client; // Current Client
 
 public:
 	WifiConnection();

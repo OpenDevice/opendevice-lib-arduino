@@ -18,7 +18,7 @@
 #include <WifiConnection.h>
 
 // TODO: use list: http://stackoverflow.com/a/27088552/955857
-WiFiClient WifiConnection::client;
+WiFiClient WifiConnection::client; // Current Client
 
 WifiConnection::WifiConnection()
 	: server(DEFAULT_SERVER_PORT) {
