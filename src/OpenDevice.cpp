@@ -404,12 +404,12 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Device* OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type){
-	return addSensor(pin, type, 0);
+Device* OpenDeviceClass::addSensor(char* name, uint8_t pin, Device::DeviceType type){
+	return addSensor(name, pin, type, 0);
 }
 
-Device* OpenDeviceClass::addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID){
-	Device* v = addDevice(pin, type, true, 0);
+Device* OpenDeviceClass::addSensor(char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID){
+	Device* v = addDevice(name, pin, type, true, 0);
 	if(v) devices[deviceLength-1]->targetID = targetID;
 	return v;
 }
@@ -420,8 +420,8 @@ Device* OpenDeviceClass::addSensor(Device& sensor){
 }
 
 
-Device* OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type){
-	return addDevice(pin, type, false, 0);
+Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type){
+	return addDevice(name, pin, type, false, 0);
 }
 
 
@@ -450,7 +450,7 @@ Device* OpenDeviceClass::addDevice(Device& device){
 }
 
 
-Device* OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
+Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
 	if (deviceLength < MAX_DEVICE) {
 
 		if (sensor) {
@@ -469,6 +469,7 @@ Device* OpenDeviceClass::addDevice(uint8_t pin, Device::DeviceType type, bool se
 		if (id == 0) id = (deviceLength + 1);
 
 		devices[deviceLength] = new Device(id, pin, type, sensor);
+		devices[deviceLength]->name(name);
 		deviceLength++;
 
 		return devices[deviceLength-1];

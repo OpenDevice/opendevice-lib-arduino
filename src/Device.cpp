@@ -25,31 +25,31 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Device::Device(){
-	_init(0, 0, DIGITAL, false);
+	_init(NULL, 0, 0, DIGITAL, false);
 }
 
 Device::Device(uint8_t ipin){
-	_init(0, ipin, DIGITAL, false);
+	_init(NULL, 0, ipin, DIGITAL, false);
 }
 
 Device::Device(uint8_t ipin, DeviceType type){
-	_init(0, ipin, type, false);
+	_init(NULL, 0, ipin, type, false);
 }
 
 Device::Device(uint8_t ipin, DeviceType type, bool sensor){
-	_init(0, ipin, type, sensor);
+	_init(NULL, 0, ipin, type, sensor);
 }
 
-
 Device::Device(uint8_t _id, uint8_t _pin, DeviceType _type){
-	_init(_id, _pin, _type, false);
+	_init(NULL, _id, _pin, _type, false);
 }
 
 Device::Device(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
-	_init(_id, _pin, _type, _sensor);
+	_init(NULL, _id, _pin, _type, _sensor);
 }
 
-void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
+
+void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 
 	id = _id;
 	pin = _pin;
@@ -61,6 +61,7 @@ void Device::_init(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
 	interruptEnabled = false;
 	interruptMode = CHANGE;
 	changeListener = 0;
+	deviceName = name;
 
 	//if(_sensor){
 		currentValue = LOW;
@@ -185,6 +186,14 @@ Device* Device::invertedState(){
 	return this;
 }
 
+void Device::name(char* name){
+	deviceName = name;
+}
+
+char* Device::name(){
+	return deviceName;
+}
+
 void Device::onChange(DeviceListener listener){
 	changeListener = listener;
 }
@@ -203,7 +212,7 @@ bool Device::notifyListeners(){
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(char buffer[]){
 	 int itype = type;
-	 return sprintf (buffer, "[%d,%d,%lu,%d,%d,%d]", id, pin, getValue(), targetID, (sensor ? 1 : 0), itype);
+	 return sprintf (buffer, "[%s,%d,%d,%lu,%d,%d,%d]", (deviceName != NULL ? deviceName : ""), id, pin, getValue(), targetID, (sensor ? 1 : 0), itype);
 }
 
 

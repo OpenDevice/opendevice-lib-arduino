@@ -54,6 +54,7 @@ public:
 	uint8_t pin;
 	unsigned long currentValue;
 	DeviceType type;
+	char* deviceName;
 
 
 	bool sensor;
@@ -94,6 +95,10 @@ public:
 
 	virtual bool hasChanged();
 
+	void name(char* name);
+
+	char* name();
+
 	/**
 	 * Enable to read value using interruptions. <br/>
 	 * NOTE: It is necessary to enable support in the general settings.
@@ -120,7 +125,7 @@ private:
 	DeviceListener changeListener;
 	DeviceListener syncListerner;
 
-	void _init(uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
+	void _init(char* name, uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
 
 };
 

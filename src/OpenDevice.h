@@ -339,16 +339,16 @@ void begin(ESP8266WiFiClass &wifi){
 	void debug(const String &s);
 	#endif
 
-	Device* addSensor(uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	Device* addSensor(uint8_t pin, Device::DeviceType type);
+	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID);
+	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type);
 	Device* addSensor(Device& sensor);
 	Device* addSensor(unsigned long (*function)()){
 		FuncSensor* func = new FuncSensor(function);
 		return addDevice(*func);
 	}
 
-	Device* addDevice(uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
-	Device* addDevice(uint8_t pin, Device::DeviceType type);
+	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
+	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type);
 	Device* addDevice(Device& device);
 
 	bool addCommand(const char * name, void (*function)());
