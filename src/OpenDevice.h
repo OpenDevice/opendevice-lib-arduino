@@ -39,8 +39,12 @@ using namespace od;
 #endif
 
 
-#if defined(PubSubClient_h)
+#if defined(PubSubClient_h) && !defined(ESP8266)
 	#include "MQTTConnection.h"
+#endif
+
+#if defined(PubSubClient_h) && defined(ESP8266)
+#include "MQTTWifiConnection.h"
 #endif
 
 
@@ -289,15 +293,12 @@ void begin(ESP8266WiFiClass &wifi){
 void begin(ESP8266WiFiClass &wifi){
 	enableKeepAlive(false); // on MQTT is not required
     while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print("#");
+		delay(500);
+		Serial.print("#");
     }
 
-	Serial.println("");
-	Serial.println("WiFi connected");
-	Serial.println("IP address: ");
-	Serial.println(WiFi.localIP());
-	begin(); // custom connection, call begin
+	MQTTWifiConnection *conn =  new MQTTWifiConnection();
+	begin(*conn);
 }
 #endif
 

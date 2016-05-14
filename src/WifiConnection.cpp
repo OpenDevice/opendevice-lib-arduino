@@ -97,11 +97,11 @@ bool WifiConnection::checkDataAvalible(void){
 		Logger.debug("WifiClient", "connected");
 		client = newClient;
 		setStream(&client);
-
-		// wait to send data.
-		while (!newClient.available()) {
-			delay(1);
-		}
+//
+//		// wait to send data.
+//		while (!newClient.available()) {
+//			delay(1);
+//		}
 	}else{
 
 		int count = Udp.parsePacket();
