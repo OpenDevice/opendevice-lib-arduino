@@ -16,7 +16,8 @@ namespace od {
 MQTTClient::MQTTClient(PubSubClient& mqtt) : StreamBuffer(_buffer, DATA_BUFFER) {
 	this->mqtt = &mqtt;
 	topic = String(Config.appID);
-	topic += "/out";
+	topic += "/out/";
+	topic += Config.moduleName;
 }
 
 MQTTClient::~MQTTClient() {
