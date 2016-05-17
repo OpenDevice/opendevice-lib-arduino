@@ -24,7 +24,8 @@
 #error A C++ compiler is required!
 #endif
 
-// #include <EEPROM.h>
+// STATIC CONFIGURATION
+// =====================================
 
 #define DEBUG_SETUP	  0 // set 1 to enable (receiving debug)
 #define DEBUG_CON	  0 // set 1 to enable (receiving debug)
@@ -41,7 +42,7 @@
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
 #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
-#define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
+#define ENABLE_SSL 1 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
 
 #ifndef ENABLE_DHCP
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
@@ -70,7 +71,7 @@
 #endif
 
 
-// May be better use: https://github.com/mrRobot62/Arduino-logging-library
+// May be better use: https://github.com/mrRobot62/Arduino-logging-library OU -VDEBUG(see ESP8266)
 enum DebugTarget{
 	DEBUG_SERIAL,
 	DEBUG_CURRENT
@@ -84,6 +85,9 @@ enum ConnectionMode{
 namespace od {
 
 
+// DYNAMIC CONFIGURATION
+	// =====================================
+
 	typedef struct{
 		bool saved =  false;
 		char * moduleName = "OpenDevice";
@@ -96,6 +100,7 @@ namespace od {
 		int devicesEnd = 0;
 		uint8_t pinReset = 2;
 		bool debugMode = false;
+		bool keepAlive = true;
 		uint8_t debugTarget = DEBUG_SERIAL;
 		ConnectionMode connectionMode = CONNECTION_MODE_SERVER;
 

@@ -5,6 +5,10 @@
  *      Author: ricardo
  */
 
+#include "../dependencies.h"
+
+#ifdef PubSubClient_h
+
 #include <MQTTWifiConnection.h>
 
 namespace od {
@@ -23,6 +27,7 @@ void MQTTWifiConnection::begin(){
 	Logger.debug("MQTT", "BEGIN");
 	mqtt.setServer(Config.server, MQTT_PORT);
 	mqtt.setCallback(mqttCallback);
+	mqttConnect();
 }
 
 bool MQTTWifiConnection::checkDataAvalible(void){
@@ -33,14 +38,14 @@ bool MQTTWifiConnection::checkDataAvalible(void){
 	}
 
 	if (mqtt.connected()){
-		// enableKeepAlive(false); // on MQTT is not required
+		Config.keepAlive = false; // on MQTT is not required
 		mqtt.loop();
 		mqttTimeout.disable();
 		setStream(mqttClient);
 		return DeviceConnection::checkDataAvalible();
 	}else{
 		if(!mqttTimeout.isEnabled()) mqttTimeout.enable();
-		// enableKeepAlive(true); // on MQTT is not required
+		Config.keepAlive = true; // on raw TCP is  required
 		return WifiConnection::checkDataAvalible(); // TCP SERVER...
 	}
 
@@ -75,3 +80,5 @@ void MQTTWifiConnection::mqttConnect(){
 }
 
 } /* namespace od */
+
+#endif

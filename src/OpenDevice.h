@@ -106,7 +106,6 @@ private:
 	// Debouncing of normal pressing (for Sensor's)
 	long time;
 	bool autoControl; // Changes in the sensor should affect bonded devices..
-	bool keepAliveEnabled;
 	long keepAliveTime;
 	long keepAliveMiss;
 	bool connected;

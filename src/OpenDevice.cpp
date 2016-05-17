@@ -25,7 +25,6 @@ volatile uint8_t* PIN_INTERRUPT = 0;
 OpenDeviceClass::OpenDeviceClass() {
 	deviceConnection = NULL;
 	autoControl = false;
-	keepAliveEnabled = true;
 	connected = false;
 	keepAliveTime = 0;
 	keepAliveMiss = 0;
@@ -157,7 +156,7 @@ void OpenDeviceClass::_loop() {
 	checkSensorsStatus();
 
 	// Send PING/KeepAlive if enabled
-	if(connected && keepAliveEnabled){
+	if(connected && Config.keepAlive){
 	  unsigned long currentMillis = millis();
 	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
 		keepAliveTime = currentMillis;
@@ -174,7 +173,7 @@ void OpenDeviceClass::_loop() {
 }
 
 void OpenDeviceClass::enableKeepAlive(bool val){
-	keepAliveEnabled = val;
+	Config.keepAlive = val;
 }
 
 void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
