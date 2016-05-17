@@ -14,52 +14,26 @@
  */
 
 
-//#include <ESP8266AT.h> // Enable: AT Firmware
-
 #include <ESP8266WiFi.h>  // Enable ESP8266 Embedded
-#include <PubSubClient.h> // Enable + MQTT
+// #include <PubSubClient.h> // Enable + MQTT
 
 #include <OpenDevice.h>
-#include <utility/Timeout.h>
 
-const char* ssid = "ricardo-ap";
-const char* password = "abcdefghij";
+const char* ssid = "--";
+const char* password = "--";
 
 void setup() {
   ODev.name("ODev-Thing1");
-  Config.server = "192.168.3.105"; // Only for MQTT
-  ODev.enableKeepAlive(false);
+  // Config.server = "192.168.3.105"; // Only for MQTT
   ODev.enableDebug();
 
-  ODev.addDevice(2, Device::DIGITAL);
+  ODev.addDevice("LED", 2, Device::DIGITAL);
 
-  // WiFi.init(new ESP8266(Serial1, 115200)); // Only for: AT Firmware
   WiFi.mode(WIFI_AP_STA);
   WiFi.begin(ssid, password);
   ODev.begin(WiFi);
 }
 
 void loop() {
-
-  // Send using console
-  if(Serial.available()){
-    readAndSendAT();
-  }
-
   ODev.loop();
 }
-
-// Optional - for debug purpose  (Only for: AT Firmware)
-void readAndSendAT(){
-    #ifdef Serial1
-    while(Serial.available() > 0){
-      Serial1.write(Serial.read());
-    }
-
-    // wait for response
-    String rec = WiFi.ESP->recvString("OK", "ERROR", 10000);
-    Serial.print(rec);
-    #endif
-}
-
-

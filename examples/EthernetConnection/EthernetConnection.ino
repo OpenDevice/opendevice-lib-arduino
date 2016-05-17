@@ -19,7 +19,7 @@ void setup(){
   // ODev.ip(192,168,3,106);
  
   ODev.enableDebug();
-  ODev.addDevice(13, Device::DIGITAL);
+  ODev.addDevice("LED", 13, Device::DIGITAL);
   ODev.addCommand("mycmd1", ledON);
   ODev.addCommand("mycmd2", ledOFF);
   ODev.begin();

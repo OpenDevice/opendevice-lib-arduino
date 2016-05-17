@@ -16,7 +16,7 @@ SoftwareSerial mySerial(2, 5); // RX, TX
 
 void setup(){
     // ODev.enableDebug();
-    ODev.addDevice(13, Device::DIGITAL); // ID:1
+    ODev.addDevice("LED", 13, Device::DIGITAL); // ID:1
     
     mySerial.begin(9600);
     ODev.begin(mySerial); 

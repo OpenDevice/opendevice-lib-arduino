@@ -22,7 +22,7 @@ void setup(){
   #endif
   
   ODev.enableDebug();
-  ODev.addDevice(13, Device::DIGITAL);
+  ODev.addDevice("LED", 13, Device::DIGITAL);
   ODev.addCommand("mycmd1", ledON);
   ODev.addCommand("mycmd2", ledOFF);
   ODev.begin();

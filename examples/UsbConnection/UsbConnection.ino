@@ -8,7 +8,7 @@
 
 void setup(){
     ODev.enableDebug();
-    ODev.addDevice(13, Device::DIGITAL); // ID:1
+    ODev.addDevice("LED", 13, Device::DIGITAL); // ID:1
     ODev.begin(); // by default call Serial.begin() and while(!Serial) on Leonardo
 }
 
