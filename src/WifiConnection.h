@@ -44,9 +44,10 @@ using namespace od;
  */
 class WifiConnection : public BaseWifiConnection {
 
-static WiFiClient client; // Current Client
-
 public:
+
+	static WiFiClient client; // Current Client
+
 	WifiConnection();
 	virtual ~WifiConnection();
 
@@ -68,7 +69,7 @@ public:
 
 	virtual char* getIP();
 
-private:
+protected:
 	WiFiServer server;
 	boolean isStartup;
 	WiFiUDP Udp; // A UDP instance (discovery service)

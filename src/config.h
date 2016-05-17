@@ -41,6 +41,7 @@
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
 #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
+#define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
 
 #ifndef ENABLE_DHCP
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this

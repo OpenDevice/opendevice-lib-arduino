@@ -51,17 +51,23 @@ public:
 
 private:
 
+	PubSubClient mqtt;
+	Timeout mqttTimeout;
+
 #if defined(_YUN_SERVER_H_)
 YunClient ethclient;
 #endif
 
 // ESP8266 Standalone
 #if defined(ESP8266)
-WiFiClient ethclient;
+#if ENABLE_SSL
+	WiFiClientSecure ethclient;
+	#define MQTT_PORT 8883
+#else
+	WiFiClient ethclient;
+	#define MQTT_PORT 1883
 #endif
-
-PubSubClient mqtt;
-Timeout mqttTimeout;
+#endif
 
 	void mqttConnect();
 

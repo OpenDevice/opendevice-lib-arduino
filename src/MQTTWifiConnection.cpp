@@ -21,23 +21,26 @@ MQTTWifiConnection::~MQTTWifiConnection() {
 void MQTTWifiConnection::begin(){
 	WifiConnection::begin();
 	Logger.debug("MQTT", "BEGIN");
-	mqtt.setServer(Config.server, 1883);
+	mqtt.setServer(Config.server, MQTT_PORT);
 	mqtt.setCallback(mqttCallback);
 }
 
 bool MQTTWifiConnection::checkDataAvalible(void){
 
-	if (!mqtt.connected() && mqttTimeout.expired()) {
+	// Reconnect MQTT if OFFLINE and not have Client (TcpServer)
+	if (!mqtt.connected() && mqttTimeout.expired() &&  !WifiConnection::client.connected()) {
 		mqttConnect();
 	}
 
 	if (mqtt.connected()){
+		// enableKeepAlive(false); // on MQTT is not required
 		mqtt.loop();
 		mqttTimeout.disable();
 		setStream(mqttClient);
 		return DeviceConnection::checkDataAvalible();
 	}else{
 		if(!mqttTimeout.isEnabled()) mqttTimeout.enable();
+		// enableKeepAlive(true); // on MQTT is not required
 		return WifiConnection::checkDataAvalible(); // TCP SERVER...
 	}
 
@@ -63,6 +66,7 @@ void MQTTWifiConnection::mqttConnect(){
 	  Serial.println("[connected]");
 	  mqtt.subscribe(subscribe.c_str());
 	} else {
+	  mqttTimeout.reset();
 	  Serial.print("failed (#");
 	  Serial.print(mqtt.state());
 	  Serial.println(")");

@@ -75,7 +75,7 @@ bool WifiConnection::checkDataAvalible(void){
 #if defined(ESP8266)
 	// This is only to debug
 	if(STATION_CONNECTING == wifi_station_get_connect_status()){
-		Logger.debug("WifiConnection", "reconnecting...");
+		Logger.debug("Wifi", "reconnecting...");
 		if(WiFi.waitForConnectResult() != WL_CONNECTED){ // need wait..
 			Logger.debug("STA Reconnect", "FAIL");
 		}else{
