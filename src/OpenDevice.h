@@ -291,7 +291,6 @@ void begin(ESP8266WiFiClass &wifi){
 
 #if defined(ESP8266) && defined(PubSubClient_h)
 void begin(ESP8266WiFiClass &wifi){
-	enableKeepAlive(false); // on MQTT is not required
     while (WiFi.status() != WL_CONNECTED) {
 		delay(500);
 		Serial.print("#");

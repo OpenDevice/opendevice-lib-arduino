@@ -74,11 +74,11 @@ void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool
 
 
 void Device::on(){
-	setValue(HIGH);
+	setValue(HIGH, true);
 }
 
 void  Device::off(){
-	setValue(LOW);
+	setValue(LOW, true);
 }
 
 bool Device::setValue(unsigned long value, bool sync){

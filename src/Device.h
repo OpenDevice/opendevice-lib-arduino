@@ -84,6 +84,11 @@ public:
 
 	void off();
 
+	bool isON() { return currentValue == HIGH; }
+
+	bool isOFF() { return currentValue == LOW; }
+
+
 	/**
 	 * Get current value.
 	 */

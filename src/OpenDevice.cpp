@@ -470,6 +470,7 @@ Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType t
 
 		devices[deviceLength] = new Device(id, pin, type, sensor);
 		devices[deviceLength]->name(name);
+		devices[deviceLength]->setSyncListener(&(OpenDeviceClass::onDeviceChanged));
 		deviceLength++;
 
 		return devices[deviceLength-1];
