@@ -34,19 +34,25 @@ bool MQTTWifiConnection::checkDataAvalible(void){
 
 	// Reconnect MQTT if OFFLINE and not have Client (TcpServer)
 	if (!mqtt.connected() && mqttTimeout.expired() &&  !WifiConnection::client.connected()) {
-		mqttConnect();
+		if(WiFi.status() == WL_CONNECTED){
+			mqttConnect();
+		}
 	}
+
 
 	if (mqtt.connected()){
 		Config.keepAlive = false; // on MQTT is not required
+
+		checkOTA(); // check for OTA updates (because WifiConnection  is not called)
+
 		mqtt.loop();
 		mqttTimeout.disable();
 		setStream(mqttClient);
 		return DeviceConnection::checkDataAvalible();
-	}else{
+	}else{ // TCP SERVER...
 		if(!mqttTimeout.isEnabled()) mqttTimeout.enable();
 		Config.keepAlive = true; // on raw TCP is  required
-		return WifiConnection::checkDataAvalible(); // TCP SERVER...
+		return WifiConnection::checkDataAvalible();
 	}
 
 }
@@ -68,13 +74,11 @@ void MQTTWifiConnection::mqttConnect(){
 	Logger.debug("MQTT", "connecting... ");
 	// Attempt to connect
 	if (mqtt.connect(clientID.c_str())) {
-	  Serial.println("[connected]");
+	  Logger.debug("MQTT", "[connected]");
 	  mqtt.subscribe(subscribe.c_str());
 	} else {
 	  mqttTimeout.reset();
-	  Serial.print("failed (#");
-	  Serial.print(mqtt.state());
-	  Serial.println(")");
+	  Logger.debug("MQTT <Fail>", mqtt.state());
 	}
 
 }
