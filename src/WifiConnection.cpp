@@ -34,7 +34,15 @@ void WifiConnection::begin(void){
 // Only ESP8266 has softAP
 #if defined(ESP8266)
 
-	// TODO: verificar se softAP não foi chamado anteriormente e se ele gera um WL_CONNECTED
+	WiFi.setAutoReconnect(true);
+
+	uint8_t status = waitForConnectResult();
+
+	if(status == WL_CONNECTED){ // need wait..
+		Logger.debug("WiFi", "Conneted");
+	}else {
+		Logger.debug("WiFi", "FAIL");
+	}
 
 	WiFiMode mode = WiFi.getMode();
 	if(mode == WIFI_AP || mode == WIFI_AP_STA){
@@ -42,15 +50,7 @@ void WifiConnection::begin(void){
 		Logger.debug("SoftAP", "OK");
 	}
 
-	// has saved last STA connections settings
-	if(wifi_station_get_auto_connect() && isStartup ){
-		Logger.debug("Automatic STA Reconnect");
-		if(WiFi.waitForConnectResult() != WL_CONNECTED){ // need wait..
-			Logger.debug("Automatic STA Reconnect", "FAIL");
-		}
-	}
 #endif
-
 
 	server.begin();
 
@@ -68,20 +68,29 @@ void WifiConnection::begin(void){
     if(Config.debugMode) Serial.println(WiFi.softAPIP());
 
     isStartup = false;
+
+    if(status == WL_CONNECTED){
+		#if defined(ESP8266)
+    	enableOTA(); // Configure OTA
+    	#endif
+    }
+
 }
 
 bool WifiConnection::checkDataAvalible(void){
 
 #if defined(ESP8266)
 	// This is only to debug
-	if(STATION_CONNECTING == wifi_station_get_connect_status()){
-		Logger.debug("Wifi", "reconnecting...");
-		if(WiFi.waitForConnectResult() != WL_CONNECTED){ // need wait..
-			Logger.debug("STA Reconnect", "FAIL");
-		}else{
-			Logger.debug("STA Reconnect", "CONNECTED");
-		}
-	}
+	// if(STATION_CONNECTING == wifi_station_get_connect_status()){
+	// 	Logger.debug("Wifi", "reconnecting...");
+	// 	if(WiFi.waitForConnectResult() != WL_CONNECTED){ // need wait..
+	// 		Logger.debug("STA Reconnect", "FAIL");
+	// 	}else{
+	// 		Logger.debug("STA Reconnect", "CONNECTED");
+	// 	}
+	// }
+
+	checkOTA(); // check for OTA updates.
 #endif
 
 	// entrou em loop
@@ -171,6 +180,21 @@ char* WifiConnection::getIP(){
 	sprintf(ipaddress, "%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
 
 	return ipaddress;
+}
+
+uint8_t WifiConnection::waitForConnectResult() {
+    //1 and 3 have STA enabled
+    if(( WiFi.getMode() & 1) == 0) {
+        return WL_DISCONNECTED;
+    }
+    while(status() == WL_DISCONNECTED) {
+        delay(200);
+        if(Config.debugMode) Serial.print("#");
+    }
+
+    if(Config.debugMode) Serial.println();
+
+    return WiFi.status();
 }
 
 #endif
