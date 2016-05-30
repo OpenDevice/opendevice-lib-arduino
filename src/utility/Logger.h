@@ -37,6 +37,25 @@ typedef struct{
 			}
 		}
 
+	//#ifdef __FlashStringHelper
+		void debug(const __FlashStringHelper* title, const char str[] = "", bool newLine = true){
+			if(Config.debugMode){
+				if(Config.debugTarget == 0){
+					Serial.print("DB:");
+					Serial.print(title);
+					if(str && strlen(str) > 0){
+						Serial.print(" :: ");
+						if(newLine) Serial.println(str);
+						else Serial.print(str);
+					}else{
+						Serial.println();
+					}
+				}
+			}
+		}
+	//#endif
+
+
 		void debug(const char title[], int val, bool newLine = true){
 			if(Config.debugMode){
 				if(Config.debugTarget == 1){
