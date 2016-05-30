@@ -104,7 +104,7 @@ bool DeviceConnection::checkDataAvalible(){
 			available--;
 
 			#if DEBUG_CON
-				Serial.print(F("DB:READ:"));Serial.println((char)lastByte);Serial.write(ACK_BIT);
+				Serial.print(F("DB:READ:"));Serial.println((char)lastByte);
 			#endif
 
 			// NOTE: Start bit is equals to the SEPARATOR
@@ -117,7 +117,7 @@ bool DeviceConnection::checkDataAvalible(){
 			else if(lastByte == ACK_BIT){
 
 				#if DEBUG_CON
-					Serial.println(F("DB:END_CMD"));Serial.write(ACK_BIT);
+					Serial.println(F("DB:END_CMD"));
 				#endif
 
 				processing = false;
@@ -137,7 +137,7 @@ bool DeviceConnection::checkDataAvalible(){
 				if(!w){
 					notifyError(ResponseStatus::BUFFER_OVERFLOW);
 					#if DEBUG_CON
-					Serial.println(F("DB:BUFFER_OVERFLOW"));Serial.write(ACK_BIT);
+					Serial.println(F("DB:BUFFER_OVERFLOW"));
 					#endif
 					return false;
 				}
