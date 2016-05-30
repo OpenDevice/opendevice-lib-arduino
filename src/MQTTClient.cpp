@@ -34,10 +34,11 @@ void MQTTClient::setData(uint8_t *data, const uint16_t len){
 size_t MQTTClient::write(uint8_t v){
 	if(v == Command::ACK_BIT){ // don't write ACK
 		#if DEBUG_CON
-		Serial.print("Write:");
+		Serial.print("MQTT SEND: ");
 		Serial.println((const char *) StreamBuffer::_buffer);
 		#endif
 		mqtt->publish(topic.c_str(), (const char *) StreamBuffer::_buffer);
+		flush();
 		return 1;
 	}else{ // Write to buffer
 		return StreamBuffer::write(v);
