@@ -2,17 +2,35 @@
 
 This library is responsible for communication using the API and protocols supported by OpenDevice.
 
-Please note that the library also requires some other libraries to function properly, when used with other connection types or sensors, like the library for the Enc28j60 chip.
+link:https://github.com/OpenDevice/OpenDevice/wiki/Supported-Devices[See supported devices]
 
-For now, the implementations were ported to Arduino and Energia. 
+=== Example
 
-link:https://github.com/OpenDevice/OpenDevice/wiki/Supported-Devices[Check the list of devices tested]
+```
+#include <ESP8266WiFi.h>  // Enable ESP8266 Embedded
+#include <OpenDevice.h>
 
-=== Dependencies
-The dependencies are not mandatory, only if you want to use other features as (IR or the ENC28J60 module, etc ..)
+const char* ssid = "--";
+const char* password = "--";
 
-* IRRemote - (git clone https://github.com/shirriff/Arduino-IRremote IRremote)
-* UIPEthernet - (git clone https://github.com/OpenDevice/arduino_uip UIPEthernet)
+void setup() {
+  ODev.name("ODev-Thing1");
+  ODev.enableDebug();
+
+  ODev.addDevice("LED", 2, Device::DIGITAL);
+
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.begin(ssid, password);
+  ODev.begin(WiFi);
+}
+
+void loop() {
+  ODev.loop();
+}
+
+``` 
+
+See complete examples and projects in **examples** folder
 
 == What is OpenDevice?
 
@@ -25,6 +43,15 @@ The main objective is monitor and control inexpensive hardwares like *Arduino, R
 This allows you to focus on your project and innovation, leave obscure details of communication protocols and specifications with OpenDevice, you will make a major step towards the success of your project.
 
 TIP: Plug your device (Arduino/Raspberypi/Other) to the Cloud and sync in real-time	
+
+=== Dependencies
+
+**You must enable the libraries used in**: "{arduinolibs}/OpenDevice/dependencies.h" 
+
+Please note that the OpenDevice also requires some other libraries to function properly, when used with other connection types or sensors, like the library for the Enc28j60 chip.      
+
+The dependencies are not mandatory, only if you want to use other features as (IR or the ENC28J60 module, etc ..)
+
 
 == Install
 

@@ -15,6 +15,7 @@
 #define OPENDEVICE_CONFIG_H_
 
 #include <Arduino.h>
+#include <EEPROM.h>
 
 #if defined(__COMPILING_AVR_LIBC__)
 #include <avr/eeprom.h>
@@ -38,11 +39,11 @@
 #define DEFAULT_BAUD 115200
 #define DEFAULT_SERVER_PORT 8182
 #define DISCOVERY_PORT 6142
-#define KEEP_ALIVE_INTERVAL 5000
+#define KEEP_ALIVE_INTERVAL 30000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
 #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
-#define ENABLE_SSL 1 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
+#define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
 
 #ifndef ENABLE_DHCP
 #define ENABLE_DHCP 1  /* if you need save flash memory disable this
@@ -105,6 +106,13 @@ namespace od {
 		ConnectionMode connectionMode = CONNECTION_MODE_SERVER;
 
 		void load(){
+			#if defined(ESP8266)
+				EEPROM.begin(4096);
+			#else
+				EEPROM.begin(EEPROM.length());
+			#endif
+
+			// TODO: change to get and pt;
 			#if defined(__COMPILING_AVR_LIBC__)
 			eeprom_read_block((void*)this, (void*)0, sizeof(this));
 			#endif
