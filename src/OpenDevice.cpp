@@ -423,8 +423,12 @@ Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType t
 	return addDevice(name, pin, type, false, 0);
 }
 
-
 Device* OpenDeviceClass::addDevice(Device& device){
+	return addDevice(NULL, device);
+}
+
+
+Device* OpenDeviceClass::addDevice(char* name, Device& device){
 	if (deviceLength < MAX_DEVICE) {
 
 		if(device.pin > 0){
@@ -440,6 +444,7 @@ Device* OpenDeviceClass::addDevice(Device& device){
 		devices[deviceLength] = &device;
 		deviceLength = deviceLength + 1;
 		device.setSyncListener(&(OpenDeviceClass::onDeviceChanged));
+		device.name(name);
 
 		return &device;
 	} else{

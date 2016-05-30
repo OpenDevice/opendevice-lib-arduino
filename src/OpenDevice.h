@@ -216,7 +216,7 @@ public:
 	}
 #else
 	/**
-	 * No parameters, user Serial by default
+	 * No parameters, use Serial by default
 	 */
 	void begin(){
 
@@ -290,11 +290,6 @@ void begin(ESP8266WiFiClass &wifi){
 
 #if defined(ESP8266) && defined(PubSubClient_h)
 void begin(ESP8266WiFiClass &wifi){
-    while (WiFi.status() != WL_CONNECTED) {
-		delay(500);
-		Serial.print("#");
-    }
-
 	MQTTWifiConnection *conn =  new MQTTWifiConnection();
 	begin(*conn);
 }
@@ -348,6 +343,7 @@ void begin(ESP8266WiFiClass &wifi){
 	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
 	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type);
 	Device* addDevice(Device& device);
+	Device* addDevice(char* name, Device& device);
 
 	bool addCommand(const char * name, void (*function)());
 
