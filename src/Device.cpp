@@ -94,8 +94,9 @@ bool Device::setValue(unsigned long value, bool sync){
 			analogWrite(pin, value);
 		}
 
-		notifyListeners();
+		notifyListeners(); // Notify internal listeners (onChange)
 
+		// Send value to server/client
 		if(sync){
 			if(syncListerner) (*syncListerner)(id, currentValue);
 		}

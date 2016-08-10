@@ -109,7 +109,7 @@ namespace od {
 			#if defined(ESP8266)
 				EEPROM.begin(4096);
 			#else
-				EEPROM.begin(EEPROM.length());
+				EEPROM.begin(); // EEPROM.begin( EEPROM.length() )
 			#endif
 
 			// TODO: change to get and pt;
