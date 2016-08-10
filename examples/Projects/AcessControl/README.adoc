@@ -7,8 +7,8 @@ On-line mode allows use of a larger number of keys as well as a more intelligent
 NOTE: two modes can be used simultaneously
 
 === Features
- * Online Authentication
- * Offline Authentication
+ * Online Validation
+ * Offline Validation
  * EEPROM Storage
  * Visual and Sounds feedback
  * WiFi connection (tested on ESP8266)
