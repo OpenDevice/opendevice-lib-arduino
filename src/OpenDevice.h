@@ -179,6 +179,8 @@ public:
 	void id(uint8_t *pid) { memcpy(Config.id, pid, sizeof(Config.id)); }
 
 	void name(char *pname) { Config.moduleName = pname; }
+	void server(char *pname) { Config.server = pname; }
+
 	const char* name() { return Config.moduleName; }
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
 
