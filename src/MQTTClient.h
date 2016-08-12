@@ -25,6 +25,7 @@ public:
 
     virtual size_t write(uint8_t);
     void setData(uint8_t *buffer, const uint16_t len);
+    void begin();
 
 private:
     uint8_t _buffer[DATA_BUFFER];

@@ -7,7 +7,7 @@
 
 #include "../dependencies.h"
 
-#ifdef PubSubClient_h
+#if defined(PubSubClient_h) && defined(WiFi_h)
 
 #include <MQTTWifiConnection.h>
 
@@ -27,6 +27,7 @@ void MQTTWifiConnection::begin(){
 	Logger.debug("MQTT", "BEGIN");
 	mqtt.setServer(Config.server, MQTT_PORT);
 	mqtt.setCallback(mqttCallback);
+	mqttClient->begin();
 	mqttConnect();
 }
 
@@ -39,11 +40,10 @@ bool MQTTWifiConnection::checkDataAvalible(void){
 		}
 	}
 
-
 	if (mqtt.connected()){
 		Config.keepAlive = false; // on MQTT is not required
 
-		checkOTA(); // check for OTA updates (because WifiConnection  is not called)
+		checkOTA(); // check for OTA updates (force, because WifiConnection is not called)
 
 		mqtt.loop();
 		mqttTimeout.disable();

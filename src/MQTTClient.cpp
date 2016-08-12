@@ -15,12 +15,15 @@ namespace od {
 
 MQTTClient::MQTTClient(PubSubClient& mqtt) : StreamBuffer(_buffer, DATA_BUFFER) {
 	this->mqtt = &mqtt;
-	topic = String(Config.appID);
-	topic += "/out/";
-	topic += Config.moduleName;
 }
 
 MQTTClient::~MQTTClient() {
+}
+
+void MQTTClient::begin(){
+	topic = String(Config.appID);
+	topic += "/out/";
+	topic += Config.moduleName;
 }
 
 void MQTTClient::setData(uint8_t *data, const uint16_t len){
