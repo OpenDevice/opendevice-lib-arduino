@@ -1,6 +1,6 @@
 /*
  * *****************************************************************************
- * See tutorial: https://opendevice.atlassian.net/wiki/display/DOC/A.+First+Steps+with+ODev
+ * See tutorial: https://opendevice.atlassian.net/wiki/display/DOC/Getting+started
  * This example code is in the public domain.
  * *****************************************************************************
  */
@@ -8,7 +8,7 @@
 
 void setup(){
     ODev.enableDebug();
-    ODev.addDevice("LED", 13, Device::DIGITAL); // ID:1
+    ODev.addDevice("LED1", 13, Device::DIGITAL); // ID:1
     ODev.begin(); // by default call Serial.begin() and while(!Serial) on Leonardo
 }
 
