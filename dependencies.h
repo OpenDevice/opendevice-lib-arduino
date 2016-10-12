@@ -11,6 +11,7 @@
  * *****************************************************************************
  */
 
+
 #ifndef LIBRARIES_OPENDEVICE_DEPENDENCIES_H_
 #define LIBRARIES_OPENDEVICE_DEPENDENCIES_H_
 
@@ -18,11 +19,23 @@
 // Configure dependencies used in your project (Please comment unused dependencies)
 // *******************************************************************************************
 
-//#include <MFRC522.h> // RFID
-// #include <RCSwitch.h> // RF 433Mhz
-// #include <ESP8266AT.h> // ESP8266 - AT Firmwware
+//================================================
+// Boards and Connections
+//================================================
+
 #include <ESP8266WiFi.h>  // ESP8266 - Standalone
+// #include <ESP8266AT.h> // ESP8266 - AT Firmwware
+//#include <YunClient.h>
 #include <PubSubClient.h> // Enable MQTT
+
+//================================================
+// Features
+//================================================
+
+//#include <ArduinoOTA.h> // Enable OTA Updates - loading the firmware to ESP module using Wi-Fi connection
+ 					    // Disable to reduce flash size or for security reasons
+ 						// TIP LINUX :: force discovery, run command: avahi-browse _arduino._tcp
+//#include <TaskSchedulerDeclarations.h> // Enable suport for Tash Schedule (Cooperative multitasking)
 
 //#if defined(EnableInterrupt_h)
 //#define EI_ARDUINO_INTERRUPTED_PIN
@@ -30,9 +43,12 @@
 //#include <EnableInterrupt.h>
 //#endif
 
-//#include <TaskSchedulerDeclarations.h>
+//================================================
+// Devices
+//================================================
 
-
+//#include <MFRC522.h> // RFID
+// #include <RCSwitch.h> // RF 433Mhz
 
 // --- IR DEVICE
 //#if defined(ESP8266)
@@ -41,6 +57,8 @@
 //#include "IRremote.h"
 //#endif
 // -- END
+
+
 
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_DEPENDENCIES_H_ */

@@ -51,10 +51,6 @@
 #endif
 
 
-#if defined(ESP8266)
-	#define DEFAULT_BAUD 115200
-#endif
-
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
 #define MAX_LISTENERS 2
