@@ -73,7 +73,7 @@ void MQTTWifiConnection::mqttConnect(){
 
 	Logger.debug("MQTT", "connecting... ");
 	// Attempt to connect
-	if (mqtt.connect(clientID.c_str())) {
+	if (mqtt.connect(clientID.c_str(), Config.appID, "")) {
 	  Logger.debug("MQTT", "[connected]");
 	  mqtt.subscribe(subscribe.c_str());
 	} else {

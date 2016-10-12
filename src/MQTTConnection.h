@@ -11,96 +11,61 @@
  * *****************************************************************************
  */
 
-#ifndef OPENDEVICE_MQTTConnection
-#define OPENDEVICE_MQTTConnection
-
 /*
- * This MQTT implementation is designed to run both on Ethernet and Wifi (ESP8266)
+ * MQTTConnection.h
  *
- * Author: Ricardo JL Rufino
+ * Enable MQTT for Ethernet or Yun connections
+ *
+ *  Created on: Aug 12, 2016
+ *  Author: Ricardo JL Rufino
  */
-#include <Arduino.h>
-#include <Stream.h>
+
+#ifndef LIBRARIES_OPENDEVICE_SRC_MQTTCONNECTION_H_
+#define LIBRARIES_OPENDEVICE_SRC_MQTTCONNECTION_H_
+
+
+#if defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_)
+#include <Bridge.h>
+#include <YunClient.h> // Enable for MQTT/Yun (as MQTT Client)
+#endif
 
 #include <PubSubClient.h>
 
 // NOTE: Please do not include OpenDevice.h this will break the preprocessors / macros
 #include "config.h"
 #include "utility/Logger.h"
+#include "utility/Timeout.h"
 #include "DeviceConnection.h"
 #include "MQTTClient.h"
 
-using namespace od;
+#define MQTT_PORT 1883
 
-#define USING_CUSTOM_CONNECTION 1
-#define CUSTOM_CONNECTION_CLASS MQTTClient
+namespace od {
 
-#if defined(_YUN_SERVER_H_)
-static YunClient ethclient;
-#endif
+class MQTTConnection: public DeviceConnection {
 
-// ESP8266 Standalone
-#if defined(ESP8266)
-static WiFiClient ethclient;
-#endif
+static MQTTClient* mqttClient;
 
-static PubSubClient mqtt(ethclient);
-static MQTTClient mqttClient(mqtt);
+public:
 
-static void pubSubClientReconnect() {
-  // Loop until we're reconnected
-  while (!mqtt.connected()) {
-	String clientID = String(Config.appID);
-	clientID+= "/";
-	clientID+= Config.moduleName;
+	MQTTConnection(Client& client);
 
-	String subscribe = String(Config.appID);
-	subscribe+= "/in/";
-	subscribe+= Config.moduleName;
+	virtual ~MQTTConnection();
 
-    Serial.print("Connecting...");
-    // Attempt to connect
-    if (mqtt.connect(clientID.c_str())) { /// ---> NAME.
-      Serial.println("connected");
-      mqtt.subscribe(subscribe.c_str());
-    } else {
-      Serial.print("failed (#");
-      Serial.print(mqtt.state());
-      Serial.println(")");
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
+	virtual void begin(void);
 
-static void pubSubClientCallback(char* topic, byte* payload, unsigned int length) {
-	mqttClient.setData(payload, length);
-}
+	virtual bool checkDataAvalible(void);
 
+	static void mqttCallback(char* topic, byte* payload, unsigned int length);
 
-/** This method is called automatically by the OpenDevice when run: ODev.begin() */
-static void custom_connection_begin(){
-	Logger.debug("MQTT", "BEGIN");
-	mqtt.setServer(Config.server, 1883);
-	mqtt.setCallback(pubSubClientCallback);
-#if defined(_YUN_SERVER_H_)
-	Bridge.begin();
-#endif
-}
+private:
 
-/** This method is called automatically by the OpenDevice when run: ODev.loop() */
-static MQTTClient custom_connection_loop(DeviceConnection *conn){
+	PubSubClient mqtt;
+	Timeout mqttTimeout;
+	void mqttConnect();
 
-	  if (!mqtt.connected()) {
-		  pubSubClientReconnect();
-	  }
+};
 
-	  mqtt.loop();
+} /* namespace od */
 
-	  return mqttClient;
-
-}
-
-#endif
-
-
+#endif /* LIBRARIES_OPENDEVICE_SRC_MQTTCONNECTION_H_ */
