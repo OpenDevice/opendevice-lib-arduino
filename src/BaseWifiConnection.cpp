@@ -98,7 +98,7 @@ void BaseWifiConnection::sendDiscoveryResponse(){
 	doToken();
 	print(Config.moduleName);
 	doToken();
-	print(Device::NODE); // ModuleType: NODE
+	print(Device::BOARD); // ModuleType: NODE
 	doToken();
 	print(Config.devicesLength);
 	doToken();

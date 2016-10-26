@@ -43,7 +43,7 @@ public:
 //			RFID 					= 7,
 //			RF	 					= 8,
 
-			NODE = 10,  	  // Hold Multiple Devices
+			BOARD = 10,  	  // Hold Multiple Devices
 			MANAGER = 11, // Middleware/Server
 
 	};

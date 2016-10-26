@@ -123,6 +123,9 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
 
+	// Add Board Device Class
+	addDevice(Config.moduleName, -1, Device::BOARD);
+
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
 		if(devices[i]->interruptEnabled){
@@ -246,9 +249,10 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 
 		for (int i = 0; i < ODev.deviceLength; ++i) {
 			Device *device = ODev.getDeviceAt(i);
-			// Write array to connection..
+
 			device->toString(buffer);
-			conn->print(buffer);
+
+			conn->print(buffer); // Write array to connection..
 
 			memset(buffer, 0, sizeof(buffer));
 

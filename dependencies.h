@@ -23,10 +23,10 @@
 // Boards and Connections
 //================================================
 
-#include <ESP8266WiFi.h>  // ESP8266 - Standalone
+// #include <ESP8266WiFi.h>  // ESP8266 - Standalone
 // #include <ESP8266AT.h> // ESP8266 - AT Firmwware
 //#include <YunClient.h>
-#include <PubSubClient.h> // Enable MQTT
+// #include <PubSubClient.h> // Enable MQTT
 
 //================================================
 // Features
