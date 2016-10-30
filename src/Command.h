@@ -33,29 +33,32 @@ namespace CommandType {
 
 		// ---
 		PING_REQUEST            = 20,
-	    PING_RESPONSE           = 21,
-	    DISCOVERY_REQUEST       = 22,
-	    DISCOVERY_RESPONSE      = 23,
-	    MEMORY_REPORT           = 24, // Report the amount of memory = displays the current and maximum).
-	    CPU_TEMPERATURE_REPORT  = 25,
-	    CPU_USAGE_REPORT        = 26,
-		RESET 		        	= 27, // Reset Microcontroller
+    PING_RESPONSE           = 21,
+    DISCOVERY_REQUEST       = 22,
+    DISCOVERY_RESPONSE      = 23,
+    MEMORY_REPORT           = 24, // Report the amount of memory = displays the current and maximum).
+    CPU_TEMPERATURE_REPORT  = 25,
+    CPU_USAGE_REPORT        = 26,
+		RESET 		        			= 27, // Reset Microcontroller
 
 		// ---
-		GET_DEVICES 			= 30,
+		GET_DEVICES 					= 30,
 		GET_DEVICES_RESPONSE 	= 31,
-	    DEVICE_ADD 				= 32,
-	    DEVICE_ADD_RESPONSE		= 33,
-	    DEVICE_DEL 				= 34,
-		CLEAR_DEVICES 			= 35,
-		GET_CONNECTIONS 		= 36,
-		GET_CONNECTIONS_RESPONSE   = 37,
-	    CONNECTION_ADD 			= 38,
-	    CONNECTION_ADD_RESPONSE = 39, // Return IP
-	    CONNECTION_DEL 			= 40,
-		CLEAR_CONNECTIONS 		= 41,
+    DEVICE_ADD 						= 32,
+    DEVICE_ADD_RESPONSE		= 33,
+    DEVICE_DEL 						= 34,
+		CLEAR_DEVICES 				= 35,
+		SYNC_DEVICES_ID 			= 36, 
+
+
+		GET_CONNECTIONS 					= 40,
+		GET_CONNECTIONS_RESPONSE  = 41,
+    CONNECTION_ADD 						= 42,
+    CONNECTION_ADD_RESPONSE 	= 43, // Return IP
+    CONNECTION_DEL 						= 44,
+		CLEAR_CONNECTIONS 				= 45,
 		// ---
-		USER_COMMAND 			= 99
+		USER_COMMAND 							= 99
 	};
 }
 
@@ -119,4 +122,3 @@ struct Command {
 };
 
 #endif /* HEADER */
-
