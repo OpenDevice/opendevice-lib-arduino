@@ -15,7 +15,7 @@
 
 #ifdef __ESP8266AT_H__
 
-#include <WifiConnetionEspAT.h>
+#include "WifiConnetionEspAT.h"
 
 WifiConnetionEspAT::WifiConnetionEspAT()
 	: statusTimeout(20000),
@@ -52,7 +52,7 @@ void WifiConnetionEspAT::begin(){
 #if DEBUG_SETUP
 	Logger.debug("MUX", (status ? "OK" : "FAIL")); // FIXME: use F("...") to reduce memory.
 #endif
-	
+
 	status = ESP->startTCPServer(DEFAULT_SERVER_PORT);
 
 #if DEBUG_SETUP
@@ -70,7 +70,7 @@ void WifiConnetionEspAT::begin(){
 	}else{
 		_statusTcp = WL_CONNECT_FAILED;
 	}
-	
+
 	DeviceConnection::begin();
 
 #if DEBUG_SETUP
@@ -182,7 +182,7 @@ void WifiConnetionEspAT::disconnect(bool wifioff){
 }
 
 /**
- * Connect to AP 
+ * Connect to AP
  */
 bool WifiConnetionEspAT::begin(const char* ssid, const char *passphrase){
 
@@ -209,7 +209,7 @@ void WifiConnetionEspAT::softAP(const char* ssid, const char* passphrase, int ch
 	softAPEnabled = true;
 	uint8_t enc = 4; // WPA_WPA2_PSK
 	if(!passphrase || strlen(passphrase) == 0 ) enc = 0;
-	
+
 	bool status = ESP->enableDHCP(0);
 
 #if DEBUG_SETUP

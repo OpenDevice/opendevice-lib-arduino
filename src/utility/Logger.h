@@ -10,19 +10,25 @@
 
 #include "config.h"
 
+#if DEBUG || defined(DEBUG_ESP_PORT)
+#define LOG_DEBUG(title, val) Logger.debug(F(title), val)
+#else
+#define LOG_DEBUG(...)
+#endif
+
 namespace od {
 
 typedef struct{
 
 		void debug(const char title[], const char str[] = "", bool newLine = true){
-			if(Config.debugMode){
-				if(Config.debugTarget == 1){
+			// if(Config.debugMode){
+				// if(Config.debugTarget == 1){
 //					deviceConnection->doStart();
 //					deviceConnection->print("DB:");
 //					deviceConnection->print(str);
 //					deviceConnection->doEnd();
-				}else{
-					#if(ENABLE_SERIAL)
+				// }else{
+					// #if(ENABLE_SERIAL)
 					Serial.print("DB:");
 					Serial.print(title);
 					if(str && strlen(str) > 0){
@@ -32,18 +38,18 @@ typedef struct{
 					}else{
 						Serial.println();
 					}
-					#endif
-				}
-			}
+					// #endif
+				// }
+			// }
 		}
 
 	//#ifdef __FlashStringHelper
-		void debug(const __FlashStringHelper* title, const char str[] = "", bool newLine = true){
+		template <class T> void debug(const __FlashStringHelper* title, const T str, bool newLine = true){
 			if(Config.debugMode){
 				if(Config.debugTarget == 0){
 					Serial.print("DB:");
 					Serial.print(title);
-					if(str && strlen(str) > 0){
+					if(str){
 						Serial.print(" :: ");
 						if(newLine) Serial.println(str);
 						else Serial.print(str);

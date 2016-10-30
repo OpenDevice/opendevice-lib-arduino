@@ -46,13 +46,15 @@ EthernetClient ethclient;
 void custom_connection_begin(){
 	// Serial.println(" - Setup EthernetServer");
 
-	uint8_t *mac = Config.id;
+	// uint8_t *mac = Config.id;
+  // FIXME: generate MAC.
+	byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 
-	if(!Config.saved){
-		loadConfig();
-	}
+	// if(!Config.saved){
+	// 	loadConfig();
+	// }
 
-	// FIXME: remove logic to save IP, implement discovery service;
+	// TODO: remove logic to save IP, implement discovery service;
 
 	// Using saved IP (Sketch or EEPROM)
 	if(Config.ip[0] != 0){
@@ -71,7 +73,7 @@ void custom_connection_begin(){
 				Config.ip[1] = ip[1];
 				Config.ip[2] = ip[2];
 				Config.ip[3] = ip[3];
-				saveConfig();
+				ODev.save();
 			}else{
 				Serial.println("DHCP Failed");
 			}
@@ -102,4 +104,3 @@ EthernetClient custom_connection_loop(DeviceConnection *conn){
 	return ethclient;
 
 }
-

@@ -7,9 +7,9 @@
 
 #include "../dependencies.h"
 
-#if defined(PubSubClient_h) && defined(WiFi_h)
+#ifdef WiFi_h
 
-#include <MQTTWifiConnection.h>
+#include "MQTTWifiConnection.h"
 
 namespace od {
 
@@ -35,7 +35,7 @@ bool MQTTWifiConnection::checkDataAvalible(void){
 
 	// Reconnect MQTT if OFFLINE and not have Client (TcpServer)
 	if (!mqtt.connected() && mqttTimeout.expired() &&  !WifiConnection::client.connected()) {
-		if(WiFi.status() == WL_CONNECTED){
+		if(WiFi.status() == WL_CONNECTED || WiFi.getMode() == WIFI_AP){
 			mqttConnect();
 		}
 	}
@@ -73,7 +73,7 @@ void MQTTWifiConnection::mqttConnect(){
 
 	Logger.debug("MQTT", "connecting... ");
 	// Attempt to connect
-	if (mqtt.connect(clientID.c_str(), Config.appID, "")) {
+	if (mqtt.connect(clientID.c_str(), Config.appID, "*")) {
 	  Logger.debug("MQTT", "[connected]");
 	  mqtt.subscribe(subscribe.c_str());
 	} else {

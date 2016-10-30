@@ -15,7 +15,7 @@
 
 #ifdef WiFi_h
 
-#include <WifiConnection.h>
+#include "WifiConnection.h"
 
 // TODO: use list: http://stackoverflow.com/a/27088552/955857
 WiFiClient WifiConnection::client; // Current Client
@@ -44,7 +44,7 @@ void WifiConnection::begin(void){
 		Logger.debug("WiFi", "FAIL");
 	}
 
-	WiFiMode mode = WiFi.getMode();
+	WiFiMode_t mode = WiFi.getMode();
 	if(status != WL_CONNECTED || mode == WIFI_AP || mode == WIFI_AP_STA){
 		WiFi.softAP(Config.moduleName);
 		Logger.debug("SoftAP", "OK");
@@ -189,10 +189,10 @@ uint8_t WifiConnection::waitForConnectResult() {
     }
     while(status() == WL_DISCONNECTED) {
         delay(200);
-        if(Config.debugMode) Serial.print("#");
+        Serial.print("#");
     }
 
-    if(Config.debugMode) Serial.println();
+    Serial.println();
 
     return WiFi.status();
 }

@@ -29,6 +29,7 @@
 #include <YunClient.h> // Enable for MQTT/Yun (as MQTT Client)
 #endif
 
+
 #include <PubSubClient.h>
 
 // NOTE: Please do not include OpenDevice.h this will break the preprocessors / macros
@@ -42,15 +43,15 @@
 
 namespace od {
 
-class MQTTConnection: public DeviceConnection {
+class MQTTEthConnection: public DeviceConnection {
 
 static MQTTClient* mqttClient;
 
 public:
 
-	MQTTConnection(Client& client);
+	MQTTEthConnection(Client& client);
 
-	virtual ~MQTTConnection();
+	virtual ~MQTTEthConnection();
 
 	virtual void begin(void);
 

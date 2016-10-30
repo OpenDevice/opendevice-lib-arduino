@@ -15,8 +15,9 @@
 #ifndef LIBRARIES_OPENDEVICE_SRC_WIFICONNECTION_H_
 #define LIBRARIES_OPENDEVICE_SRC_WIFICONNECTION_H_
 
+#include "../dependencies.h"
 
-#include <IPAddress.h>
+#ifdef WiFi_h
 
 #include "config.h"
 #include "utility/Logger.h"
@@ -79,7 +80,7 @@ protected:
 
 #ifdef __ARDUINO_OTA_H
 	void enableOTA(){
-		
+
 		ArduinoOTA.setHostname(Config.moduleName);
 
 		// TODO: change password
@@ -102,14 +103,14 @@ protected:
 		    	else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
 		    	else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
 		    	else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-		    	else if (error == OTA_END_ERROR) Serial.println("End Failed");			
+		    	else if (error == OTA_END_ERROR) Serial.println("End Failed");
 			}
 		});
 	}
 #else
 	void enableOTA(){
 		// DISABLED
-	}	
+	}
 #endif
 
 #ifdef __ARDUINO_OTA_H
@@ -119,8 +120,10 @@ protected:
 #else
 	void checkOTA(){
 		// DISABLED
-	}	
+	}
 #endif
 };
+
+#endif
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_WIFICONNECTION_H_ */

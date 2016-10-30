@@ -20,39 +20,38 @@
  *  Author: Ricardo JL Rufino
  */
 
-
+#include <connections/MQTTEthConnection.h>
 #include "../dependencies.h"
 
-#if defined(PubSubClient_h) && !defined(WiFi_h)
-
-#include <MQTTConnection.h>
 
 namespace od {
 
-MQTTClient* MQTTConnection::mqttClient;
+MQTTClient* MQTTEthConnection::mqttClient;
 
-MQTTConnection::MQTTConnection(Client& client): mqtt(client), mqttTimeout(5000) {
+MQTTEthConnection::MQTTEthConnection(Client& client): mqtt(client), mqttTimeout(5000) {
 	mqttClient = new MQTTClient(mqtt);
 }
 
-MQTTConnection::~MQTTConnection() {
-	// TODO Auto-generated destructor stub
+MQTTEthConnection::~MQTTEthConnection() {
+
 }
 
-void MQTTConnection::begin(){
+void MQTTEthConnection::begin(){
+
 	Logger.debug("MQTT", "BEGIN");
 	mqtt.setServer(Config.server, MQTT_PORT);
 	mqtt.setCallback(mqttCallback);
 	mqttClient->begin();
 
 #if defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_)
+	#error "OK... YUN IS WORKINH..... REMOVE THIS PLEASE"
 	Bridge.begin();
 #endif
 
 	mqttConnect();
 }
 
-bool MQTTConnection::checkDataAvalible(void){
+bool MQTTEthConnection::checkDataAvalible(void){
 
 	// Reconnect MQTT if OFFLINE and not have Client (TcpServer)
 	if (mqttTimeout.expired() && !mqtt.connected()) {
@@ -75,11 +74,11 @@ bool MQTTConnection::checkDataAvalible(void){
 
 }
 
-void MQTTConnection::mqttCallback(char* topic, byte* payload, unsigned int length){
+void MQTTEthConnection::mqttCallback(char* topic, byte* payload, unsigned int length){
 	mqttClient->setData(payload, length);
 }
 
-void MQTTConnection::mqttConnect(){
+void MQTTEthConnection::mqttConnect(){
 
 	String clientID = String(Config.appID);
 	clientID+= "/";
@@ -89,19 +88,19 @@ void MQTTConnection::mqttConnect(){
 	subscribe+= "/in/";
 	subscribe+= Config.moduleName;
 
-	Logger.debug("MQTT", "connecting... ");
+	LOG_DEBUG("MQTT", "connecting... ");
 
 	// Attempt to connect
-	if (mqtt.connect(clientID.c_str())) {
-	  Logger.debug("MQTT", "[connected]");
+	if (mqtt.connect(clientID.c_str(), Config.appID, "*")) {
+	  LOG_DEBUG("MQTT", "[connected]");
 	  mqtt.subscribe(subscribe.c_str());
 	} else {
 	  mqttTimeout.reset();
-	  Logger.debug("MQTT <Fail>", mqtt.state());
+	  LOG_DEBUG("MQTT <Fail>", mqtt.state());
 	}
 
 }
 
 } /* namespace od */
 
-#endif
+// #endif
