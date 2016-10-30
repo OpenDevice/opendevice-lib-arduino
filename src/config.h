@@ -17,9 +17,9 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 
-#if defined(__COMPILING_AVR_LIBC__)
-#include <avr/eeprom.h>
-#endif
+// #if defined(__COMPILING_AVR_LIBC__)
+// #include <avr/eeprom.h>
+// #endif
 
 #ifndef __cplusplus
 #error A C++ compiler is required!
@@ -28,20 +28,22 @@
 // STATIC CONFIGURATION
 // =====================================
 
-#define DEBUG_SETUP	  0 // set 1 to enable (receiving debug)
-#define DEBUG_CON	  0 // set 1 to enable (receiving debug)
+#define DEBUG_SETUP	  1 // set 1 to enable (receiving debug)
+#define DEBUG_CON	  	0 // set 1 to enable (receiving debug)
 #define ENABLE_SERIAL 1
 
 #define API_VERSION   1 // software version of this library
 #define OPENDEVICE_LIBRARY_VERSION 050
-
+#define CONFIG_VERSION "cv1"  // version of config layout
+#define CONFIG_START 0        // start address in EEPROM
 
 #define DEFAULT_BAUD 115200
-#define DEFAULT_SERVER_PORT 8182
-#define DISCOVERY_PORT 6142
+#define DEFAULT_SERVER_PORT 8182	// Used only in server mode to receive socket connections
+#define DISCOVERY_PORT 6142				// UDP port to enable discovery services.
 #define KEEP_ALIVE_INTERVAL 30000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
+#define ENABLE_SYNC_DEVICEID 1  			// Sync DeviceID from server and save on EEPROM.
 #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 #define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
 
@@ -52,17 +54,20 @@
 
 
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
+// ---- Low Memory Devices ----------
 #define DATA_BUFFER  16
 #define MAX_LISTENERS 2
 #define MAX_DEVICE 5
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 5
 #define READING_INTERVAL 100 // sensor reading interval (ms)
+// END:Low --------------------------
 #else
+// ---- Medium Memory Devices --------
 #define DATA_BUFFER  160
-#define MAX_LISTENERS 10
-#define MAX_DEVICE 10
-#define MAX_COMMAND 10 // this is used for user command callbacks
+#define MAX_LISTENERS 5
+#define MAX_DEVICE 5
+#define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 #endif
@@ -81,62 +86,28 @@ enum ConnectionMode{
 
 namespace od {
 
+ /**
+  * Configuration Storage Struct
+	* Default values in .cpp
+	*/
+	struct ConfigClass{
 
-// DYNAMIC CONFIGURATION
-	// =====================================
-
-	typedef struct{
-		bool saved =  false;
-		char * moduleName = "OpenDevice";
-		char * server = "api.opendevice.io";
-		char * appID = "*";
-		uint8_t id[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; // MAC
-		uint8_t ip[4] = { 0, 0, 0, 0 };
-		uint8_t devicesLength = 0;
-		int devicesStart = 0;
-		int devicesEnd = 0;
-		uint8_t pinReset = 2;
-		bool debugMode = false;
-		bool keepAlive = true;
-		uint8_t debugTarget = DEBUG_SERIAL;
-		ConnectionMode connectionMode = CONNECTION_MODE_SERVER;
-
-		void load(){
-			#if defined(ESP8266)
-				EEPROM.begin(4096);
-			#else
-				EEPROM.begin(); // EEPROM.begin( EEPROM.length() )
-			#endif
-
-			// TODO: change to get and pt;
-			#if defined(__COMPILING_AVR_LIBC__)
-			eeprom_read_block((void*)this, (void*)0, sizeof(this));
-			#endif
-		}
-
-		void save(){
-			#if defined(__COMPILING_AVR_LIBC__)
-			saved = true;
-			eeprom_write_block((void*)this, (void*)0, sizeof(this));
-			#endif
-		}
-
-	} ConfigClass;
+	  char version[4]; // version of config - used for validation
+	  char moduleName[15];
+	  char server[25];
+	  char appID[36];
+	  byte id[6];  // MAC
+	  byte ip[4];
+	  uint8_t pinReset;
+	  bool debugMode;
+	  bool keepAlive;
+	  uint8_t debugTarget;
+	  uint8_t connectionMode;
+	  int8_t devicesLength;
+	  uint16_t devices[MAX_DEVICE];
+	};
 
 	extern ConfigClass Config;
-
-	static void loadConfig(){
-		#if defined(__COMPILING_AVR_LIBC__)
-		eeprom_read_block((void*)&Config, (void*)0, sizeof(Config));
-		#endif
-	}
-	static void saveConfig(){
-		Config.saved = true;
-		#if defined(__COMPILING_AVR_LIBC__)
-		eeprom_write_block((void*)&Config, (void*)0, sizeof(Config));
-		#endif
-	}
 }
-
 
 #endif /* OPENDEVICE_CONFIG_H_ */
