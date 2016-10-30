@@ -69,7 +69,7 @@ void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool
 	//	currentValue = LOW; // TODO: isso deve ser definido, pois tomada é HIGHT e lanpada deve ser LOW
 	//}
 
-	
+
 }
 
 
@@ -117,6 +117,8 @@ unsigned long Device::getValue(){
 			if(inverted) value = ! value;
 
 			return value;
+		}else if(type == Device::BOARD){
+			return 0;
 		}else{
 			return analogRead(pin);
 		}
@@ -215,6 +217,3 @@ int Device::toString(char buffer[]){
 	 int itype = type;
 	 return sprintf (buffer, "[%s,%d,%d,%lu,%d,%d,%d]", (deviceName != NULL ? deviceName : ""), id, pin, getValue(), targetID, (sensor ? 1 : 0), itype);
 }
-
-
-

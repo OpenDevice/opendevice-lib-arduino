@@ -38,9 +38,9 @@ protected:
 	bool processing;
 	char _buffer[DATA_BUFFER];
 
-    const uint16_t _len = DATA_BUFFER;
-    bool _buffer_overflow;
-    uint16_t _endOffset;
+  const uint16_t _len = DATA_BUFFER;
+  bool _buffer_overflow;
+  uint16_t _endOffset;
 	volatile uint8_t _readOffset;
 
 	virtual void init();
@@ -75,7 +75,7 @@ private:
     int nextEndOffSet();
     bool isListEnd(char c);
 
-public: 
+public:
 
 	// Alias
 	static const uint8_t START_BIT = Command::START_BIT;
@@ -89,7 +89,7 @@ public:
 	// public methods
 	DeviceConnection();
 	DeviceConnection(Stream &serial);
-	
+
 	virtual void begin(void);
 	void flush(void);
 	virtual bool checkDataAvalible(void);
@@ -99,7 +99,7 @@ public:
 //	void addListener(uint8_t,CommandListener);
 //	void removeListener(uint8_t);
 	void getBuffer(uint8_t[]);
-	
+
 	String readString();
 	inline int readInt(){ return parseInt(); }
 	inline long readLong(){ return parseInt(); }
@@ -112,14 +112,14 @@ public:
 	int readIntValues(int values[], int max);
 	int readLongValues(long values[], int max);
 	int readFloatValues(float values[], int max);
-	
+
 
 	#if defined(ARDUINO) && ARDUINO >= 100
 	virtual size_t write(uint8_t);
 	#else
 	virtual void write(uint8_t);
 	#endif
-	
+
 
 	virtual void doStart();
 	virtual void doEnd();
@@ -152,7 +152,7 @@ public:
 
     using Print::write;
     using Print::print;
-	
+
 	static int api_version() { return API_VERSION;}
 };
 

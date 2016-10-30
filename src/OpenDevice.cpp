@@ -35,7 +35,11 @@ OpenDeviceClass::OpenDeviceClass() {
 		devices[i] = NULL;
 	}
 
-	loadConfig();
+	#if defined(ESP8266)
+		EEPROM.begin(sizeof(Config));
+	#endif
+
+	load(); // Load storage configuration
 }
 
 //void OpenDeviceClass::begin(Stream &serial) {
@@ -123,8 +127,8 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
 
-	// Add Board Device Class
-	addDevice(Config.moduleName, -1, Device::BOARD);
+	// Load Device(ID) from Storage and set in devices
+	loadDevicesFromStorage();
 
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
@@ -162,16 +166,16 @@ void OpenDeviceClass::_loop() {
 	if(connected && Config.keepAlive){
 	  unsigned long currentMillis = millis();
 	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
-		keepAliveTime = currentMillis;
-		keepAliveMiss++;
+			keepAliveTime = currentMillis;
+			keepAliveMiss++;
 
-		ODev.send(cmd(CommandType::PING_REQUEST));
-		if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
-			connected = false;
-		}
+			ODev.send(cmd(CommandType::PING_REQUEST));
+			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
+				connected = false;
+			}
 	  }
 	}
-	
+
 
 }
 
@@ -234,7 +238,7 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 		pinMode(Config.pinReset, OUTPUT);
 		digitalWrite(Config.pinReset, LOW);
 
-		// Send response Ex: GET_DEVICES_RESPONSE;ID;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
+	// Send response Ex: GET_DEVICES_RESPONSE;ID;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
 	} else if (cmd.type == CommandType::GET_DEVICES) {
 
 		conn->doStart();
@@ -262,6 +266,28 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 		}
 
 		conn->doEnd();
+
+  // Save devices ID on storage
+	} else if (cmd.type == CommandType::SYNC_DEVICES_ID) {
+
+		int length = conn->readInt();
+		Config.devicesLength = length;
+
+		LOG_DEBUG("SYNC", length);
+
+		if(length!= ODev.deviceLength) {   // Invalid Match
+			ODev.notifyReceived(ResponseStatus::BAD_REQUEST);
+			return;
+		}
+
+		for (size_t i = 0; i < length; i++) {
+			ODev.devices[i]->id = conn->readInt();
+			Config.devices[i] = ODev.devices[i]->id;
+			// Serial.print("Device :: ");Serial.print(i);
+			// Serial.print(" =-> ");Serial.println(ODev.devices[i]->id, DEC);
+		}
+
+		ODev.save();
 
 	}else{
 
@@ -335,7 +361,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 		ODev.deviceConnection->send(lastCMD, false);
 		// Check extra data to send.
 		sensor->serializeExtraData(ODev.deviceConnection);
-		ODev.deviceConnection->doEnd();	
+		ODev.deviceConnection->doEnd();
 	}
 
 }
@@ -443,7 +469,12 @@ Device* OpenDeviceClass::addDevice(char* name, Device& device){
 			}
 		}
 
-		if (device.id <= 0) device.id =(deviceLength + 1);
+    // Force syncronization with server
+		#if(ENABLE_SYNC_DEVICEID)
+		if (device.id <= 0) device.id = 0;
+		#else
+		if (device.id <= 0) device.id = (deviceLength + 1); // auto increment
+		#endif
 
 		devices[deviceLength] = &device;
 		deviceLength = deviceLength + 1;
@@ -474,7 +505,13 @@ Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType t
 			pinMode(pin, OUTPUT);
 		}
 
+		// Force syncronization with server
+		#if(ENABLE_SYNC_DEVICEID)
+		// nothing.. id == 0
+		#else
 		if (id == 0) id = (deviceLength + 1);
+		#endif
+
 
 		devices[deviceLength] = new Device(id, pin, type, sensor);
 		devices[deviceLength]->name(name);
@@ -556,7 +593,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 }
 
 void OpenDeviceClass::setValue(uint8_t id, unsigned long value){
-	
+
 	Command lastCMD = ODev.lastCMD;
 
     for (int i = 0; i < deviceLength; i++) {
@@ -623,23 +660,21 @@ Device* OpenDeviceClass::getDeviceAt(uint8_t index){
 
 uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 
-	if (!Config.saved) { // not loaded
-		loadConfig();
-		if (!Config.saved || Config.id[0] == 0) { // not saved
+	if (Config.id[0] == 0 && Config.id[1] == 0) { // not saved
 
-			// The first three octets are the "Organizationally Unique Identifier" or OUI, these are assigned to companies.
-			// I've use the OUI from GHEO Sa, which is the correct one for Arduino Ethernet.
-			// Then the rest of the MAC address or the last three octets is randomly generated.
-			Config.id[0] = 0x90; Config.id[1] = 0xA2; Config.id[2] = 0xDA;
+		// The first three octets are the "Organizationally Unique Identifier" or OUI, these are assigned to companies.
+		// I've use the OUI from GHEO Sa, which is the correct one for Arduino Ethernet.
+		// Then the rest of the MAC address or the last three octets is randomly generated.
+		Config.id[0] = 0x90; Config.id[1] = 0xA2; Config.id[2] = 0xDA;
 
-			randomSeed(analogRead(apin));
-			//Serial.print("MAC.NOTSAVED -");
-			for (int i = 3; i < 6; i++) {
-				Config.id[i] = random(0, 255);
-			}
-			saveConfig();
+		randomSeed(analogRead(apin));
+		//Serial.print("MAC.NOTSAVED -");
+		for (int i = 3; i < 6; i++) {
+			Config.id[i] = random(0, 255);
 		}
+		save();
 	}
+
 
 	//Serial.print("MAC.SAVED:");
 	for (int i = 0; i < 6; ++i) {
@@ -650,6 +685,19 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 	delay(200);
 
 	return Config.id;
+}
+
+void OpenDeviceClass::name(const char *pname){
+	strcpy (Config.moduleName, pname);
+	addDevice(Config.moduleName, -1, Device::BOARD); // // Add Board Device Class
+}
+
+void OpenDeviceClass::server(char pname[]){
+	strcpy(Config.server, pname);
+}
+
+void OpenDeviceClass::apiKey(char pname[]){
+	strcpy(Config.appID, pname);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -691,7 +739,7 @@ void OpenDeviceClass::debug(const char str[], unsigned long value){
 			deviceConnection->doStart();
 			deviceConnection->print("DB:");
 			deviceConnection->print(str);
-			if(value >= 0) deviceConnection->print(value);	
+			if(value >= 0) deviceConnection->print(value);
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
@@ -726,6 +774,26 @@ void OpenDeviceClass::debug(const String &str){
 }
 #endif
 
+/**
+ * Verify if was saved the devices(IDs) on the internal storage.
+ * If not saved, then the server will send IDs.
+ */
+void OpenDeviceClass::loadDevicesFromStorage(){
+	#if(ENABLE_SYNC_DEVICEID)
+
+		LOG_DEBUG("Stored Devices ", Config.devicesLength);
+
+		for (int i = 0; i < deviceLength; ++i) {
+			Device *device = getDeviceAt(i);
+			if(device->id == 0 && i < Config.devicesLength){
+				device->id = Config.devices[i];
+			}
+		}
+
+		// A device may have been removed from the sketch
+		if(Config.devicesLength > deviceLength) Config.devicesLength = deviceLength;
+
+	#endif
+}
+
 OpenDeviceClass ODev;
-
-

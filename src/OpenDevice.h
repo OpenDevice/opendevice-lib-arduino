@@ -21,58 +21,11 @@
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/FuncSensor.h"
+#include "utility/Logger.h"
 #include "../dependencies.h"
 
 using namespace od;
 
-// ===========================================================
-// Automatic Detection of Connections
-// ===========================================================
-
-#if defined(ethernet_h) || defined (UIPETHERNET_H)
-	#include "EthernetServerConnection.h"
-#endif
-
-// Arduino YUN Wifi/Ethernet bridge
-#if defined(_YUN_SERVER_H_) && !defined(PubSubClient_h)
-	#include "YunServerConnection.h"
-#endif
-
-
-#if defined(PubSubClient_h) && !defined(ESP8266)
-	#include "MQTTConnection.h"
-#endif
-
-#if defined(PubSubClient_h) && defined(ESP8266)
-#include "MQTTWifiConnection.h"
-#endif
-
-
-// ESP8266 AT Command library
-#if defined(__ESP8266AT_H__)
-	#include <WifiConnetionEspAT.h>
-#endif
-
-// ESP8266 Standalone
-#if defined(ESP8266) && !defined(PubSubClient_h)
-	#include "stdlib_noniso.h"
-	#include <ESP8266WiFi.h>
-	#include <WifiConnection.h>
-#endif
-
-
-#if defined(MFRC522_h)
-	#include <devices/RFIDSensor.h>
-#endif
-
-#if defined(_RCSwitch_h)
-	#include <devices/RFSensor.h>
-#endif
-
-#if defined(IRremote_h)
-	#include <devices/IRSensor.h>
-	#include <devices/IRDevice.h>
-#endif
 
 
 extern volatile uint8_t* PIN_INTERRUPT;
@@ -118,15 +71,16 @@ private:
 	void onSensorChanged(uint8_t id, unsigned long value);
 
 	void notifyReceived(ResponseStatus::ResponseStatus status);
-	
+
 	// Utils....
 	void clear(Command cmd);
-	void showFreeRam();
 	void debugChange(uint8_t id, unsigned long value);
 
 	void _loop();
 
 	void beginDefault();
+
+	void loadDevicesFromStorage();
 
 public:
 
@@ -150,7 +104,6 @@ public:
 		void loop(){
 			CUSTOM_CONNECTION_CLASS conn = custom_connection_loop(deviceConnection);
 			deviceConnection->setStream(&conn);
-
 			_loop();
 
 			#ifdef _TASKSCHEDULER_H_
@@ -178,9 +131,9 @@ public:
 	 */
 	void id(uint8_t *pid) { memcpy(Config.id, pid, sizeof(Config.id)); }
 
-	void name(char *pname) { Config.moduleName = pname; }
-	void server(char *pname) { Config.server = pname; }
-	void apiKey(char *key) { Config.appID = key; }
+	void name(const char *pname);
+	void server(char pname[]);
+	void apiKey(char pname[]);
 
 	const char* name() { return Config.moduleName; }
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
@@ -219,7 +172,7 @@ public:
 	}
 #else
 	/**
-	 * No parameters, use Serial by default
+	 * No parameters, use Serial/Wifi by default
 	 */
 	void begin(){
 
@@ -228,9 +181,60 @@ public:
 			while (!Serial){delay(1);}
 		#endif
 
-		beginDefault();
+		#if defined(ESP8266) && defined(PubSubClient_h)
+
+			MQTTWifiConnection *conn =  new MQTTWifiConnection();
+			begin(*conn);
+
+		#elif defined(ethernet_h)
+				connectNetwork();
+		    static EthernetClient ethclient;
+		    	MQTTEthConnection *conn =  new MQTTEthConnection(ethclient);
+				begin(*conn);
+		#else
+				beginDefault();
+		#endif
+
 
 	};
+#endif
+
+#if defined(ethernet_h)
+
+	void connectNetwork(){
+
+		// byte* mac = generateID();
+		byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+
+		// // Using saved IP (Sketch or EEPROM)
+		// if(Config.ip[0] != 0){
+		// 	Serial.println(F("Using saved IP on EEPROM"));
+		// 	Ethernet.begin(mac, Config.ip);
+		// } // try DHCP
+		// else{
+			Serial.println(F("Using DHCP"));
+			#if(ENABLE_DHCP)
+				#if defined (UIPETHERNET_H) && !UIP_CONF_UDP
+				#error "Using UIPEthernet with DHCP, you must enable UIP_CONF_UDP ! (This eats space !)"
+				#endif
+				if (Ethernet.begin(mac)>0) {
+					IPAddress ip = Ethernet.localIP();
+					Config.ip[0] = ip[0];
+					Config.ip[1] = ip[1];
+					Config.ip[2] = ip[2];
+					Config.ip[3] = ip[3];
+					save();
+				}else{
+					Serial.println("DHCP Failed");
+				}
+			#else
+				Serial.println(F("Please define a IP or enable DHCP"));
+			#endif
+		// }
+
+		Serial.print("Server is at: "); Serial.println(Ethernet.localIP());
+	}
+
 #endif
 
 #if defined(HAVE_CDCSERIAL)
@@ -282,21 +286,14 @@ void begin(usb_serial_class &serial, unsigned long baud){
 }
 #endif
 
-#if defined(ESP8266) && !defined(PubSubClient_h)
-void begin(ESP8266WiFiClass &wifi){
+// #if defined(ESP8266) && !defined(PubSubClient_h)
+// void begin(ESP8266WiFiClass &wifi){
+//
+// 	WifiConnection *conn =  new WifiConnection();
+// 	begin(*conn);
+// }
+// #endif
 
-	WifiConnection *conn =  new WifiConnection();
-	begin(*conn);
-}
-#endif
-
-
-#if defined(ESP8266) && defined(PubSubClient_h)
-void begin(ESP8266WiFiClass &wifi){
-	MQTTWifiConnection *conn =  new MQTTWifiConnection();
-	begin(*conn);
-}
-#endif
 
 // TODO: Make compatible with Due
 //	#ifdef _SAM3XA_
@@ -317,6 +314,8 @@ void begin(ESP8266WiFiClass &wifi){
 	/** When enabled OpenDevice will be sending a PING message to connection to inform you that everything is OK. <br/>
 	 * Control of the Keep Alive / Ping can be left to the other side of the connection, in this case the "device" would be disabled */
 	void enableKeepAlive(bool val =  false);
+
+  void showFreeRam();
 
 	void enableDebug(uint8_t debugTarget = DEBUG_SERIAL);
 
@@ -365,7 +364,7 @@ void begin(ESP8266WiFiClass &wifi){
 	 * This function generates a Module.ID/MAC (pseudo-random) to be used in the connection and save to EEPROM for future use.
 	 * @param apin  Must be passed to the function an analog pin not used
 	 **/
-	uint8_t * generateID(uint8_t apin);
+	uint8_t * generateID(uint8_t apin = 0);
 
 	void setDefaultListener(void (*pt2Func)(uint8_t, unsigned long));
 
@@ -374,6 +373,76 @@ void begin(ESP8266WiFiClass &wifi){
 
 	void toggle(uint8_t id);
 	void sendToAll(unsigned long value);
+
+	/**
+	 * Check if exist a valid configuration (memory layout) in EEPROM
+	 */
+	bool check(){
+		return (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
+						EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
+						EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2]);
+	}
+
+	/** Save current configuration to storage */
+	void save(){
+			EEPROM.put(CONFIG_START, Config);
+			#if defined(ESP8266)
+				EEPROM.commit();
+			#endif
+	}
+
+  /**
+	 * Clear saved setings
+	 */
+	void clear(){
+
+		for (int i = CONFIG_START ; i < CONFIG_START + sizeof(Config) ; i++) {
+		  EEPROM.write(i, 0);
+		}
+
+		#if defined(ESP8266)
+		EEPROM.commit();
+		#endif
+	}
+
+
+
+	void printStorageSettings(){
+
+	#if defined(ESP8266)
+	 uint32_t realSize = ESP.getFlashChipRealSize();
+	 uint32_t ideSize = ESP.getFlashChipSize();
+	 FlashMode_t ideMode = ESP.getFlashChipMode();
+
+	 Serial.print("Flash real id:"); Serial.println(ESP.getFlashChipId());
+	 Serial.print("Flash real size:"); Serial.println(realSize);
+	 Serial.print("Flash ide size:"); Serial.println(ideSize);
+	 Serial.print("Flash ide mode:"); Serial.println((ideMode == FM_QIO ? "QIO" : ideMode == FM_QOUT ? "QOUT" : ideMode == FM_DIO ? "DIO" : ideMode == FM_DOUT ? "DOUT" : "UNKNOWN"));
+
+	 if(ideSize != realSize) {
+			 Serial.println("Flash Chip configuration wrong!\n");
+	 } else {
+			 Serial.println("Flash Chip configuration ok.\n");
+	 }
+	 delay(500);
+	 #else
+	 		 Serial.println("Only for ESP8266");
+	 #endif
+
+	}
+
+	/**
+	 * Load configuration from storage (EEPROM).
+	 * Check if exist, if not, use default values
+	 **/
+	void load(){
+		if(check()){
+			EEPROM.get(CONFIG_START, Config);
+		} else{
+			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
+			// save(); // init and save defaults
+		}
+	}
 
 	inline bool isConnected(){return connected;}
 	inline void setConnected(bool val){connected = val;}
