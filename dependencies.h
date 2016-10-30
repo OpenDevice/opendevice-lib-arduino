@@ -19,6 +19,69 @@
 // Configure dependencies used in your project (Please comment unused dependencies)
 // *******************************************************************************************
 
+// ===========================================================
+// Automatic Detection of Connections
+// ===========================================================
+
+#ifdef ESP8266
+	#include <ESP8266WiFi.h>
+#endif
+
+
+// #if defined(ethernet_h) || defined (UIPETHERNET_H)
+//   #ifdef PubSubClient_h
+//     #include "MQTTConnection.h"
+//   #else
+// 	 #include "EthernetServerConnection.h"
+//   #endif
+//
+// #endif
+
+
+// ESP8266 + MQTT
+#if defined(PubSubClient_h) && defined(ESP8266)
+#include "connections/MQTTWifiConnection.h"
+#endif
+
+// Arduino MQTT + Ethernet
+#if defined(PubSubClient_h) && defined(ethernet_h)
+#include <PubSubClient.h>
+#include "connections/MQTTEthConnection.h"
+#endif
+
+
+// Arduino YUN Wifi/Ethernet Server
+#if defined(_YUN_SERVER_H_) && !defined(PubSubClient_h)
+	#include "connections/YunServerConnection.h"
+#endif
+
+// ESP8266 AT Command library
+#if defined(__ESP8266AT_H__)
+	#include <connections/WifiConnetionEspAT.h>
+#endif
+
+// ESP8266 Standalone
+// #if defined(ESP8266) && !defined(PubSubClient_h)
+// 	#include "stdlib_noniso.h"
+// 	#include <ESP8266WiFi.h>
+// 	#include <WifiConnection.h>
+// #endif
+
+
+#if defined(MFRC522_h)
+	#include <devices/RFIDSensor.h>
+#endif
+
+#if defined(_RCSwitch_h)
+	#include <devices/RFSensor.h>
+#endif
+
+#if defined(IRremote_h)
+	#include <devices/IRSensor.h>
+	#include <devices/IRDevice.h>
+#endif
+
+
 //================================================
 // Boards and Connections
 //================================================

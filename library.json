@@ -6,13 +6,18 @@
   "homepage": "http:/opendevice.io",
   "dependencies": [
     {"name": "PubSubClient", "version": ">=2.6"},
-    {"name": "EnableInterrupt", "version":  ">=0.9.5", "platforms" : "atmelavr"},
+    {"name": "EEPROM", "version":  ">=2.0"},
+    {"name": "ESP8266WiFi", "version":  ">=1.2.7", "platforms" : "espressif8266"}
+  ],
+  "list": [
+    {"name": "PubSubClient", "version": ">=2.6"},
     {"name": "MFRC522", "version":  ">=1.1.8"},
     {"name": "Bridge", "version":  ">=1.6.1", "platforms" : "atmelavr"},
     {"name": "Ethernet", "version":  ">=1.1.2", "platforms" : "atmelavr"},
     {"name": "EEPROM", "version":  ">=2.0"},
     {"name": "SPI", "version":  ">=1.0"},
     {"name": "WiFi", "version":  ">=1.2.7", "platforms" : "atmelavr"},
+    {"name": "EnableInterrupt", "version":  ">=0.9.5", "platforms" : "atmelavr"},
     {"name": "ESP8266WiFi", "version":  ">=1.2.7", "platforms" : "espressif8266"}
   ],
   "repository":
