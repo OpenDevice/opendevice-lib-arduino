@@ -223,6 +223,10 @@ void DeviceConnection::getBuffer(uint8_t buf[]){
 	}
 }
 
+void DeviceConnection::printBuffer(){
+	Serial.println((const char *)_buffer);
+}
+
 
 #if defined(ARDUINO) && ARDUINO >= 100
 size_t DeviceConnection::write(uint8_t b){

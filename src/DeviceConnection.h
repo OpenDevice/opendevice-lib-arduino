@@ -36,11 +36,11 @@ class DeviceConnection : public Print{
 
 protected:
 	bool processing;
-	char _buffer[DATA_BUFFER];
+	uint8_t _buffer[DATA_BUFFER];
 
-  const uint16_t _len = DATA_BUFFER;
-  bool _buffer_overflow;
-  uint16_t _endOffset;
+	const uint16_t _len = DATA_BUFFER;
+	bool _buffer_overflow;
+	uint16_t _endOffset;
 	volatile uint8_t _readOffset;
 
 	virtual void init();
@@ -99,6 +99,7 @@ public:
 //	void addListener(uint8_t,CommandListener);
 //	void removeListener(uint8_t);
 	void getBuffer(uint8_t[]);
+	void printBuffer();
 
 	String readString();
 	inline int readInt(){ return parseInt(); }
