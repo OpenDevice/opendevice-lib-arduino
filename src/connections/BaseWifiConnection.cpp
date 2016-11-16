@@ -12,9 +12,6 @@
  */
 
 #include "../dependencies.h"
-
-#ifdef WiFi_h
-
 #include "BaseWifiConnection.h"
 
 BaseWifiConnection::BaseWifiConnection() {
@@ -133,5 +130,3 @@ bool BaseWifiConnection::waitForConnected(uint32_t timeout)
 
     return false;
 }
-
-#endif

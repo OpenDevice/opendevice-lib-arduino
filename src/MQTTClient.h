@@ -20,7 +20,7 @@ namespace od {
 
 class MQTTClient : public StreamBuffer {
 public:
-	MQTTClient(PubSubClient&);
+	MQTTClient(PubSubClient&, uint8_t * _buffer);
 	virtual ~MQTTClient();
 
     virtual size_t write(uint8_t);
@@ -29,7 +29,6 @@ public:
 		bool connected(){ return mqtt->connected(); };
 
 private:
-    uint8_t _buffer[DATA_BUFFER];
     PubSubClient* mqtt;
     String topic;
 };
