@@ -7,7 +7,7 @@
 #include <OpenDevice.h>
 
 void setup(){
-    ODev.enableDebug();
+    ODev.name("ODevSerial");
     ODev.addDevice("LED1", 13, Device::DIGITAL); // ID:1
     ODev.begin(); // by default call Serial.begin() and while(!Serial) on Leonardo
 }
