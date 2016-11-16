@@ -32,8 +32,7 @@
 #define DEBUG_CON	  	0 // set 1 to enable (receiving debug)
 #define ENABLE_SERIAL 1
 
-#define API_VERSION   1 // software version of this library
-#define OPENDEVICE_LIBRARY_VERSION 050
+#define API_VERSION   050 // software version of this library
 #define CONFIG_VERSION "cv1"  // version of config layout
 #define CONFIG_START 0        // start address in EEPROM
 
@@ -58,16 +57,18 @@
 #define DATA_BUFFER  16
 #define MAX_LISTENERS 2
 #define MAX_DEVICE 5
+#define MAX_DEVICE_ID 255
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 5
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 // END:Low --------------------------
 #else
 // ---- Medium Memory Devices --------
-#define DATA_BUFFER  160
+#define DATA_BUFFER  128
 #define MAX_LISTENERS 5
-#define MAX_DEVICE 5
-#define MAX_COMMAND 5 // this is used for user command callbacks
+#define MAX_DEVICE 11
+#define MAX_DEVICE_ID 255
+#define MAX_COMMAND 3 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 #endif

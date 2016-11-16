@@ -19,6 +19,7 @@
 // Configure dependencies used in your project (Please comment unused dependencies)
 // *******************************************************************************************
 
+
 // ===========================================================
 // Automatic Detection of Connections
 // ===========================================================
@@ -68,8 +69,25 @@
 // #endif
 
 
+
+//================================================
+// Features
+//================================================
+
+#ifdef __ARDUINO_OTA_H
+#include <ArduinoOTA.h> // Enable OTA Updates - loading the firmware to ESP module using Wi-Fi connection
+ 					    // Disable to reduce flash size or for security reasons
+ 						// SEE: https://opendevice.atlassian.net/wiki/pages/viewpage.action?pageId=37519365
+#include "utility/RemoteUpdate.h"
+
+#endif
+
+
+#include "utility/TaskScheduler.h" // Enable support for Task Schedule (Cooperative multitasking)
+
+
 #if defined(MFRC522_h)
-	#include <devices/RFIDSensor.h>
+	#include <devices/RFIDSensor.cpp>
 #endif
 
 #if defined(_RCSwitch_h)
@@ -77,8 +95,8 @@
 #endif
 
 #if defined(IRremote_h)
-	#include <devices/IRSensor.h>
-	#include <devices/IRDevice.h>
+	#include <devices/IRSensor.cpp>
+	#include <devices/IRDevice.cpp>
 #endif
 
 
@@ -91,14 +109,9 @@
 //#include <YunClient.h>
 // #include <PubSubClient.h> // Enable MQTT
 
-//================================================
-// Features
-//================================================
 
-//#include <ArduinoOTA.h> // Enable OTA Updates - loading the firmware to ESP module using Wi-Fi connection
- 					    // Disable to reduce flash size or for security reasons
- 						// TIP LINUX :: force discovery, run command: avahi-browse _arduino._tcp
-//#include <TaskSchedulerDeclarations.h> // Enable suport for Tash Schedule (Cooperative multitasking)
+
+
 
 //#if defined(EnableInterrupt_h)
 //#define EI_ARDUINO_INTERRUPTED_PIN
