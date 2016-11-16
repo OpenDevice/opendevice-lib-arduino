@@ -5,16 +5,33 @@
  *      Author: ricardo
  */
 
+
+
 #ifndef LIBRARIES_OPENDEVICE_SRC_LOGGER_H_
 #define LIBRARIES_OPENDEVICE_SRC_LOGGER_H_
 
 #include "config.h"
 
+// Workaround issue: https://github.com/esp8266/Arduino/issues/2078
+#ifdef ESP8266
+	#undef PROGMEM
+	#define PROGMEM
+	#undef PSTR
+	#define PSTR(s) (s)
+	#undef pgm_read_byte
+	#define pgm_read_byte(addr) (*reinterpret_cast<const uint8_t*>(addr))
+	#undef pgm_read_word
+	#define pgm_read_word(addr) (*reinterpret_cast<const uint16_t*>(addr))
+#endif
+
 #if DEBUG || defined(DEBUG_ESP_PORT)
 #define LOG_DEBUG(title, val) Logger.debug(F(title), val)
+#define LOG_DEBUG_S(title) Logger.debug(F(title), NULL)
 #else
 #define LOG_DEBUG(...)
+#define LOG_DEBUG_S(title)
 #endif
+
 
 namespace od {
 
