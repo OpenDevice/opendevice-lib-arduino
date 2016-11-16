@@ -7,7 +7,7 @@
 
 void setup(){
 	ODev.name("ODevBT");
-    ODev.addDevice("LED", 13, Device::DIGITAL); // ID:1
+    ODev.addDevice("LED", 13, Device::DIGITAL); 
     ODev.begin(Serial1, 9600); //-- for Leonardo, Teensy (Rx:0,Tx:1)
 }
 

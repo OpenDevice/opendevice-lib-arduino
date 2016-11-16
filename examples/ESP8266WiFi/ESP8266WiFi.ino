@@ -14,24 +14,30 @@
  */
 
 
+#define ODEV_API_KEY ""
+#define ODEV_MODULE_NAME "ODevESP8266-1"
+
 #include <ESP8266WiFi.h>  // Enable ESP8266 Embedded
-// #include <PubSubClient.h> // Enable + MQTT
+#include <PubSubClient.h> // MQTT
+#include <ArduinoOTA.h>   // Remote Updates
 
 #include <OpenDevice.h>
+
 
 const char* ssid = "--";
 const char* password = "--";
 
 void setup() {
-  ODev.name("ODev-Thing1");
-  // Config.server = "192.168.3.105"; // Only for MQTT
   ODev.enableDebug();
+  ODev.name(ODEV_MODULE_NAME);
+  ODev.apiKey(ODEV_API_KEY);
+  ODev.server("192.168.3.106"); // Change Server !
 
   ODev.addDevice("LED", 2, Device::DIGITAL);
 
   WiFi.mode(WIFI_AP_STA);
   WiFi.begin(ssid, password);
-  ODev.begin(WiFi);
+  ODev.begin();
 }
 
 void loop() {

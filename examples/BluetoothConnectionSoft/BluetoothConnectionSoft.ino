@@ -1,9 +1,8 @@
-/*
- * *****************************************************************************
- * See tutorial: https://opendevice.atlassian.net/wiki/display/DOC/A.+First+Steps+with+OpenDevice
- * This example code is in the public domain.
- * *****************************************************************************
- */
+//******************************************************************************
+// See tutorial: 
+// https://opendevice.atlassian.net/wiki/display/DOC/Getting+started
+//******************************************************************************
+
  
 #include <SoftSerial.h>   
 #include <TinyPinChange.h>  
@@ -16,7 +15,8 @@ SoftwareSerial mySerial(2, 5); // RX, TX
 
 void setup(){
     // ODev.enableDebug();
-    ODev.addDevice("LED", 13, Device::DIGITAL); // ID:1
+    ODev.name("ODevBT");
+    ODev.addDevice("LED", 13, Device::DIGITAL);
     
     mySerial.begin(9600);
     ODev.begin(mySerial); 
