@@ -17,16 +17,16 @@
 
 #include <Arduino.h>
 #include "config.h"
+#include "../dependencies.h"
+
 #include "Command.h"
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/FuncSensor.h"
 #include "utility/Logger.h"
-#include "../dependencies.h"
+
 
 using namespace od;
-
-
 
 extern volatile uint8_t* PIN_INTERRUPT;
 
@@ -100,29 +100,24 @@ public:
 	// virtual ~OpenDeviceClass();
 
 
-	#if defined(USING_CUSTOM_CONNECTION)
-		void loop(){
+	void loop(){
+
+		#ifdef CUSTOM_CONNECTION_CLASS
 			CUSTOM_CONNECTION_CLASS conn = custom_connection_loop(deviceConnection);
 			deviceConnection->setStream(&conn);
-			_loop();
+		#endif
 
-			#ifdef _TASKSCHEDULER_H_
-				scheduler.execute();
-			#endif
-		}
-	#else
-		void loop(){
+		_loop();
 
-			_loop();
+		#ifdef _TASKSCHEDULER_H_
+			scheduler.execute();
+		#endif
 
-			#ifdef _TASKSCHEDULER_H_
-				scheduler.execute();
-			#endif
+		#if defined(__ARDUINO_OTA_H)
+			RemoteUpdate.check();
+		#endif
 
-		};
-	#endif
-
-
+	};
 
 
 	/**
@@ -181,20 +176,24 @@ public:
 			while (!Serial){delay(1);}
 		#endif
 
+		#if defined(__ARDUINO_OTA_H)
+			RemoteUpdate.begin();
+		#endif
+
+
 		#if defined(ESP8266) && defined(PubSubClient_h)
 
 			MQTTWifiConnection *conn =  new MQTTWifiConnection();
 			begin(*conn);
 
 		#elif defined(ethernet_h)
-				connectNetwork();
-		    static EthernetClient ethclient;
-		    	MQTTEthConnection *conn =  new MQTTEthConnection(ethclient);
-				begin(*conn);
+			connectNetwork();
+			static EthernetClient ethclient;
+			MQTTEthConnection *conn =  new MQTTEthConnection(ethclient);
+			begin(*conn);
 		#else
-				beginDefault();
+			beginDefault();
 		#endif
-
 
 	};
 #endif
@@ -204,6 +203,7 @@ public:
 	void connectNetwork(){
 
 		// byte* mac = generateID();
+		// FIXME: use DYNAMIC
 		byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 
 		// // Using saved IP (Sketch or EEPROM)
@@ -336,10 +336,10 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID);
 	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type);
-	Device* addSensor(Device& sensor);
-	Device* addSensor(unsigned long (*function)()){
+	Device* addSensor(char* name, Device& sensor);
+	Device* addSensor(char* name, unsigned long (*function)()){
 		FuncSensor* func = new FuncSensor(function);
-		return addDevice(*func);
+		return addDevice(name, *func);
 	}
 
 	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
@@ -351,9 +351,15 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 #ifdef _TASKSCHEDULER_H_
 
-	void addTask(Task& aTask, void (*aCallback)());
+	inline void addTask(Task& aTask, void (*aCallback)()){
+		aTask.setCallback(aCallback);
+		scheduler.addTask(aTask);
+	}
 
-	void deleteTask(Task& aTask);
+
+	inline void deleteTask(Task& aTask){
+		scheduler.deleteTask(aTask);
+	}
 
 #endif
 
@@ -371,8 +377,21 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	void setValue(uint8_t id, unsigned long value);
 	void sendValue(Device* device);
 
-	void toggle(uint8_t id);
+	void toggle(uint8_t index);
 	void sendToAll(unsigned long value);
+
+	/**
+	 * Load configuration from storage (EEPROM).
+	 * Check if exist, if not, use default values
+	 **/
+	void load(){
+//		if(check()){
+//			EEPROM.get(CONFIG_START, Config);
+//		} else{
+//			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
+//			// save(); // init and save defaults
+//		}
+	}
 
 	/**
 	 * Check if exist a valid configuration (memory layout) in EEPROM
@@ -385,10 +404,10 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	/** Save current configuration to storage */
 	void save(){
-			EEPROM.put(CONFIG_START, Config);
-			#if defined(ESP8266)
-				EEPROM.commit();
-			#endif
+//		EEPROM.put(CONFIG_START, Config);
+//		#if defined(ESP8266)
+//			EEPROM.commit();
+//		#endif
 	}
 
   /**
@@ -431,18 +450,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	}
 
-	/**
-	 * Load configuration from storage (EEPROM).
-	 * Check if exist, if not, use default values
-	 **/
-	void load(){
-		if(check()){
-			EEPROM.get(CONFIG_START, Config);
-		} else{
-			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
-			// save(); // init and save defaults
-		}
-	}
+
 
 	inline bool isConnected(){return connected;}
 	inline void setConnected(bool val){connected = val;}
