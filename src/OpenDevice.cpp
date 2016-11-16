@@ -238,21 +238,24 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 		pinMode(Config.pinReset, OUTPUT);
 		digitalWrite(Config.pinReset, LOW);
 
-	// Send response Ex: GET_DEVICES_RESPONSE;ID;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];[ID,PIN,VALUE,...];[ID,PIN,VALUE,...]
+	// Send response: GET_DEVICES_RESPONSE;ID;Index;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];
+	// NOTE: This message is sent to each device
 	} else if (cmd.type == CommandType::GET_DEVICES) {
-
-		conn->doStart();
-		conn->print(CommandType::GET_DEVICES_RESPONSE);
-		conn->doToken();
-		conn->print(cmd.id);
-		conn->doToken();
-		conn->print(ODev.deviceLength);
-		conn->doToken();
 
 		char buffer[50] = {0};// FIXME: daria para usar o mesmo buffer do deviceConnection ??
 
 		for (int i = 0; i < ODev.deviceLength; ++i) {
 			Device *device = ODev.getDeviceAt(i);
+
+			conn->doStart();
+			conn->print(CommandType::GET_DEVICES_RESPONSE);
+			conn->doToken();
+			conn->print(cmd.id);
+			conn->doToken();
+			conn->print(i+1);
+			conn->doToken();
+			conn->print(ODev.deviceLength);
+			conn->doToken();
 
 			device->toString(buffer);
 
@@ -260,17 +263,17 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 
 			memset(buffer, 0, sizeof(buffer));
 
-			if (i < ODev.deviceLength) {
-				conn->doToken();
-			}
+			conn->doEnd();
 		}
 
-		conn->doEnd();
 
   // Save devices ID on storage
 	} else if (cmd.type == CommandType::SYNC_DEVICES_ID) {
 
+//		conn->printBuffer();
+
 		int length = conn->readInt();
+
 		Config.devicesLength = length;
 
 		LOG_DEBUG("SYNC", length);
@@ -281,13 +284,20 @@ void OpenDeviceClass::onMessageReceived(Command cmd) {
 		}
 
 		for (size_t i = 0; i < length; i++) {
-			ODev.devices[i]->id = conn->readInt();
-			Config.devices[i] = ODev.devices[i]->id;
-			// Serial.print("Device :: ");Serial.print(i);
-			// Serial.print(" =-> ");Serial.println(ODev.devices[i]->id, DEC);
+			int uid = conn->readInt();
+			if(uid > 255){
+				LOG_DEBUG_S("MAX_ID ERROR");
+				ODev.notifyReceived(ResponseStatus::BAD_REQUEST);
+				return;
+			}
+
+			ODev.devices[i]->id = uid;
+			Config.devices[i] = uid;
+			Serial.print("Device :: ");Serial.print(i);Serial.print(" => ");Serial.println(ODev.devices[i]->id, DEC);
 		}
 
 		ODev.save();
+		ODev.notifyReceived(ResponseStatus::SUCCESS);
 
 	}else{
 
@@ -444,8 +454,8 @@ Device* OpenDeviceClass::addSensor(char* name, uint8_t pin, Device::DeviceType t
 }
 
 
-Device* OpenDeviceClass::addSensor(Device& sensor){
-	return addDevice(sensor);
+Device* OpenDeviceClass::addSensor(char* name, Device& sensor){
+	return addDevice(name, sensor);
 }
 
 
@@ -469,7 +479,7 @@ Device* OpenDeviceClass::addDevice(char* name, Device& device){
 			}
 		}
 
-    // Force syncronization with server
+		// Force syncronization with server
 		#if(ENABLE_SYNC_DEVICEID)
 		if (device.id <= 0) device.id = 0;
 		#else
@@ -502,7 +512,7 @@ Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType t
 				#endif
 			}
 		} else {
-			pinMode(pin, OUTPUT);
+			if(pin != 255) pinMode(pin, OUTPUT);
 		}
 
 		// Force syncronization with server
@@ -537,20 +547,6 @@ bool OpenDeviceClass::addCommand(const char * name, void (*function)()){
 			return false;
 		}
 }
-
-#ifdef _TASKSCHEDULER_H_
-
-	void OpenDeviceClass::addTask(Task& aTask, void (*aCallback)()){
-		scheduler.addTask(aTask);
-		aTask.setCallback(aCallback);
-	}
-
-
-	void OpenDeviceClass::deleteTask(Task& aTask){
-		scheduler.deleteTask(aTask);
-	}
-
-#endif
 
 
 void OpenDeviceClass::checkSensorsStatus(){
@@ -614,8 +610,8 @@ void OpenDeviceClass::sendValue(Device* device){
 }
 
 
-void OpenDeviceClass::toggle(uint8_t id){
-	Device* device = ODev.getDevice(id);
+void OpenDeviceClass::toggle(uint8_t index){
+	Device* device = ODev.getDeviceAt(index);
 	setValue(device->id, !device->getValue());
 }
 
