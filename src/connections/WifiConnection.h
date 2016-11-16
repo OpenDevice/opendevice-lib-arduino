@@ -15,14 +15,11 @@
 #ifndef LIBRARIES_OPENDEVICE_SRC_WIFICONNECTION_H_
 #define LIBRARIES_OPENDEVICE_SRC_WIFICONNECTION_H_
 
-#include "../dependencies.h"
-
-#ifdef WiFi_h
-
 #include "config.h"
 #include "utility/Logger.h"
 #include "DeviceConnection.h"
 #include "BaseWifiConnection.h"
+//#include "utility/RemoteUpdate.h"
 
 
 // FIXME: detect correct version of WIFI
@@ -78,52 +75,6 @@ protected:
 
 	uint8_t waitForConnectResult();
 
-#ifdef __ARDUINO_OTA_H
-	void enableOTA(){
-
-		ArduinoOTA.setHostname(Config.moduleName);
-
-		// TODO: change password
-		ArduinoOTA.setPassword((const char *)"123");
-
-		ArduinoOTA.begin();
-
-		ArduinoOTA.onStart([]() {
-    		Logger.debug(F("<<OpenDevice OTA Start>>"));
-  		});
-
-  		ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-  		 	Logger.debug("Progress", (progress / (total / 100)));
-  		});
-
-		ArduinoOTA.onError([](ota_error_t error) {
-			if(Config.debugMode){
-			    Serial.printf("Error[%u]: ", error);
-		    	if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-		    	else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-		    	else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-		    	else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-		    	else if (error == OTA_END_ERROR) Serial.println("End Failed");
-			}
-		});
-	}
-#else
-	void enableOTA(){
-		// DISABLED
-	}
-#endif
-
-#ifdef __ARDUINO_OTA_H
-	void checkOTA(){
-		ArduinoOTA.handle();
-	}
-#else
-	void checkOTA(){
-		// DISABLED
-	}
-#endif
 };
-
-#endif
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_WIFICONNECTION_H_ */

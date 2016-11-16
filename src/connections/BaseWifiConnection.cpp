@@ -11,7 +11,12 @@
  * *****************************************************************************
  */
 
-#include "../dependencies.h"
+ #ifdef ESP8266
+  	#include <ESP8266WiFi.h>
+ #endif
+
+#ifdef WiFi_h
+
 #include "BaseWifiConnection.h"
 
 BaseWifiConnection::BaseWifiConnection() {
@@ -130,3 +135,5 @@ bool BaseWifiConnection::waitForConnected(uint32_t timeout)
 
     return false;
 }
+
+#endif

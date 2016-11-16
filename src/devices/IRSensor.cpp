@@ -11,8 +11,6 @@
  * *****************************************************************************
  */
 
-#include "../dependencies.h"
-
 #if defined(IRremote_h)
 
 #include "IRSensor.h"

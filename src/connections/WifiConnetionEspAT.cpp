@@ -11,8 +11,6 @@
  * *****************************************************************************
  */
 
-#include "../dependencies.h"
-
 #ifdef __ESP8266AT_H__
 
 #include "WifiConnetionEspAT.h"

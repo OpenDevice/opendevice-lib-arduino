@@ -49,4 +49,3 @@ YunClient custom_connection_loop(DeviceConnection *conn){
 	return ethclient;
 
 }
-

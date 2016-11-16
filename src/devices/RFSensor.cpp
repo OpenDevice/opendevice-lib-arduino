@@ -11,8 +11,6 @@
  * *****************************************************************************
  */
 
-#include "../dependencies.h"
-
 #if defined(_RCSwitch_h)
 
 #include "RFSensor.h"

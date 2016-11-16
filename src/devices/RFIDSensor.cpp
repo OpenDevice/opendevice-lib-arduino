@@ -11,8 +11,6 @@
  * *****************************************************************************
  */
 
-#include "../dependencies.h"
-
 #if defined(MFRC522_h)
 
 #include "RFIDSensor.h"

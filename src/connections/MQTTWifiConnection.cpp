@@ -5,7 +5,9 @@
  *      Author: ricardo
  */
 
-#include "../dependencies.h"
+#ifdef ESP8266
+ 	#include <ESP8266WiFi.h>
+#endif
 
 #ifdef WiFi_h
 
@@ -16,7 +18,7 @@ namespace od {
 MQTTClient* MQTTWifiConnection::mqttClient;
 
 MQTTWifiConnection::MQTTWifiConnection(): mqtt(ethclient), mqttTimeout(5000) {
-	mqttClient = new MQTTClient(mqtt);
+	mqttClient = new MQTTClient(mqtt, _buffer);
 }
 
 MQTTWifiConnection::~MQTTWifiConnection() {
@@ -42,9 +44,6 @@ bool MQTTWifiConnection::checkDataAvalible(void){
 
 	if (mqtt.connected()){
 		Config.keepAlive = false; // on MQTT is not required
-
-		checkOTA(); // check for OTA updates (force, because WifiConnection is not called)
-
 		mqtt.loop();
 		mqttTimeout.disable();
 		setStream(mqttClient);

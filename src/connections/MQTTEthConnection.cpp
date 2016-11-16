@@ -21,15 +21,13 @@
  */
 
 #include <connections/MQTTEthConnection.h>
-#include "../dependencies.h"
-
 
 namespace od {
 
 MQTTClient* MQTTEthConnection::mqttClient;
 
 MQTTEthConnection::MQTTEthConnection(Client& client): mqtt(client), mqttTimeout(5000) {
-	mqttClient = new MQTTClient(mqtt);
+	mqttClient = new MQTTClient(mqtt, _buffer);
 }
 
 MQTTEthConnection::~MQTTEthConnection() {

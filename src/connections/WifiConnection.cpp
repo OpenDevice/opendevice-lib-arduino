@@ -11,7 +11,9 @@
  * *****************************************************************************
  */
 
-#include "../dependencies.h"
+ #ifdef ESP8266
+  	#include <ESP8266WiFi.h>
+ #endif
 
 #ifdef WiFi_h
 
@@ -69,12 +71,6 @@ void WifiConnection::begin(void){
 
     isStartup = false;
 
-    if(status == WL_CONNECTED){
-		#if defined(ESP8266)
-    	enableOTA(); // Configure OTA
-    	#endif
-    }
-
 }
 
 bool WifiConnection::checkDataAvalible(void){
@@ -90,7 +86,6 @@ bool WifiConnection::checkDataAvalible(void){
 	// 	}
 	// }
 
-	checkOTA(); // check for OTA updates.
 #endif
 
 	// entrou em loop
@@ -155,6 +150,7 @@ void WifiConnection::restart(){
 void WifiConnection::disconnect(bool wifioff){
 	WiFi.disconnect(wifioff);
 }
+
 
 
 void WifiConnection::mode(WiFiMode mode){
