@@ -171,6 +171,10 @@ public:
 	 */
 	void begin(){
 
+		#ifdef ODEV_MODULE_NAME
+		strcpy(Config.moduleName, ODEV_MODULE_NAME);
+		#endif
+
 		// Wait serial if using Leonardo / YUN
 		#if defined(HAVE_CDCSERIAL) && defined(__AVR_ATmega32U4__)
 			while (!Serial){delay(1);}
@@ -385,12 +389,13 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 * Check if exist, if not, use default values
 	 **/
 	void load(){
-//		if(check()){
-//			EEPROM.get(CONFIG_START, Config);
-//		} else{
-//			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
-//			// save(); // init and save defaults
-//		}
+		if(check()){
+			EEPROM.get(CONFIG_START, Config);
+		} else{
+			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
+			// save(); // init and save defaults
+		}
+
 	}
 
 	/**
@@ -404,10 +409,10 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	/** Save current configuration to storage */
 	void save(){
-//		EEPROM.put(CONFIG_START, Config);
-//		#if defined(ESP8266)
-//			EEPROM.commit();
-//		#endif
+		EEPROM.put(CONFIG_START, Config);
+		#if defined(ESP8266)
+			EEPROM.commit();
+		#endif
 	}
 
   /**
