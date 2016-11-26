@@ -169,7 +169,7 @@ void OpenDeviceClass::_loop() {
 			keepAliveTime = currentMillis;
 			keepAliveMiss++;
 
-			ODev.send(cmd(CommandType::PING_REQUEST));
+			send(cmd(CommandType::PING_REQUEST));
 			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
 				connected = false;
 			}
@@ -189,124 +189,6 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
 	if(_debugTarget == DEBUG_SERIAL) Serial.begin(DEFAULT_BAUD);
 }
 
-/** Called when a command is received by the connection */
-void OpenDeviceClass::onMessageReceived(Command cmd) {
-	ODev.lastCMD = cmd;
-	DeviceConnection *conn = ODev.deviceConnection;
-
-//	if(!ODev.connected){
-//		pinMode(13, OUTPUT);
-//		digitalWrite(13, HIGH);
-//	}
-
-	ODev.connected = true;
-	ODev.keepAliveTime = millis();
-	ODev.keepAliveMiss = 0;
-
-	bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
-
-	ODev.debug("CType:", cmd.type);
-	// ODev.showFreeRam();
-
-	// Directed to a device (Like On/OFF or more complex)
-	if (cmd.deviceID > 0) {
-		Device *foundDevice = ODev.getDevice(cmd.deviceID);
-		if (foundDevice != NULL) {
-			ODev.debugChange(foundDevice->id, cmd.value);
-			foundDevice->setValue(cmd.value, false);
-			foundDevice->deserializeExtraData(&cmd, conn);
-			ODev.notifyReceived(ResponseStatus::SUCCESS);
-		} else {
-			ODev.notifyReceived(ResponseStatus::NOT_FOUND);
-		}
-	// User-defined command, this is an easy way to extend OpenDevice protocol.
-	} else if (cmd.type == CommandType::USER_COMMAND) {
-		String name = conn->readString();
-		for (int i = 0; i < ODev.commandsLength; i++) {
-			// if(ODev.debugMode){ ODev.debug("Call function:"); ODev.debug(name); }
-			if (name.equals(ODev.commands[i].command)) {
-				ODev.notifyReceived(ResponseStatus::SUCCESS);
-				(*ODev.commands[i].function)();
-			}
-		}
-	} else if (cmd.type == CommandType::PING_REQUEST) {
-
-		ODev.send(ODev.resp(CommandType::PING_RESPONSE, 0, ResponseStatus::SUCCESS));
-
-	} else if (cmd.type == CommandType::RESET) {
-
-		pinMode(Config.pinReset, OUTPUT);
-		digitalWrite(Config.pinReset, LOW);
-
-	// Send response: GET_DEVICES_RESPONSE;ID;Index;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];
-	// NOTE: This message is sent to each device
-	} else if (cmd.type == CommandType::GET_DEVICES) {
-
-		char buffer[50] = {0};// FIXME: daria para usar o mesmo buffer do deviceConnection ??
-
-		for (int i = 0; i < ODev.deviceLength; ++i) {
-			Device *device = ODev.getDeviceAt(i);
-
-			conn->doStart();
-			conn->print(CommandType::GET_DEVICES_RESPONSE);
-			conn->doToken();
-			conn->print(cmd.id);
-			conn->doToken();
-			conn->print(i+1);
-			conn->doToken();
-			conn->print(ODev.deviceLength);
-			conn->doToken();
-
-			device->toString(buffer);
-
-			conn->print(buffer); // Write array to connection..
-
-			memset(buffer, 0, sizeof(buffer));
-
-			conn->doEnd();
-		}
-
-
-  // Save devices ID on storage
-	} else if (cmd.type == CommandType::SYNC_DEVICES_ID) {
-
-//		conn->printBuffer();
-
-		int length = conn->readInt();
-
-		Config.devicesLength = length;
-
-		LOG_DEBUG("SYNC", length);
-
-		if(length!= ODev.deviceLength) {   // Invalid Match
-			ODev.notifyReceived(ResponseStatus::BAD_REQUEST);
-			return;
-		}
-
-		for (size_t i = 0; i < length; i++) {
-			int uid = conn->readInt();
-			if(uid > 255){
-				LOG_DEBUG_S("MAX_ID ERROR");
-				ODev.notifyReceived(ResponseStatus::BAD_REQUEST);
-				return;
-			}
-
-			ODev.devices[i]->id = uid;
-			Config.devices[i] = uid;
-			Serial.print("Device :: ");Serial.print(i);Serial.print(" => ");Serial.println(ODev.devices[i]->id, DEC);
-		}
-
-		ODev.save();
-		ODev.notifyReceived(ResponseStatus::SUCCESS);
-
-	}else{
-
-		// TODO: Send response: UNKNOW_COMMAND
-
-	}
-
-}
-
 /**
  * Fired by Device when user change device state in Sketch
  */
@@ -316,6 +198,10 @@ bool OpenDeviceClass::onDeviceChanged(uint8_t iid, unsigned long value) {
 	return true;
 }
 
+void OpenDeviceClass::onMessageReceived(Command cmd) {
+	ODev.messageReceived = true;
+	ODev.lastCMD = cmd;
+}
 
 void OpenDeviceClass::onInterruptReceived(){
 
@@ -343,9 +229,9 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 //    if(id < 100) // FIXME: detectar se é o IR.
 //    	value = !value;        // NOTA: Os valores do Swicth sao invertidos
 
-   ODev.debugChange(id, value);
+  debugChange(id, value);
 
-	if(ODev.autoControl){
+	if(autoControl){
 		if(device != NULL){
 			// Sepre que uma alteracao for detectada, será invertido o seu estado atual.
 			// Caso o dispositivo seja digital, ele ira reconhecer apenas dois valores, 0..1
@@ -361,24 +247,23 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 
 	// SEND: Command
 	// ==========================
-	Command lastCMD = ODev.lastCMD;
 	lastCMD.id = 0;
 	lastCMD.type = (uint8_t) sensor->type;
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
-	if(ODev.connected){
-		ODev.deviceConnection->send(lastCMD, false);
+	if(connected){
+		deviceConnection->send(lastCMD, false);
 		// Check extra data to send.
-		sensor->serializeExtraData(ODev.deviceConnection);
-		ODev.deviceConnection->doEnd();
+		sensor->serializeExtraData(deviceConnection);
+		deviceConnection->doEnd();
 	}
 
 }
 
 
 void OpenDeviceClass::send(Command cmd){
-	if(ODev.connected) deviceConnection->send(cmd, true);
+	if(connected) deviceConnection->send(cmd, true);
 }
 
 Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, unsigned long value){
@@ -590,8 +475,6 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 void OpenDeviceClass::setValue(uint8_t id, unsigned long value){
 
-	Command lastCMD = ODev.lastCMD;
-
     for (int i = 0; i < deviceLength; i++) {
     	if(devices[i]->id == id){
     		devices[i]->setValue(value, false);
@@ -611,7 +494,7 @@ void OpenDeviceClass::sendValue(Device* device){
 
 
 void OpenDeviceClass::toggle(uint8_t index){
-	Device* device = ODev.getDeviceAt(index);
+	Device* device = getDeviceAt(index);
 	setValue(device->id, !device->getValue());
 }
 

@@ -125,7 +125,7 @@ bool DeviceConnection::checkDataAvalible(){
 				uint8_t type = parseInt();
 				// digitalWrite(11,LOW);
 				parseCommand(type);
-				flush();
+				
 
 				return true;
 
@@ -144,7 +144,7 @@ bool DeviceConnection::checkDataAvalible(){
 
 			}
 		}
-		
+
 		// // Wait a bit to read the next byte if not available yet.
 		// // If the timeout (which is usually very low) occur the loop is finished
 		// if(processing && !timeout){
@@ -239,7 +239,7 @@ void DeviceConnection::write(uint8_t b){
 	conn->write(b);
 }
 #endif
-	
+
 
 
 void DeviceConnection::doStart(){
@@ -569,4 +569,3 @@ int DeviceConnection::nextEndOffSet(){
 bool DeviceConnection::isListEnd(char c){
 	return  c==']' || c==')' || c=='}' || c==Command::SEPARATOR;
 }
-

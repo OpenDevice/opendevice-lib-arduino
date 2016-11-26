@@ -25,7 +25,6 @@
 #include "devices/FuncSensor.h"
 #include "utility/Logger.h"
 
-
 using namespace od;
 
 extern volatile uint8_t* PIN_INTERRUPT;
@@ -65,7 +64,6 @@ private:
 
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
-	static void onMessageReceived(Command cmd);
 	static bool onDeviceChanged(uint8_t iid, unsigned long value);
 
 	void onSensorChanged(uint8_t id, unsigned long value);
@@ -84,8 +82,8 @@ private:
 
 public:
 
-
 	Command lastCMD; // Command received / send.
+	bool messageReceived = false;
 
 	uint8_t deviceLength;
 	uint8_t commandsLength;
@@ -108,6 +106,11 @@ public:
 		#endif
 
 		_loop();
+
+		if(messageReceived){
+			onMessageReceivedImpl();
+			deviceConnection->flush();
+		}
 
 		#ifdef _TASKSCHEDULER_H_
 			scheduler.execute();
@@ -184,10 +187,19 @@ public:
 			RemoteUpdate.begin();
 		#endif
 
+		#if defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_)
+			Bridge.begin();
+		#endif
 
 		#if defined(ESP8266) && defined(PubSubClient_h)
 
 			MQTTWifiConnection *conn =  new MQTTWifiConnection();
+			begin(*conn);
+
+		#elif defined(_YUN_CLIENT_H_)
+
+			static YunClient ethclient;
+			MQTTEthConnection *conn =  new MQTTEthConnection(ethclient);
 			begin(*conn);
 
 		#elif defined(ethernet_h)
@@ -227,7 +239,8 @@ public:
 					Config.ip[1] = ip[1];
 					Config.ip[2] = ip[2];
 					Config.ip[3] = ip[3];
-					save();
+					Serial.println("DHCP [OK]");
+					// save();
 				}else{
 					Serial.println("DHCP Failed");
 				}
@@ -472,8 +485,134 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	inline int readIntValues(int values[], int max = -1){ return deviceConnection->readIntValues(values, max); }
 	inline int readLongValues(long values[], int max = -1){ return deviceConnection->readLongValues(values, max); }
 	inline int readFloatValues(float values[], int max = -1){ return deviceConnection->readFloatValues(values, max); }
+
+	static void onMessageReceived(Command cmd);
+
+	/** Called when a command is received by the connection */
+	void onMessageReceivedImpl() {
+
+		Command cmd = lastCMD;
+		DeviceConnection *conn = deviceConnection;
+
+		messageReceived = false;
+		connected = true;
+		keepAliveTime = millis();
+		keepAliveMiss = 0;
+
+		bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
+
+		debug("CType:", cmd.type);
+		// showFreeRam();
+
+		// Directed to a device (Like On/OFF or more complex)
+		if (cmd.deviceID > 0) {
+			Device *foundDevice = getDevice(cmd.deviceID);
+			if (foundDevice != NULL) {
+				debugChange(foundDevice->id, cmd.value);
+				foundDevice->setValue(cmd.value, false);
+				foundDevice->deserializeExtraData(&cmd, conn);
+				notifyReceived(ResponseStatus::SUCCESS);
+			} else {
+				notifyReceived(ResponseStatus::NOT_FOUND);
+			}
+		// User-defined command, this is an easy way to extend OpenDevice protocol.
+		} else if (cmd.type == CommandType::USER_COMMAND) {
+			String name = conn->readString();
+			for (int i = 0; i < commandsLength; i++) {
+				// if(debugMode){ debug("Call function:"); debug(name); }
+				if (name.equals(commands[i].command)) {
+					notifyReceived(ResponseStatus::SUCCESS);
+					(*commands[i].function)();
+				}
+			}
+		} else if (cmd.type == CommandType::PING_REQUEST) {
+
+			send(resp(CommandType::PING_RESPONSE, 0, ResponseStatus::SUCCESS));
+
+		} else if (cmd.type == CommandType::RESET) {
+
+			pinMode(Config.pinReset, OUTPUT);
+			digitalWrite(Config.pinReset, LOW);
+
+		// Send response: GET_DEVICES_RESPONSE;ID;Index;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];
+		// NOTE: This message is sent to each device
+		} else if (cmd.type == CommandType::GET_DEVICES) {
+
+			char buffer[50] = {0};// FIXME: daria para usar o mesmo buffer do deviceConnection ??
+
+			for (int i = 0; i < deviceLength; ++i) {
+				Device *device = getDeviceAt(i);
+
+				conn->doStart();
+				conn->print(CommandType::GET_DEVICES_RESPONSE);
+				conn->doToken();
+				conn->print(cmd.id);
+				conn->doToken();
+				conn->print(i+1);
+				conn->doToken();
+				conn->print(deviceLength);
+				conn->doToken();
+
+				device->toString(buffer);
+
+				conn->print(buffer); // Write array to connection..
+
+				memset(buffer, 0, sizeof(buffer));
+
+				conn->doEnd();
+			}
+
+	  // Save devices ID on storage
+		} else if (cmd.type == CommandType::SYNC_DEVICES_ID) {
+
+			//		conn->printBuffer();
+
+			int length = conn->readInt();
+
+			Config.devicesLength = length;
+
+			LOG_DEBUG("SYNC", length);
+
+			if(length!= deviceLength) {   // Invalid Match
+				notifyReceived(ResponseStatus::BAD_REQUEST);
+				return;
+			}
+
+			for (size_t i = 0; i < length; i++) {
+				int uid = conn->readInt();
+				if(uid > 255){
+					LOG_DEBUG_S("MAX_ID ERROR");
+					notifyReceived(ResponseStatus::BAD_REQUEST);
+					return;
+				}
+
+				devices[i]->id = uid;
+				Config.devices[i] = uid;
+				Serial.print("Device :: ");Serial.print(i);Serial.print(" => ");Serial.println(devices[i]->id, DEC);
+			}
+
+			save();
+			notifyReceived(ResponseStatus::SUCCESS);
+
+
+		} else if (cmd.type == CommandType::FIRMWARE_UPDATE) {
+
+			#ifdef ESP8266HTTPUPDATE_H_
+        String url = conn->readString();
+  		  RemoteUpdate.updateFromURL(url);
+      #endif
+
+		}else{
+
+			// TODO: Send response: UNKNOW_COMMAND
+
+		}
+
+	}
+
 };
 
 extern OpenDeviceClass ODev;
+
 
 #endif /* OpenDevice_H_ */
