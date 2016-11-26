@@ -48,7 +48,8 @@ namespace CommandType {
     DEVICE_ADD_RESPONSE		= 33,
     DEVICE_DEL 						= 34,
 		CLEAR_DEVICES 				= 35,
-		SYNC_DEVICES_ID 			= 36, 
+		SYNC_DEVICES_ID 			= 36,
+		FIRMWARE_UPDATE       = 37,
 
 
 		GET_CONNECTIONS 					= 40,
@@ -58,6 +59,7 @@ namespace CommandType {
     CONNECTION_DEL 						= 44,
 		CLEAR_CONNECTIONS 				= 45,
 		// ---
+		USER_EVENT								= 98, // Command used to send user-defined events / notifications
 		USER_COMMAND 							= 99
 	};
 }
