@@ -28,9 +28,13 @@
 // STATIC CONFIGURATION
 // =====================================
 
-#define DEBUG_SETUP	  1 // set 1 to enable (receiving debug)
-#define DEBUG_CON	  	0 // set 1 to enable (receiving debug)
-#define ENABLE_SERIAL 1
+#ifndef DEBUG
+#define DEBUG	0
+#endif
+
+#define DEBUG_SETUP	  0 // set 1 to enable (receiving debug)
+#define DEBUG_CON	  0 // set 1 to enable (receiving debug)
+#define ENABLE_SERIAL     1
 
 #define API_VERSION   050 // software version of this library
 #define CONFIG_VERSION "cv1"  // version of config layout

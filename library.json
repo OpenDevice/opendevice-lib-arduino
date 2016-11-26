@@ -7,9 +7,10 @@
   "dependencies": [
     {"name": "PubSubClient", "version": ">=2.6"},
     {"name": "EEPROM", "version":  ">=2.0"},
-    {"name": "ESP8266WiFi", "version":  ">=1.2.7", "platforms" : "espressif8266"}
+    {"name": "ESP8266WiFi", "version":  ">=1.2.7", "platforms" : "espressif8266"},
+    {"name": "ESP8266mDNS", "version":  ">=1.0", "platforms" : "espressif8266"}
   ],
-  "list": [
+  "dependencies_OLD": [
     {"name": "PubSubClient", "version": ">=2.6"},
     {"name": "MFRC522", "version":  ">=1.1.8"},
     {"name": "Bridge", "version":  ">=1.6.1", "platforms" : "atmelavr"},
