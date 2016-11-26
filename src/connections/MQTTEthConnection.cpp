@@ -40,13 +40,8 @@ void MQTTEthConnection::begin(){
 	mqtt.setServer(Config.server, MQTT_PORT);
 	mqtt.setCallback(mqttCallback);
 	mqttClient->begin();
-
-#if defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_)
-	#error "OK... YUN IS WORKINH..... REMOVE THIS PLEASE"
-	Bridge.begin();
-#endif
-
 	mqttConnect();
+
 }
 
 bool MQTTEthConnection::checkDataAvalible(void){

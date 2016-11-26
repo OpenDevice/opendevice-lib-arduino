@@ -26,7 +26,7 @@ public:
     virtual size_t write(uint8_t);
     void setData(uint8_t *buffer, const uint16_t len);
     void begin();
-		bool connected(){ return mqtt->connected(); };
+	bool connected(){ return mqtt->connected(); };
 
 private:
     PubSubClient* mqtt;
