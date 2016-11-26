@@ -39,13 +39,13 @@
 // #endif
 
 
-// ESP8266 + MQTT
+// MQTT + ESP8266
 #if defined(PubSubClient_h) && defined(ESP8266)
 #include "connections/MQTTWifiConnection.h"
 #endif
 
-// Arduino MQTT + Ethernet
-#if defined(PubSubClient_h) && defined(ethernet_h)
+// MQTT + Ethernet Shield / Arduino YUN
+#if defined(PubSubClient_h) && ( defined(ethernet_h) || defined(_YUN_CLIENT_H_))
 #include <PubSubClient.h>
 #include "connections/MQTTEthConnection.h"
 #endif
@@ -61,6 +61,11 @@
 	#include <connections/WifiConnetionEspAT.h>
 #endif
 
+
+#if defined(_EL_CLIENT_H_)
+	#include <connections/EspLinkConnection.cpp>
+#endif
+
 // ESP8266 Standalone
 // #if defined(ESP8266) && !defined(PubSubClient_h)
 // 	#include "stdlib_noniso.h"
@@ -74,14 +79,19 @@
 // Features
 //================================================
 
-#ifdef __ARDUINO_OTA_H
-#include <ArduinoOTA.h> // Enable OTA Updates - loading the firmware to ESP module using Wi-Fi connection
- 					    // Disable to reduce flash size or for security reasons
- 						// SEE: https://opendevice.atlassian.net/wiki/pages/viewpage.action?pageId=37519365
-#include "utility/RemoteUpdate.h"
 
+// Enable OTA Updates - loading the firmware to ESP module using Wi-Fi connection
+// Disable to reduce flash size or for security reasons
+// SEE: https://opendevice.atlassian.net/wiki/pages/viewpage.action?pageId=37519365
+#ifdef __ARDUINO_OTA_H
+#include <ArduinoOTA.h>
 #endif
 
+#ifdef ESP8266HTTPUPDATE_H_ // Enable OTA Updates
+#include <ESP8266httpUpdate.h>
+#endif
+
+#include "utility/RemoteUpdate.h"
 
 #include "utility/TaskScheduler.h" // Enable support for Task Schedule (Cooperative multitasking)
 

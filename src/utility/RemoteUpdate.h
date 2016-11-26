@@ -10,7 +10,7 @@ class RemoteUpdateClass
 {
   public:
 
-	RemoteUpdateClass();
+	   RemoteUpdateClass();
 
     ~RemoteUpdateClass();
 
@@ -52,6 +52,29 @@ class RemoteUpdateClass
     void check(){
       #ifdef __ARDUINO_OTA_H
       		ArduinoOTA.handle();
+      #endif
+    }
+
+    void updateFromURL(String path){
+
+      Serial.println("firmware update .. ");
+
+      #ifdef ESP8266HTTPUPDATE_H_
+        Serial.println(Config.server);
+        Serial.println("/tests/firmwares/download/"+path);
+
+        t_httpUpdate_return ret = ESPhttpUpdate.update(Config.server, 8181, "/uploads/firmwares/"+path); // .c_str()
+        switch(ret) {
+            case HTTP_UPDATE_FAILED:
+                Serial.println("[update] Update failed.");
+                break;
+            case HTTP_UPDATE_NO_UPDATES:
+                Serial.println("[update] Update no Update.");
+                break;
+            case HTTP_UPDATE_OK:
+                Serial.println("[update] Update ok."); // may not called we reboot the ESP
+                break;
+        }
       #endif
     }
 };
