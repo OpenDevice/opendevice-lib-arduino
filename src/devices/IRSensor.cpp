@@ -11,7 +11,7 @@
  * *****************************************************************************
  */
 
-#if defined(IRremote_h)
+#if defined(IRremote_h) || defined(IRREMOTEESP8266_H_)
 
 #include "IRSensor.h"
 
