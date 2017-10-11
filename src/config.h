@@ -49,7 +49,7 @@
 #define ENABLE_SYNC_DEVICEID 1  			// Sync DeviceID from server and save on EEPROM.
 #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 #define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
-#define ENABLE_ALEXA_PROTOCOL 1 // Enable Alexa/AmazonEcho integration (ESP8266 Only)
+// #define ENABLE_ALEXA_PROTOCOL 1 // Enable Alexa/AmazonEcho integration (ESP8266 Only)
 #define ALEXA_MAX_DEVICES 10 // MAX 14
 
 #ifndef ENABLE_DHCP
