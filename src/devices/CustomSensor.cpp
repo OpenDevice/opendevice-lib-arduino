@@ -11,16 +11,16 @@
  * *****************************************************************************
  */
 
-#include "FuncSensor.h"
+#include "CustomSensor.h"
 
-FuncSensor::FuncSensor(CommandFunction func) : Device(0, 0, Device::ANALOG, true) , fgetValue(func) {
+CustomSensor::CustomSensor(CommandFunction func) : Device(0, 0, Device::ANALOG, true) , fgetValue(func) {
 
 }
 
-FuncSensor::~FuncSensor() {
+CustomSensor::~CustomSensor() {
 }
 
-bool FuncSensor::hasChanged(){
+bool CustomSensor::hasChanged(){
 
 	unsigned long v = fgetValue();
 
@@ -33,4 +33,3 @@ bool FuncSensor::hasChanged(){
 	return false;
 
 }
-

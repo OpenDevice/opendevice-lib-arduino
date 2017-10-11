@@ -10,8 +10,8 @@
  *  Ricardo JL Rufino - Initial API and Implementation
  * *****************************************************************************
  */
-#ifndef LIBRARIES_OPENDEVICE_SRC_FUNCSENSOR_H_
-#define LIBRARIES_OPENDEVICE_SRC_FUNCSENSOR_H_
+#ifndef LIBRARIES_OPENDEVICE_SRC_CustomSensor_H_
+#define LIBRARIES_OPENDEVICE_SRC_CustomSensor_H_
 
 #include "Device.h"
 
@@ -21,13 +21,13 @@ extern "C"
   typedef unsigned long (*CommandFunction) ();
 }
 
-class FuncSensor : public Device  {
+class CustomSensor : public Device  {
 public:
-	FuncSensor(CommandFunction func);
-	virtual ~FuncSensor();
+	CustomSensor(CommandFunction func);
+	virtual ~CustomSensor();
 	bool hasChanged();
 private:
 	CommandFunction fgetValue;
 };
 
-#endif /* LIBRARIES_OPENDEVICE_SRC_FUNCSENSOR_H_ */
+#endif /* LIBRARIES_OPENDEVICE_SRC_CustomSensor_H_ */
