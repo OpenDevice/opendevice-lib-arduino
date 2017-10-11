@@ -157,21 +157,34 @@ bool Device::hasChanged(){
 
 	return false;
 }
-
+/**
+ * This will be called on ODev.begin() to do extra initialization
+ */
 void Device::init(){
 
-	if(inverted && type == Device::DIGITAL){
+	if(pin > 0){
+		// sensor - opering in inverted mode
+		if(inverted && type == Device::DIGITAL){
 
-		if(sensor){
-			#if defined(INPUT_PULLUP)
-			  pinMode (pin, INPUT_PULLUP);
-			#else //TODO: not tested !
-			  pinMode (device.pin, INPUT);
-			  digitalWrite (device.pin, HIGH);
-			#endif
+			if(sensor){
+				#if defined(INPUT_PULLUP)
+				  pinMode (pin, INPUT_PULLUP);
+				#else //TODO: not tested !
+				  pinMode (pin, INPUT);
+				  digitalWrite (pin, HIGH);
+				#endif
+			}else{
+				digitalWrite(pin, (currentValue == LOW ? HIGH : LOW));
+			}
+
 		}else{
-			digitalWrite(pin, (currentValue == LOW ? HIGH : LOW));
+				if (sensor) {
+					pinMode(pin, INPUT);
+				} else {
+					pinMode(pin, OUTPUT);
+				}
 		}
+
 	}
 
 }

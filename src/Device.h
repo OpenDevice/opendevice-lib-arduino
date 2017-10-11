@@ -36,16 +36,16 @@ class Device
 public:
 
 	enum DeviceType{
-			DIGITAL = 1,
-			ANALOG = 2,
-			NUMERIC = 3,
-			// NEXT constants only used in embedded side, to mapping to command
-//			RFID 					= 7,
-//			RF	 					= 8,
-
-			BOARD = 10,  	  // Hold Multiple Devices
-			MANAGER = 11, // Middleware/Server
-
+    DIGITAL = 1,
+    ANALOG = 2,
+    ANALOG_SIGNED = 3,
+    NUMERIC = 4,
+    FLOAT2 = 5,
+    FLOAT2_SIGNED = 6,
+    FLOAT4 = 7,
+    CHARACTER = 8,
+    BOARD = 10,
+    MANAGER = 11
 	};
 
 	const static uint8_t MAX_ANALOG_VALUE = 255;
@@ -61,7 +61,7 @@ public:
 	uint8_t targetID; // associated device (used in sensors)
 
 	bool inverted; // It allows to operate in an inverted logic (only DIGITAL)
-	
+
 	// for interrupt mode
 	volatile bool needSync;
 	bool interruptEnabled; // only for sensor
