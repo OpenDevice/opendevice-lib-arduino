@@ -2,7 +2,7 @@
  * AlexaDevice.h
  *
  *  Created on: 10 de out de 2017
- *      Author: ricardo
+ *      Author: Ricardo JL Rufino
  */
 
 #ifndef LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXADEVICE_H_

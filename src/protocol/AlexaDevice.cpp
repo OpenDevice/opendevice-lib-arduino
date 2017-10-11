@@ -2,7 +2,7 @@
  * AlexaDevice.cpp
  *
  *  Created on: 10 de out de 2017
- *      Author: ricardo
+ *      Author: Ricardo JL Rufino
  */
 
 #include <protocol/AlexaDevice.h>

@@ -2,7 +2,7 @@
  * AlexaProtocol.h
  *
  *  Created on: 10 de out de 2017
- *      Author: ricardo
+ *      Author: Ricardo JL Rufino
  */
 
 #ifndef LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXAPROTOCOL_H_
@@ -14,6 +14,10 @@
 
 namespace od {
 
+/**
+ * Emulate a Belkin WeMo Device, natively compatible with Alexa.
+ * This code is based on: https://github.com/witnessmenow/esp8266-alexa-wemo-emulator
+ */
 class AlexaProtocol {
 private:
 	int numOfDevices;
