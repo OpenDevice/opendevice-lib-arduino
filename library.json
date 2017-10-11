@@ -1,6 +1,6 @@
 {
   "name": "OpenDevice",
-  "version": "0.1.4",
+  "version": "0.1.5-beta",
   "keywords": "communication, iot, monitoring, mqtt, control",
   "description": "OpenDevice is a set of tools and APIs to build solutions for the Internet of Things like home automations systems, robotics, smart city, energy monitoring, security, sensor monitoring",
   "homepage": "http:/opendevice.io",

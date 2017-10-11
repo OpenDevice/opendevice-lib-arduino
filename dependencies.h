@@ -66,12 +66,12 @@
 	#include <connections/EspLinkConnection.cpp>
 #endif
 
-// ESP8266 Standalone
-// #if defined(ESP8266) && !defined(PubSubClient_h)
-// 	#include "stdlib_noniso.h"
-// 	#include <ESP8266WiFi.h>
-// 	#include <WifiConnection.h>
-// #endif
+// ESP8266 as TCP Server
+#if defined(ESP8266) && !defined(PubSubClient_h)
+	#include "stdlib_noniso.h"
+	#include <ESP8266WiFi.h>
+	#include <connections/WifiConnection.h>
+#endif
 
 
 
@@ -79,6 +79,7 @@
 // Features
 //================================================
 
+#include "utility/TaskScheduler.h" // Enable support for Task Schedule (Cooperative multitasking)
 
 // Enable OTA Updates - loading the firmware to ESP module using Wi-Fi connection
 // Disable to reduce flash size or for security reasons
@@ -93,9 +94,6 @@
 
 #include "utility/RemoteUpdate.h"
 
-#include "utility/TaskScheduler.h" // Enable support for Task Schedule (Cooperative multitasking)
-
-
 #if defined(MFRC522_h)
 	#include <devices/RFIDSensor.cpp>
 #endif
@@ -104,11 +102,16 @@
 	#include <devices/RFSensor.h>
 #endif
 
-#if defined(IRremote_h)
+#if defined(IRremote_h) || defined(IRREMOTEESP8266_H_)
 	#include <devices/IRSensor.cpp>
 	#include <devices/IRDevice.cpp>
 #endif
 
+// Enable integration with Alexa (from config.h)
+#if defined(ENABLE_ALEXA_PROTOCOL)
+	#include <protocol/AlexaProtocol.h>
+	#include <protocol/AlexaDevice.h>
+#endif
 
 //================================================
 // Boards and Connections

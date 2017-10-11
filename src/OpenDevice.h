@@ -22,7 +22,7 @@
 #include "Command.h"
 #include "DeviceConnection.h"
 #include "Device.h"
-#include "devices/FuncSensor.h"
+#include "devices/CustomSensor.h"
 #include "utility/Logger.h"
 
 using namespace od;
@@ -120,6 +120,9 @@ public:
 			RemoteUpdate.check();
 		#endif
 
+		#if defined(ENABLE_ALEXA_PROTOCOL)
+			Alexa.loop();
+		#endif
 	};
 
 
@@ -179,7 +182,7 @@ public:
 		#endif
 
 		// Wait serial if using Leonardo / YUN
-		#if defined(HAVE_CDCSERIAL) && defined(__AVR_ATmega32U4__)
+		#if defined(__AVR_ATmega32U4__) && !(defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_))
 			while (!Serial){delay(1);}
 		#endif
 
@@ -191,17 +194,26 @@ public:
 			Bridge.begin();
 		#endif
 
+    // ESP as MQTT Client
 		#if defined(ESP8266) && defined(PubSubClient_h)
 
 			MQTTWifiConnection *conn =  new MQTTWifiConnection();
 			begin(*conn);
 
+    // ESP as TCP Server
+		#elif defined(ESP8266) && ! defined(PubSubClient_h)
+
+			WifiConnection *conn =  new WifiConnection();
+			begin(*conn);
+
+    // YUN MQTT Client
 		#elif defined(_YUN_CLIENT_H_)
 
 			static YunClient ethclient;
 			MQTTEthConnection *conn =  new MQTTEthConnection(ethclient);
 			begin(*conn);
 
+    // Ethernet MQTT Client
 		#elif defined(ethernet_h)
 			connectNetwork();
 			static EthernetClient ethclient;
@@ -209,6 +221,14 @@ public:
 			begin(*conn);
 		#else
 			beginDefault();
+		#endif
+
+		// Initialize Alexa devices (only digital devices)
+		#if defined(ENABLE_ALEXA_PROTOCOL)
+			for (int i = 1; i < deviceLength; ++i) {
+				Alexa.addDevice(getDeviceAt(i));
+			}
+			Alexa.begin();
 		#endif
 
 	};
@@ -355,7 +375,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type);
 	Device* addSensor(char* name, Device& sensor);
 	Device* addSensor(char* name, unsigned long (*function)()){
-		FuncSensor* func = new FuncSensor(function);
+		CustomSensor* func = new CustomSensor(function);
 		return addDevice(name, *func);
 	}
 
@@ -588,7 +608,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 				devices[i]->id = uid;
 				Config.devices[i] = uid;
-				Serial.print("Device :: ");Serial.print(i);Serial.print(" => ");Serial.println(devices[i]->id, DEC);
+				// Serial.print("SYNC :: ");Serial.print(i);Serial.print(" => ");Serial.println(devices[i]->id, DEC);
 			}
 
 			save();

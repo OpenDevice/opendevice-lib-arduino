@@ -356,14 +356,6 @@ Device* OpenDeviceClass::addDevice(Device& device){
 Device* OpenDeviceClass::addDevice(char* name, Device& device){
 	if (deviceLength < MAX_DEVICE) {
 
-		if(device.pin > 0){
-			if (device.sensor) {
-				// default is INPUT.
-			} else {
-				pinMode(device.pin, OUTPUT);
-			}
-		}
-
 		// Force syncronization with server
 		#if(ENABLE_SYNC_DEVICEID)
 		if (device.id <= 0) device.id = 0;
