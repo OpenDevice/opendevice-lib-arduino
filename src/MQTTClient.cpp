@@ -29,19 +29,19 @@ void MQTTClient::setData(uint8_t *data, const uint16_t len){
 	for(uint32_t i = 0; i < len; i++) {
 		StreamBuffer::write(data[i]);
 	}
-//	#if DEBUG_CON
+	#if DEBUG_CON
 	Serial.print("MQTT RECV: ");
 	Serial.println((const char *) StreamBuffer::_buffer);
-//	#endif
+	#endif
 }
 
 // Write to buffer and wait for ACK to publish
 size_t MQTTClient::write(uint8_t v){
 	if(v == Command::ACK_BIT){ // don't write ACK
-//		#if DEBUG_CON
+		#if DEBUG_CON
 		Serial.print("MQTT SEND: ");
 		Serial.println((const char *) StreamBuffer::_buffer);
-//		#endif
+		#endif
 		mqtt->publish(topic.c_str(), (const char *) StreamBuffer::_buffer);
 		flush();
 		return 1;

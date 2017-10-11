@@ -48,7 +48,7 @@ void WifiConnection::begin(void){
 
 	WiFiMode_t mode = WiFi.getMode();
 	if(status != WL_CONNECTED || mode == WIFI_AP || mode == WIFI_AP_STA){
-		WiFi.softAP(Config.moduleName);
+		WiFi.softAP(Config.moduleName, Config.appID);
 		Logger.debug("SoftAP", "OK");
 	}
 

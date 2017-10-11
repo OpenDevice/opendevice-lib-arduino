@@ -45,8 +45,6 @@ namespace od {
 
 class MQTTEthConnection: public DeviceConnection {
 
-static MQTTClient* mqttClient;
-
 public:
 
 	MQTTEthConnection(Client& client);
@@ -57,10 +55,14 @@ public:
 
 	virtual bool checkDataAvalible(void);
 
+	virtual size_t write(uint8_t);
+
 	static void mqttCallback(char* topic, byte* payload, unsigned int length);
 
 private:
-
+  static StreamBuffer* buffer;
+	static bool received;
+	String topic;
 	PubSubClient mqtt;
 	Timeout mqttTimeout;
 	void mqttConnect();

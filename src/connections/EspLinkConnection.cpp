@@ -128,6 +128,7 @@ void EspLinkConnection::begin() {
 	esp->DBG("EL-MQTT ready");
 }
 
+
 bool EspLinkConnection::checkDataAvalible() {
 	esp->Process();
 

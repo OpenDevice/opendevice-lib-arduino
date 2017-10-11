@@ -24,10 +24,15 @@
 
 namespace od {
 
-MQTTClient* MQTTEthConnection::mqttClient;
+StreamBuffer* MQTTEthConnection::buffer;
+bool MQTTEthConnection::received = false;
 
-MQTTEthConnection::MQTTEthConnection(Client& client): mqtt(client), mqttTimeout(5000) {
-	mqttClient = new MQTTClient(mqtt, _buffer);
+MQTTEthConnection::MQTTEthConnection(Client& client):
+		mqtt(client),
+		mqttTimeout(5000){
+
+		buffer = new StreamBuffer(_buffer, DATA_BUFFER);
+
 }
 
 MQTTEthConnection::~MQTTEthConnection() {
@@ -39,7 +44,12 @@ void MQTTEthConnection::begin(){
 	Logger.debug("MQTT", "BEGIN");
 	mqtt.setServer(Config.server, MQTT_PORT);
 	mqtt.setCallback(mqttCallback);
-	mqttClient->begin();
+
+	//  Publish topic
+	topic = String(Config.appID);
+	topic += "/out/";
+	topic += Config.moduleName;
+
 	mqttConnect();
 
 }
@@ -55,8 +65,13 @@ bool MQTTEthConnection::checkDataAvalible(void){
 		Config.keepAlive = false; // on MQTT is not required
 		mqtt.loop();
 		mqttTimeout.disable();
-		setStream(mqttClient);
-		return DeviceConnection::checkDataAvalible();
+
+		if(received){
+			setStream(buffer);
+			DeviceConnection::checkDataAvalible();
+			received = false;
+		}
+
 	}else{ // TCP SERVER...
 //		if(!mqttTimeout.isEnabled()) mqttTimeout.enable();
 //		Config.keepAlive = true; // on raw TCP is  required
@@ -68,7 +83,24 @@ bool MQTTEthConnection::checkDataAvalible(void){
 }
 
 void MQTTEthConnection::mqttCallback(char* topic, byte* payload, unsigned int length){
-	mqttClient->setData(payload, length);
+	buffer->flush();
+	received = true;
+	for (uint32_t i = 0; i < length; i++) {
+		buffer->write(payload[i]);
+	}
+}
+
+size_t MQTTEthConnection::write(uint8_t v){
+	if(v == Command::ACK_BIT){ // don't write ACK
+		#if DEBUG_CON
+		LOG_DEBUG("MQTT SEND", (const char *) buffer->_buffer);
+		#endif
+		mqtt.publish(topic.c_str(), (const char *) buffer->_buffer);
+		flush();
+		return 1;
+	}else{ // Write to buffer
+		return buffer->write(v);
+	}
 }
 
 void MQTTEthConnection::mqttConnect(){
