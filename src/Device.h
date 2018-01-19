@@ -115,6 +115,8 @@ public:
 	 */
 	Device* invertedState();
 
+  Device* activeLow(){ return invertedState(); };
+
 	virtual void init();
 
 	void onChange(DeviceListener);
