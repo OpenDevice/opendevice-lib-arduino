@@ -162,7 +162,9 @@ bool Device::hasChanged(){
  */
 void Device::init(){
 
-	if(pin > 0){
+  // pinMode INIT
+	if(pin > 0 && type != Device::BOARD){
+
 		// sensor - opering in inverted mode
 		if(inverted && type == Device::DIGITAL){
 
@@ -174,6 +176,7 @@ void Device::init(){
 				  digitalWrite (pin, HIGH);
 				#endif
 			}else{
+				pinMode(pin, OUTPUT);
 				digitalWrite(pin, (currentValue == LOW ? HIGH : LOW));
 			}
 
@@ -218,10 +221,15 @@ void Device::setSyncListener(DeviceListener listener){
 	syncListerner = listener;
 }
 
+/**
+ * fire 'onChange' listener
+ */
 bool Device::notifyListeners(){
-	bool ret = true;
-	if(changeListener) ret = (*changeListener)(id, currentValue);
-	return ret;
+	if(changeListener){
+		return (*changeListener)(id, currentValue);
+	} else{
+		return true; // force sync with server
+	}
 }
 
 
