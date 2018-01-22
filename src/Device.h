@@ -40,13 +40,14 @@ public:
     ANALOG = 2,
     ANALOG_SIGNED = 3,
     NUMERIC = 4,
-    FLOAT2 = 5,
+    FLOAT2 = 5,  // 2 decimal places
     FLOAT2_SIGNED = 6,
-    FLOAT4 = 7,
+    FLOAT4 = 7,  // 4 decimal places
     CHARACTER = 8,
     BOARD = 10,
     MANAGER = 11
 	};
+  // NOTE: On change this, my need change: OpenDeviceClass::onSensorChanged
 
 	const static uint8_t MAX_ANALOG_VALUE = 255;
 
@@ -56,11 +57,14 @@ public:
 	DeviceType type;
 	char* deviceName;
 
-
+  // For sensor types
 	bool sensor;
+  int32_t readLastTime;
+  int32_t readInterval;
+
 	uint8_t targetID; // associated device (used in sensors)
 
-	bool inverted; // It allows to operate in an inverted logic (only DIGITAL)
+	bool inverted; // It allows to operate in an inverted logic (activeLow)
 
 	// for interrupt mode
 	volatile bool needSync;
@@ -88,7 +92,6 @@ public:
 
 	bool isOFF() { return currentValue == LOW; }
 
-
 	/**
 	 * Get current value.
 	 */
@@ -98,7 +101,11 @@ public:
 
 	virtual void deserializeExtraData(Command *cmd, DeviceConnection *conn);
 
+  /** For Sensors ::  read sensor ans check if value has changed */
 	virtual bool hasChanged();
+
+  /**  For Sensors ::  If set readInterval has set, check if time as elapsed */
+  bool canReadSensor();
 
 	void name(char* name);
 
@@ -118,6 +125,11 @@ public:
   Device* activeLow(){ return invertedState(); };
 
 	virtual void init();
+
+  /**
+	 * Set reading interval for sensor's
+	 */
+	Device* setInterval(int32_t _interval);
 
 	void onChange(DeviceListener);
 
