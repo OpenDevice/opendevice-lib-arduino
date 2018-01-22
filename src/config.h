@@ -25,6 +25,7 @@
 #error A C++ compiler is required!
 #endif
 
+// =====================================
 // STATIC CONFIGURATION
 // =====================================
 
@@ -46,10 +47,12 @@
 #define KEEP_ALIVE_INTERVAL 30000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
-#define ENABLE_SYNC_DEVICEID 1  			// Sync DeviceID from server and save on EEPROM.
+#define ENABLE_SYNC_DEVICEID 1    // Sync DeviceID from server and save on EEPROM.
+#define LOAD_DEVICE_STORAGE 0    // Load deviceID from EEPROM ? (enable in production)
+
 #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 #define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
-// #define ENABLE_ALEXA_PROTOCOL 1 // Enable Alexa/AmazonEcho integration (ESP8266 Only)
+#define ENABLE_ALEXA_PROTOCOL 1 // Enable Alexa/AmazonEcho integration (ESP8266 Only)
 #define ALEXA_MAX_DEVICES 10 // MAX 14
 
 #ifndef ENABLE_DHCP
@@ -59,8 +62,8 @@
 
 #define MAX_DEVICE_ID 255
 
-#if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 // ---- Low Memory Devices ----------
+#if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
 #define MAX_LISTENERS 2
 #define MAX_DEVICE 5
@@ -68,17 +71,18 @@
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 5
 #define READING_INTERVAL 100 // sensor reading interval (ms)
-// END:Low --------------------------
-#elif defined(ESP8266)
+
 // ---- High Memory Devices --------
+#elif defined(ESP8266)
 #define DATA_BUFFER  256
 #define MAX_LISTENERS 5
 #define MAX_DEVICE 20
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
-#else
+
 // ---- Medium Memory Devices --------
+#else
 #define DATA_BUFFER  128
 #define MAX_LISTENERS 5
 #define MAX_DEVICE 10
@@ -99,6 +103,11 @@ enum ConnectionMode{
 	CONNECTION_MODE_CLIENT,
 	CONNECTION_MODE_SERVER
 };
+
+
+// =====================================
+// DYNAMIC CONFIGURATION
+// =====================================
 
 namespace od {
 
