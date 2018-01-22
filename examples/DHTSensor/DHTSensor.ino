@@ -27,22 +27,22 @@ DHT_Unified::Temperature sTemp = dht.temperature();
 DHT_Unified::Humidity sHumidity = dht.humidity();
 
 void setup() {
-  Serial.begin(115200); 
-  
+  Serial.begin(115200);
+
   ODev.name("ODevHT-01");
   ODev.apiKey("----APIKEY-----");
   ODev.server("----SERVER IP-----");
 
   dht.begin(); // Initialize device.
-  
+
   ODev.addSensor("HT01_Temperature", new AdafruitSensor(sTemp))
     ->setInterval(1 * (1000)); // 1sec
-    
+
   ODev.addSensor("HT01_Humidity", new AdafruitSensor(sHumidity))
     ->setInterval(1 * (1000)); // 1sec
 
   WiFi.mode(WIFI_AP_STA);
-  WiFi.begin("---- WIFI----", ---- PASS----");
+  WiFi.begin("---- WIFI----", "---- PASS----");
 
   ODev.begin();
 }
