@@ -120,7 +120,7 @@ public:
 			RemoteUpdate.check();
 		#endif
 
-		#if defined(ENABLE_ALEXA_PROTOCOL)
+		#if(ENABLE_ALEXA_PROTOCOL)
 			Alexa.loop();
 		#endif
 	};
@@ -224,7 +224,7 @@ public:
 		#endif
 
 		// Initialize Alexa devices (only digital devices)
-		#if defined(ENABLE_ALEXA_PROTOCOL)
+		#if(ENABLE_ALEXA_PROTOCOL)
 			for (int i = 1; i < deviceLength; ++i) {
 				Alexa.addDevice(getDeviceAt(i));
 			}
@@ -374,6 +374,9 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID);
 	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type);
 	Device* addSensor(char* name, Device& sensor);
+	Device* addSensor(char* name, Device* sensor){
+		return addDevice(name, *sensor);
+	}
 	Device* addSensor(char* name, unsigned long (*function)()){
 		CustomSensor* func = new CustomSensor(function);
 		return addDevice(name, *func);
@@ -600,7 +603,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 			for (size_t i = 0; i < length; i++) {
 				int uid = conn->readInt();
-				if(uid > 255){
+				if(uid > MAX_DEVICE_ID){
 					LOG_DEBUG_S("MAX_ID ERROR");
 					notifyReceived(ResponseStatus::BAD_REQUEST);
 					return;
