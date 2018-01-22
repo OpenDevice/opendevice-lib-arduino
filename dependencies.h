@@ -94,21 +94,8 @@
 
 #include "utility/RemoteUpdate.h"
 
-#if defined(MFRC522_h)
-	#include <devices/RFIDSensor.cpp>
-#endif
-
-#if defined(_RCSwitch_h)
-	#include <devices/RFSensor.h>
-#endif
-
-#if defined(IRremote_h) || defined(IRREMOTEESP8266_H_)
-	#include <devices/IRSensor.cpp>
-	#include <devices/IRDevice.cpp>
-#endif
-
 // Enable integration with Alexa (from config.h)
-#if defined(ENABLE_ALEXA_PROTOCOL)
+#if defined(ENABLE_ALEXA_PROTOCOL) && defined(ESP8266)
 	#include <protocol/AlexaProtocol.h>
 	#include <protocol/AlexaDevice.h>
 #endif
@@ -124,8 +111,6 @@
 
 
 
-
-
 //#if defined(EnableInterrupt_h)
 //#define EI_ARDUINO_INTERRUPTED_PIN
 //#define LIBCALL_ENABLEINTERRUPT
@@ -136,8 +121,22 @@
 // Devices
 //================================================
 
-//#include <MFRC522.h> // RFID
-// #include <RCSwitch.h> // RF 433Mhz
+#if defined(MFRC522_h)
+	#include <devices/RFIDSensor.cpp>
+#endif
+
+#if defined(_RCSwitch_h)
+	#include <devices/RFSensor.h>
+#endif
+
+#if defined(IRremote_h) || defined(IRREMOTEESP8266_H_)
+	#include <devices/IRSensor.cpp>
+	#include <devices/IRDevice.cpp>
+#endif
+
+#if defined(_ADAFRUIT_SENSOR_H)
+	#include <devices/AdafruitSensor.cpp>
+#endif
 
 // --- IR DEVICE
 //#if defined(ESP8266)
@@ -146,8 +145,5 @@
 //#include "IRremote.h"
 //#endif
 // -- END
-
-
-
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_DEPENDENCIES_H_ */
