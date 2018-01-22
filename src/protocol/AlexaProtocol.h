@@ -8,6 +8,10 @@
 #ifndef LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXAPROTOCOL_H_
 #define LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXAPROTOCOL_H_
 
+#include <config.h>
+
+#if defined(ESP8266)
+
 #include <WiFiUdp.h>
 #include "Device.h"
 #include "AlexaDevice.h"
@@ -38,10 +42,10 @@ public:
     void addDevice(Device* device);
 };
 
-#if defined(ENABLE_ALEXA_PROTOCOL)
 extern AlexaProtocol Alexa;
-#endif
 
 } /* namespace od */
+
+#endif
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXAPROTOCOL_H_ */

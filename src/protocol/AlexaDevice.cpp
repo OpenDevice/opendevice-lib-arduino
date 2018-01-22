@@ -7,6 +7,8 @@
 
 #include <protocol/AlexaDevice.h>
 
+#if defined(ESP8266)
+
 namespace od {
 
 AlexaDevice::AlexaDevice(Device* device, unsigned int index) {
@@ -238,3 +240,5 @@ void AlexaDevice::respondToSearch(IPAddress& senderIP, unsigned int senderPort) 
 }
 
 } /* namespace od */
+
+#endif

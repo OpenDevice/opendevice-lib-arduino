@@ -8,9 +8,12 @@
 #ifndef LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXADEVICE_H_
 #define LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXADEVICE_H_
 
+#if defined(ESP8266)
+
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
+
 #include "Device.h"
 #include "utility/Logger.h"
 
@@ -46,3 +49,5 @@ public:
 } /* namespace od */
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_PROTOCOL_ALEXADEVICE_H_ */
+
+#endif

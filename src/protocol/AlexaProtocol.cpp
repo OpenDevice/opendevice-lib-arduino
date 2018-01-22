@@ -7,6 +7,8 @@
 
 #include <protocol/AlexaProtocol.h>
 
+#if defined(ESP8266)
+
 namespace od {
 
 AlexaProtocol::AlexaProtocol()
@@ -80,7 +82,7 @@ void AlexaProtocol::loop(){
 	    // Serial.println("-----------");
 	    if(request.indexOf('M-SEARCH') > 0) {
 	        if((request.indexOf("urn:Belkin:device:**") > 0) || (request.indexOf("ssdp:all") > 0) || (request.indexOf("upnp:rootdevice") > 0)) {
-	          Serial.print(F("ALEXA: Got UDP Belkin Request..'"));
+	          Serial.println(F("ALEXA: Got UDP Belkin Request !!!"));
 
 	          // int arrSize = sizeof(switchs) / sizeof(Switch);
 
@@ -107,8 +109,8 @@ void AlexaProtocol::loop(){
 
 }
 
-#if defined(ENABLE_ALEXA_PROTOCOL)
 AlexaProtocol Alexa;
-#endif
 
 } /* namespace od */
+
+#endif
