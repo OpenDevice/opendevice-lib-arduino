@@ -62,6 +62,8 @@ void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool
 	interruptMode = CHANGE;
 	changeListener = 0;
 	deviceName = name;
+	readInterval = 0;
+	readLastTime = 0;
 
 	//if(_sensor){
 		currentValue = LOW;
@@ -134,6 +136,28 @@ void Device::deserializeExtraData(Command *cmd, DeviceConnection *conn){
 	// do nothing
 }
 
+
+bool Device::canReadSensor(){
+	if(readInterval > 0){ // Check elapsed time
+
+		// First read
+		if(readLastTime == 0){
+			readLastTime = millis();
+			return true;
+		}
+
+		if(millis() - readLastTime >= readInterval){
+			readLastTime = millis();
+			return true;
+		}
+
+		return false;
+
+	}else{
+		return true;
+	}
+}
+
 // FOR SENSOR device...
 bool Device::hasChanged(){
 
@@ -202,6 +226,11 @@ Device* Device::enableInterrupt(uint8_t mode){
 
 Device* Device::invertedState(){
 	inverted = true;
+	return this;
+}
+
+Device* Device::setInterval(int32_t _interval){
+	readInterval = _interval;
 	return this;
 }
 
