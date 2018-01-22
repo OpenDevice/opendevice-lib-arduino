@@ -6,8 +6,7 @@
  * 
  * 
  * Links:
- * - Tutorial: https://opendevice.atlassian.net/wiki/display/DOC/WiFi+using+ESP8266 
- * - https://github.com/esp8266/arduino
+ * - Tutorial: https://opendevice.atlassian.net/wiki/spaces/DOC/pages/11337730/Connecting+Devices+using+MQTT
  * 
  * @author Ricardo JL Rufino
  * @date 16/nov/15
