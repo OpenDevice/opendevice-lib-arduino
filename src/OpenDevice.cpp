@@ -212,7 +212,7 @@ void OpenDeviceClass::onInterruptReceived(){
     	uint8_t pinChange = *(uint8_t *) PIN_INTERRUPT;
 
     	if(device->sensor && device->pin == pinChange){
-    		if(device->hasChanged()){
+    		if(device->canReadSensor() && device->hasChanged()){
     			device->needSync = true;
     		}
     	}
@@ -248,7 +248,20 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 	// SEND: Command
 	// ==========================
 	lastCMD.id = 0;
-	lastCMD.type = (uint8_t) sensor->type;
+
+  // Adapter for CommandType
+  if(sensor->type == Device::ANALOG ||
+	   sensor->type == Device::ANALOG_SIGNED ||
+		 sensor->type == Device::FLOAT2 ||
+	 	 sensor->type == Device::FLOAT2_SIGNED ||
+		 sensor->type == Device::FLOAT4){
+
+		lastCMD.type = (uint8_t) CommandType::ANALOG;
+
+	}else{
+		lastCMD.type = (uint8_t) sensor->type;
+	}
+
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
@@ -305,15 +318,17 @@ void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
 
 		if(Config.debugTarget == 1){
 			deviceConnection->doStart();
-			deviceConnection->print("DB:CHANGE:");
-			deviceConnection->print(id);
+			deviceConnection->print("DB:CHANGE ");
+			Device* device =  ODev.getDevice(id);
+			deviceConnection->print(device->deviceName);
 			deviceConnection->print("=");
 			deviceConnection->print(value);
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
 			Serial.print("DB:CHANGE:");
-			Serial.print(id, DEC);
+			Device* device =  ODev.getDevice(id);
+			Serial.print(device->deviceName);
 			Serial.print("=");
 			Serial.println(value, DEC);
 			#endif
@@ -342,6 +357,7 @@ Device* OpenDeviceClass::addSensor(char* name, uint8_t pin, Device::DeviceType t
 Device* OpenDeviceClass::addSensor(char* name, Device& sensor){
 	return addDevice(name, sensor);
 }
+
 
 
 Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type){
@@ -378,19 +394,6 @@ Device* OpenDeviceClass::addDevice(char* name, Device& device){
 
 Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
 	if (deviceLength < MAX_DEVICE) {
-
-		if (sensor) {
-			if (type == Device::DIGITAL) {
-				#if defined(INPUT_PULLUP)
-				  pinMode(pin, INPUT_PULLUP);
-				#else // Aternative INPUT_PULLUP - TODO: not tested !
-				  pinMode(pin, INPUT);
-				  digitalWrite (pin, HIGH);
-				#endif
-			}
-		} else {
-			if(pin != 255) pinMode(pin, OUTPUT);
-		}
 
 		// Force syncronization with server
 		#if(ENABLE_SYNC_DEVICEID)
@@ -442,8 +445,11 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 		bool syncCurrent = false;
 
+    // Cheak
+		bool canReadSensor = (pollingReady && devices[i]->canReadSensor());
+
 		// polling mode
-		if(pollingReady && devices[i]->interruptEnabled == false && devices[i]->hasChanged() ){
+		if(canReadSensor && devices[i]->interruptEnabled == false && devices[i]->hasChanged()){
 			syncCurrent = true;
 		// interrupt mode
 		}else if(devices[i]->interruptEnabled == true && devices[i]->needSync  ){
@@ -560,7 +566,7 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 
 void OpenDeviceClass::name(const char *pname){
 	strcpy (Config.moduleName, pname);
-	addDevice(Config.moduleName, -1, Device::BOARD); // // Add Board Device Class
+	addDevice(Config.moduleName, 0, Device::BOARD); // // Add Board Device Class
 }
 
 void OpenDeviceClass::server(char pname[]){
@@ -650,21 +656,24 @@ void OpenDeviceClass::debug(const String &str){
  * If not saved, then the server will send IDs.
  */
 void OpenDeviceClass::loadDevicesFromStorage(){
-	#if(ENABLE_SYNC_DEVICEID)
+	#if(LOAD_DEVICE_STORAGE)
 
 		LOG_DEBUG("Stored Devices ", Config.devicesLength);
 
-		for (int i = 0; i < deviceLength; ++i) {
-			Device *device = getDeviceAt(i);
-			if(device->id == 0 && i < Config.devicesLength){
-				device->id = Config.devices[i];
-			}
+    // Only restore IDs if has no change
+		// Otherise IDs will loaded from server
+		if(Config.devicesLength == deviceLength){
+				for (int i = 0; i < deviceLength; ++i) {
+					Device *device = getDeviceAt(i);
+					if(device->id == 0 && i < Config.devicesLength){
+						device->id = Config.devices[i];
+					}
+				}
 		}
 
-		// A device may have been removed from the sketch
-		if(Config.devicesLength > deviceLength) Config.devicesLength = deviceLength;
-
 	#endif
+
+	Config.devicesLength = deviceLength;
 }
 
 OpenDeviceClass ODev;
