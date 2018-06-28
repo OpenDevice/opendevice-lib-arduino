@@ -28,7 +28,7 @@
 extern "C"
 {
   // Definition of the listener function
-  typedef bool (*DeviceListener) (uint8_t iid, unsigned long value);
+  typedef bool (*DeviceListener) (uint8_t iid, value_t value);
 }
 
 class Device
@@ -44,6 +44,7 @@ public:
     FLOAT2_SIGNED = 6,
     FLOAT4 = 7,  // 4 decimal places
     CHARACTER = 8,
+    //
     BOARD = 10,
     MANAGER = 11
 	};
@@ -53,7 +54,7 @@ public:
 
 	uint8_t id;
 	uint8_t pin;
-	unsigned long currentValue;
+	value_t currentValue;
 	DeviceType type;
 	char* deviceName;
 
@@ -82,7 +83,7 @@ public:
 	 * Change value / state of Device
 	 * @param sync - sync with server
 	 */
-	bool setValue(unsigned long value, bool sync = true);
+	bool setValue(value_t value, bool sync = true);
 
 	void on();
 
@@ -95,7 +96,7 @@ public:
 	/**
 	 * Get current value.
 	 */
-	unsigned long getValue();
+	value_t getValue();
 
 	virtual size_t serializeExtraData(DeviceConnection *conn);
 

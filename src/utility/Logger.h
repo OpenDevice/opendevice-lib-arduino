@@ -10,6 +10,7 @@
 #ifndef LIBRARIES_OPENDEVICE_SRC_LOGGER_H_
 #define LIBRARIES_OPENDEVICE_SRC_LOGGER_H_
 
+#include "Arduino.h"
 #include "config.h"
 
 // Workaround issue: https://github.com/esp8266/Arduino/issues/2078
@@ -62,8 +63,6 @@ typedef struct{
 
 	//#ifdef __FlashStringHelper
 		template <class T> void debug(const __FlashStringHelper* title, const T str, bool newLine = true){
-			if(Config.debugMode){
-				if(Config.debugTarget == 0){
 					Serial.print("DB:");
 					Serial.print(title);
 					if(str){
@@ -73,20 +72,11 @@ typedef struct{
 					}else{
 						Serial.println();
 					}
-				}
-			}
 		}
 	//#endif
 
 
 		void debug(const char title[], int val, bool newLine = true){
-			if(Config.debugMode){
-				if(Config.debugTarget == 1){
-//					deviceConnection->doStart();
-//					deviceConnection->print("DB:");
-//					deviceConnection->print(str);
-//					deviceConnection->doEnd();
-				}else{
 					#if(ENABLE_SERIAL)
 					Serial.print("DB:");
 					Serial.print(title);
@@ -94,8 +84,6 @@ typedef struct{
 					Serial.print(val, DEC);
 					Serial.println();
 					#endif
-				}
-			}
 		}
 
 	} LoggerClass;

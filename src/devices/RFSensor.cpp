@@ -36,7 +36,7 @@ bool RFSensor::hasChanged(){
 			return false;
 		}
 
-		currentValue = (unsigned long) value;
+		currentValue = (value_t) value;
 
 		rf.resetAvailable();
 

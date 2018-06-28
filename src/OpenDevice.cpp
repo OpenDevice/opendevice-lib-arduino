@@ -192,7 +192,7 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
 /**
  * Fired by Device when user change device state in Sketch
  */
-bool OpenDeviceClass::onDeviceChanged(uint8_t iid, unsigned long value) {
+bool OpenDeviceClass::onDeviceChanged(uint8_t iid, value_t value) {
 	ODev.debugChange(iid, value);
 	ODev.sendValue(ODev.getDevice(iid)); // sync with server
 	return true;
@@ -222,7 +222,7 @@ void OpenDeviceClass::onInterruptReceived(){
 }
 
 
-void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
+void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
 	Device* sensor = getDevice(id);
 	Device* device = getDevice(sensor->targetID);
 
@@ -238,7 +238,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, unsigned long value){
 			if(device->type == Device::DIGITAL){
 				device->setValue( ! device->getValue() );
 			}else{
-				long cval = device->getValue();
+				value_t cval = device->getValue();
 				if(cval == 0) device->setValue(Device::MAX_ANALOG_VALUE); // set max
 				else device->setValue(0); // set max
 			}
@@ -279,7 +279,7 @@ void OpenDeviceClass::send(Command cmd){
 	if(connected) deviceConnection->send(cmd, true);
 }
 
-Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, unsigned long value){
+Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, value_t value){
 	Command cmd;
 	cmd.type = type;
 	cmd.deviceID = deviceID;
@@ -287,7 +287,7 @@ Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, un
 	return cmd;
 }
 
-Command OpenDeviceClass::resp(CommandType::CommandType type, uint8_t deviceID, unsigned long value){
+Command OpenDeviceClass::resp(CommandType::CommandType type, uint8_t deviceID, value_t value){
 	lastCMD.type = type;
 	lastCMD.deviceID = deviceID;
 	lastCMD.value = value;
@@ -312,7 +312,7 @@ void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
   send(lastCMD);
 }
 
-void OpenDeviceClass::debugChange(uint8_t id, unsigned long value){
+void OpenDeviceClass::debugChange(uint8_t id, value_t value){
 
 	if(Config.debugMode){
 
@@ -471,7 +471,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 }
 
-void OpenDeviceClass::setValue(uint8_t id, unsigned long value){
+void OpenDeviceClass::setValue(uint8_t id, value_t value){
 
     for (int i = 0; i < deviceLength; i++) {
     	if(devices[i]->id == id){
@@ -496,7 +496,7 @@ void OpenDeviceClass::toggle(uint8_t index){
 	setValue(device->id, !device->getValue());
 }
 
-void OpenDeviceClass::sendToAll(unsigned long value){
+void OpenDeviceClass::sendToAll(value_t value){
     for (int i = 0; i < deviceLength; i++) {
     	devices[i]->setValue(value);
     }

@@ -42,7 +42,7 @@ void AdafruitSensor::init(){
 bool AdafruitSensor::updateValue(float val){
 
 		// TODO !!!  ////////////////////// CASTTTTTTTTTTTTTTTTTTTTTTT || NEGATIVOOOOO
-		unsigned long cVal = val;
+		value_t cVal = val;
 
 	 if(!isnan(val) && currentValue != cVal){
 		 currentValue = cVal;
@@ -59,14 +59,14 @@ bool AdafruitSensor::hasChanged(){
 
 	switch (usType) {
 		case SENSOR_TYPE_AMBIENT_TEMPERATURE:
-				Serial.print("Temperature: ");
-				Serial.print(event.temperature);
-				Serial.println(" *C");
+				// Serial.print("Temperature: ");
+				// Serial.print(event.temperature);
+				// Serial.println(" *C");
 			return updateValue(event.temperature);
 		case SENSOR_TYPE_RELATIVE_HUMIDITY:
-				Serial.print("Humidity: ");
-				Serial.print(event.relative_humidity);
-				Serial.println("%");
+				// Serial.print("Humidity: ");
+				// Serial.print(event.relative_humidity);
+				// Serial.println("%");
 			return updateValue(event.relative_humidity);
 	}
 	return false;

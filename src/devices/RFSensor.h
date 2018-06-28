@@ -28,5 +28,3 @@ private:
 };
 
 #endif /* RFSensor_H_ */
-
-

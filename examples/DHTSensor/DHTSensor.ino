@@ -36,10 +36,10 @@ void setup() {
   dht.begin(); // Initialize device.
 
   ODev.addSensor("HT01_Temperature", new AdafruitSensor(sTemp))
-    ->setInterval(1 * (1000)); // 1sec
+    ->setInterval(2 * (1000)); // 2sec
 
   ODev.addSensor("HT01_Humidity", new AdafruitSensor(sHumidity))
-    ->setInterval(1 * (1000)); // 1sec
+    ->setInterval(2 * (1000)); // 2sec
 
   WiFi.mode(WIFI_AP_STA);
   WiFi.begin("---- WIFI----", "---- PASS----");

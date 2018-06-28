@@ -64,14 +64,7 @@ void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool
 	deviceName = name;
 	readInterval = 0;
 	readLastTime = 0;
-
-	//if(_sensor){
-		currentValue = LOW;
-	//}else{
-	//	currentValue = LOW; // TODO: isso deve ser definido, pois tomada é HIGHT e lanpada deve ser LOW
-	//}
-
-
+	currentValue = 0;
 }
 
 
@@ -83,7 +76,7 @@ void  Device::off(){
 	setValue(LOW, true);
 }
 
-bool Device::setValue(unsigned long value, bool sync){
+bool Device::setValue(value_t value, bool sync){
 	currentValue = value;
 
 	if(sensor == false){
@@ -107,7 +100,7 @@ bool Device::setValue(unsigned long value, bool sync){
 	return true;
 }
 
-unsigned long Device::getValue(){
+value_t Device::getValue(){
 
 	if(sensor){
 		return currentValue; // return last filtered value... (see: hasChanged)
@@ -161,7 +154,7 @@ bool Device::canReadSensor(){
 // FOR SENSOR device...
 bool Device::hasChanged(){
 
-	unsigned long v = 0;
+	value_t v = 0;
 
 	if(type == Device::DIGITAL){
 		v = digitalRead(pin); // READ and Invert state because (sensor) is a INPUT_PULLUP
@@ -265,5 +258,13 @@ bool Device::notifyListeners(){
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(char buffer[]){
 	 int itype = type;
-	 return sprintf (buffer, "[%s,%d,%d,%lu,%d,%d,%d]", (deviceName != NULL ? deviceName : ""), id, pin, getValue(), targetID, (sensor ? 1 : 0), itype);
+	 
+	 char v_str[6];
+	 /* 4 is mininum width, 2 is precision; float value is copied onto str_temp*/
+	 dtostrf(getValue(), 4, 2, v_str);
+
+	 int size = sprintf (buffer, "[%s,%d,%d,%s,%d,%d,%d]", (deviceName != NULL ? deviceName : ""), id, pin, v_str, targetID, (sensor ? 1 : 0), itype);
+  //  Serial.print(">>>>>> Device :");
+	//  Serial.println(buffer);
+	 return size;
 }

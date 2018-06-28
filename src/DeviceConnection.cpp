@@ -125,7 +125,7 @@ bool DeviceConnection::checkDataAvalible(){
 				uint8_t type = parseInt();
 				// digitalWrite(11,LOW);
 				parseCommand(type);
-				
+
 
 				return true;
 
@@ -325,6 +325,7 @@ void DeviceConnection::send(unsigned long n){
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
+
 void DeviceConnection::send(long n, int base){
 	if(!conn || processing) return;
 	conn->write(START_BIT);
@@ -338,26 +339,28 @@ void DeviceConnection::send(double n){
 	conn->write(ACK_BIT);
 }
 
-
 void DeviceConnection::send(Command cmd, bool complete){
 	if(!conn || processing) return;
     // digitalWrite(10, LOW);
-	unsigned long values[] = {cmd.type, cmd.id, cmd.deviceID, cmd.value};
+	unsigned long values[] = {cmd.type, cmd.id, cmd.deviceID};
 
 	conn->flush();
 
 	conn->write(START_BIT);
 	char vbuffer[3];
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		utoa(values[i], vbuffer, 10);
 		conn->write(vbuffer);
-		if(complete && i == 3){
-			conn->write(ACK_BIT);
-		}else{
-			conn->write(SEPARATOR);
-		}
+		conn->write(SEPARATOR);
 	}
 
+	if(CommandType::ANALOG == cmd.type)
+		conn->print(cmd.value);
+	else
+		conn->print((long)cmd.value);
+
+	if(complete) conn->write(ACK_BIT);
+	else conn->write(SEPARATOR);
 
 }
 
@@ -371,13 +374,6 @@ void DeviceConnection::flush() {
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 

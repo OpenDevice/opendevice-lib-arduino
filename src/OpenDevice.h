@@ -23,6 +23,7 @@
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/CustomSensor.h"
+#include "devices/VirtualSensor.h"
 #include "utility/Logger.h"
 
 using namespace od;
@@ -64,15 +65,15 @@ private:
 
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
-	static bool onDeviceChanged(uint8_t iid, unsigned long value);
+	static bool onDeviceChanged(uint8_t iid, value_t value);
 
-	void onSensorChanged(uint8_t id, unsigned long value);
+	void onSensorChanged(uint8_t id, value_t value);
 
 	void notifyReceived(ResponseStatus::ResponseStatus status);
 
 	// Utils....
 	void clear(Command cmd);
-	void debugChange(uint8_t id, unsigned long value);
+	void debugChange(uint8_t id, value_t value);
 
 	void _loop();
 
@@ -359,8 +360,8 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	void send(Command cmd);
 
 	/** Create a simple command (using lastCMD buffer)*/
-	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, unsigned long value = 0);
-	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, unsigned long value = 0);
+	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
+	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
 
 #ifdef __FlashStringHelper
 	void debug(const __FlashStringHelper* data);
@@ -377,7 +378,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	Device* addSensor(char* name, Device* sensor){
 		return addDevice(name, *sensor);
 	}
-	Device* addSensor(char* name, unsigned long (*function)()){
+	Device* addSensor(char* name, value_t (*function)()){
 		CustomSensor* func = new CustomSensor(function);
 		return addDevice(name, *func);
 	}
@@ -412,13 +413,13 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 **/
 	uint8_t * generateID(uint8_t apin = 0);
 
-	void setDefaultListener(void (*pt2Func)(uint8_t, unsigned long));
+	void setDefaultListener(void (*pt2Func)(uint8_t, value_t));
 
-	void setValue(uint8_t id, unsigned long value);
+	void setValue(uint8_t id, value_t value);
 	void sendValue(Device* device);
 
 	void toggle(uint8_t index);
-	void sendToAll(unsigned long value);
+	void sendToAll(value_t value);
 
 	/**
 	 * Load configuration from storage (EEPROM).

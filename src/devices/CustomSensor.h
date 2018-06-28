@@ -18,7 +18,7 @@
 extern "C"
 {
   // Definition of the listener function
-  typedef unsigned long (*CommandFunction) ();
+  typedef value_t (*CommandFunction) ();
 }
 
 class CustomSensor : public Device  {
@@ -27,7 +27,7 @@ public:
 	virtual ~CustomSensor();
 	bool hasChanged();
 private:
-	CommandFunction fgetValue;
+	CommandFunction commandFunction;
 };
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_CustomSensor_H_ */

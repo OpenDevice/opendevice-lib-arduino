@@ -1,5 +1,5 @@
 /*
-  This is an example of how to interact with more complex sensors, 
+  This is an example of how to interact with more complex sensors,
   which are not natively supported in OpenDevice.
   NOTE: Support for RFID is already in native OpenDevice, see example: RFIDSensor
  */
@@ -9,8 +9,8 @@
 
 #include <OpenDevice.h>
 
-#define RST_PIN    9 
-#define SS_PIN    10 
+#define RST_PIN    9
+#define SS_PIN    10
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
@@ -30,7 +30,7 @@ void loop(){
   ODev.loop();
 }
 
-unsigned long readRfid(){
+value_t readRfid(){
   // Look for new cards
   if (!mfrc522.PICC_IsNewCardPresent()) {
     return rfidValue;
@@ -50,5 +50,3 @@ unsigned long readRfid(){
     return rfidValue;
   }
 }
-
-

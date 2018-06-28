@@ -13,7 +13,7 @@
 
 #include "CustomSensor.h"
 
-CustomSensor::CustomSensor(CommandFunction func) : Device(0, 0, Device::ANALOG, true) , fgetValue(func) {
+CustomSensor::CustomSensor(CommandFunction func) : Device(0, 0, Device::ANALOG, true) , commandFunction(func) {
 
 }
 
@@ -22,7 +22,7 @@ CustomSensor::~CustomSensor() {
 
 bool CustomSensor::hasChanged(){
 
-	unsigned long v = fgetValue();
+	value_t v = commandFunction();
 
 	// check if has changed
 	if(currentValue != v){

@@ -16,6 +16,8 @@
 
 #include <inttypes.h>
 
+/* Define value type for devince */
+typedef double value_t;
 
 namespace CommandType {
 	enum CommandType {
@@ -78,11 +80,6 @@ namespace ResponseStatus {
 	};
 }
 
-/*namespace SersorType {
-	enum SersorType {
-		SWITCH = 1, TOOGLE = 2, INFRA_RED = 3,
-	};
-}*/
 
 struct Command {
 
@@ -96,7 +93,7 @@ struct Command {
 	uint8_t type; // values of CommandType
 	uint8_t id;
 	uint8_t deviceID;
-	unsigned long value;
+	value_t value;
 	uint8_t length;
 
 
