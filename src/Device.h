@@ -23,6 +23,7 @@
 
 #include <Arduino.h>
 #include "Command.h"
+#include "config.h"
 #include "DeviceConnection.h"
 
 extern "C"
@@ -56,7 +57,7 @@ public:
 	uint8_t pin;
 	value_t currentValue;
 	DeviceType type;
-	char* deviceName;
+	const char* deviceName;
 
   // For sensor types
 	bool sensor;
@@ -108,9 +109,9 @@ public:
   /**  For Sensors ::  If set readInterval has set, check if time as elapsed */
   bool canReadSensor();
 
-	void name(char* name);
+	void name(const char* name);
 
-	char* name();
+	const char* name();
 
 	/**
 	 * Enable to read value using interruptions. <br/>

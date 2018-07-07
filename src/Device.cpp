@@ -227,11 +227,11 @@ Device* Device::setInterval(int32_t _interval){
 	return this;
 }
 
-void Device::name(char* name){
+void Device::name(const char* name){
 	deviceName = name;
 }
 
-char* Device::name(){
+const char* Device::name(){
 	return deviceName;
 }
 
@@ -257,13 +257,28 @@ bool Device::notifyListeners(){
 
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(char buffer[]){
-	 int itype = type;
-	 
-	 char v_str[6];
-	 /* 4 is mininum width, 2 is precision; float value is copied onto str_temp*/
-	 dtostrf(getValue(), 4, 2, v_str);
+	int itype = type;
 
-	 int size = sprintf (buffer, "[%s,%d,%d,%s,%d,%d,%d]", (deviceName != NULL ? deviceName : ""), id, pin, v_str, targetID, (sensor ? 1 : 0), itype);
+	char v_str[6];
+	/* 4 is mininum width, 2 is precision; float value is copied onto str_temp*/
+	dtostrf(getValue(), 4, 2, v_str);
+
+	char name[MAX_DEVICE_NAME];
+	memset(name,0, sizeof(name));
+
+	#if(ENABLE_PREFIX_NAME)
+		if(type != Device::BOARD){
+			strcat( name, od::Config.moduleName );
+			strcat( name, "::" );
+		}
+	#endif
+
+	strcat( name, deviceName );
+
+	int size = sprintf (buffer, "[%s,%d,%d,%s,%d,%d,%d]", 
+				(name != NULL ? name : ""),
+				id, pin, v_str, targetID, (sensor ? 1 : 0), itype);
+
   //  Serial.print(">>>>>> Device :");
 	//  Serial.println(buffer);
 	 return size;
