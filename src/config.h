@@ -30,7 +30,7 @@
 // =====================================
 
 #ifndef DEBUG
-#define DEBUG	0
+#define DEBUG	1
 #endif
 
 #define DEBUG_SETUP	  1 // set 1 to enable (receiving debug)
@@ -48,9 +48,12 @@
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
 #define ENABLE_SYNC_DEVICEID 1    // Sync DeviceID from server and save on EEPROM.
-#define LOAD_DEVICE_STORAGE 0    // Load deviceID from EEPROM ? (enable in production)
+#define ENABLE_PREFIX_NAME 1      // Add Module name to Devices
+#define LOAD_DEVICE_STORAGE 0     // Load deviceID from EEPROM ? (enable in production)
 
-#define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
+#define RECONNECT_TIMEOUT 30000		
+
+// #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 #define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
 #define ENABLE_ALEXA_PROTOCOL 1 // Enable Alexa/AmazonEcho integration (ESP8266 Only)
 #define ALEXA_MAX_DEVICES 10 // MAX 14
@@ -65,6 +68,7 @@
 // ---- Low Memory Devices ----------
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
+#define MAX_DEVICE_NAME  10
 #define MAX_LISTENERS 2
 #define MAX_DEVICE 5
 
@@ -77,6 +81,7 @@
 #define DATA_BUFFER  256
 #define MAX_LISTENERS 5
 #define MAX_DEVICE 20
+#define MAX_DEVICE_NAME  25
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
@@ -86,6 +91,7 @@
 #define DATA_BUFFER  128
 #define MAX_LISTENERS 5
 #define MAX_DEVICE 10
+#define MAX_DEVICE_NAME  25
 #define MAX_COMMAND 3 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
@@ -130,9 +136,16 @@ namespace od {
 	  uint8_t connectionMode;
 	  int8_t devicesLength;
 	  uint16_t devices[MAX_DEVICE];
+
+	  void load();
+	  void save();
+	  void clear();
+	  bool check();
+
 	};
 
 	extern ConfigClass Config;
 }
+
 
 #endif /* OPENDEVICE_CONFIG_H_ */
