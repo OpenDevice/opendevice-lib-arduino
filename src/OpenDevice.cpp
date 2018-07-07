@@ -127,6 +127,9 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
 
+	Logger.debug("Device Name", Config.moduleName);
+	Logger.debug("Server", Config.server);
+
 	// Load Device(ID) from Storage and set in devices
 	loadDevicesFromStorage();
 
@@ -176,6 +179,11 @@ void OpenDeviceClass::_loop() {
 	  }
 	}
 
+
+	// Check reset
+	if(Config.pinReset != -1 && digitalRead(Config.pinReset) == LOW){
+		reset();
+	}
 
 }
 
@@ -343,24 +351,21 @@ void OpenDeviceClass::debugChange(uint8_t id, value_t value){
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Device* OpenDeviceClass::addSensor(char* name, uint8_t pin, Device::DeviceType type){
+Device* OpenDeviceClass::addSensor(const char* name, uint8_t pin, Device::DeviceType type){
 	return addSensor(name, pin, type, 0);
 }
 
-Device* OpenDeviceClass::addSensor(char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID){
+Device* OpenDeviceClass::addSensor(const char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID){
 	Device* v = addDevice(name, pin, type, true, 0);
 	if(v) devices[deviceLength-1]->targetID = targetID;
 	return v;
 }
 
-
-Device* OpenDeviceClass::addSensor(char* name, Device& sensor){
+Device* OpenDeviceClass::addSensor(const char* name, Device& sensor){
 	return addDevice(name, sensor);
 }
 
-
-
-Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type){
+Device* OpenDeviceClass::addDevice(const char* name, uint8_t pin, Device::DeviceType type){
 	return addDevice(name, pin, type, false, 0);
 }
 
@@ -369,50 +374,63 @@ Device* OpenDeviceClass::addDevice(Device& device){
 }
 
 
-Device* OpenDeviceClass::addDevice(char* name, Device& device){
+Device* OpenDeviceClass::addDevice(const char* name, Device& device){
 	if (deviceLength < MAX_DEVICE) {
 
 		// Force syncronization with server
 		#if(ENABLE_SYNC_DEVICEID)
-		if (device.id <= 0) device.id = 0;
+			if (device.id <= 0) device.id = 0;
 		#else
-		if (device.id <= 0) device.id = (deviceLength + 1); // auto increment
+			if (device.id <= 0) device.id = (deviceLength + 1); // auto increment
 		#endif
 
 		devices[deviceLength] = &device;
 		deviceLength = deviceLength + 1;
 		device.setSyncListener(&(OpenDeviceClass::onDeviceChanged));
-		device.name(name);
+
+		const char* deviceName = name;
+
+		#if(ENABLE_PREFIX_NAME)
+			// if(device.type != Device::BOARD){
+			// 	deviceName = (String(Config.moduleName)+String(name)).c_str();
+			// 	Logger.debug("Concatenation", deviceName);
+			// }
+		#endif
+
+		Logger.debug("Add Device", deviceName);
+		device.name(deviceName);
 
 		return &device;
 	} else{
 		return false;
 	}
-
 }
 
-
-Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
-	if (deviceLength < MAX_DEVICE) {
-
-		// Force syncronization with server
-		#if(ENABLE_SYNC_DEVICEID)
-		// nothing.. id == 0
-		#else
-		if (id == 0) id = (deviceLength + 1);
-		#endif
-
-
-		devices[deviceLength] = new Device(id, pin, type, sensor);
-		devices[deviceLength]->name(name);
-		devices[deviceLength]->setSyncListener(&(OpenDeviceClass::onDeviceChanged));
-		deviceLength++;
-
-		return devices[deviceLength-1];
-	} else{
-		return false;
-	}
+Device* OpenDeviceClass::addDevice(const char* name, uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
+	devices[deviceLength] = new Device(id, pin, type, sensor);
+	return addDevice(name, *devices[deviceLength]);
 }
+
+// Device* OpenDeviceClass::addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
+// 	if (deviceLength < MAX_DEVICE) {
+
+// 		// Force syncronization with server
+// 		#if(ENABLE_SYNC_DEVICEID)
+// 		// nothing.. id == 0
+// 		#else
+// 		if (id == 0) id = (deviceLength + 1);
+// 		#endif
+
+// 		devices[deviceLength] = new Device(id, pin, type, sensor);
+// 		devices[deviceLength]->name(name);
+// 		devices[deviceLength]->setSyncListener(&(OpenDeviceClass::onDeviceChanged));
+// 		deviceLength++;
+
+// 		return devices[deviceLength-1];
+// 	} else{
+// 		return false;
+// 	}
+// }
 
 
 bool OpenDeviceClass::addCommand(const char * name, void (*function)()){
@@ -566,7 +584,7 @@ uint8_t * OpenDeviceClass::generateID(uint8_t apin){
 
 void OpenDeviceClass::name(const char *pname){
 	strcpy (Config.moduleName, pname);
-	addDevice(Config.moduleName, 0, Device::BOARD); // // Add Board Device Class
+	addDevice(Config.moduleName, 0, Device::BOARD); // Add Board Device 
 }
 
 void OpenDeviceClass::server(char pname[]){
@@ -575,6 +593,11 @@ void OpenDeviceClass::server(char pname[]){
 
 void OpenDeviceClass::apiKey(char pname[]){
 	strcpy(Config.appID, pname);
+}
+
+void OpenDeviceClass::resetPin(byte pin){
+	Config.pinReset = pin;
+	pinMode(pin, INPUT_PULLUP);
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -609,6 +632,18 @@ void OpenDeviceClass::showFreeRam() {
 
 }
 
+
+void OpenDeviceClass::reset() {
+	#if defined(ESP8266)
+		Serial.print(F("DB:Reseting..."));
+		delay(2000);
+		ESP.reset();
+		delay(2000);
+	#else
+		pinMode(Config.pinReset, OUTPUT);
+		digitalWrite(Config.pinReset, LOW);
+  	#endif
+}
 
 void OpenDeviceClass::debug(const char str[], unsigned long value){
 	if(Config.debugMode){ // FIXME: a logica não está muito legal não... !

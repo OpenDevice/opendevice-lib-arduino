@@ -63,27 +63,27 @@ typedef struct{
 
 	//#ifdef __FlashStringHelper
 		template <class T> void debug(const __FlashStringHelper* title, const T str, bool newLine = true){
-					Serial.print("DB:");
-					Serial.print(title);
-					if(str){
-						Serial.print(" :: ");
-						if(newLine) Serial.println(str);
-						else Serial.print(str);
-					}else{
-						Serial.println();
-					}
+			Serial.print("DB:");
+			Serial.print(title);
+			if(str){
+				Serial.print(" :: ");
+				if(newLine) Serial.println(str);
+				else Serial.print(str);
+			}else{
+				Serial.println();
+			}
 		}
 	//#endif
 
 
 		void debug(const char title[], int val, bool newLine = true){
-					#if(ENABLE_SERIAL)
-					Serial.print("DB:");
-					Serial.print(title);
-					Serial.print(" :: ");
-					Serial.print(val, DEC);
-					Serial.println();
-					#endif
+			#if(DEBUG)
+			Serial.print("DB:");
+			Serial.print(title);
+			Serial.print(" :: ");
+			Serial.print(val, DEC);
+			Serial.println();
+			#endif
 		}
 
 	} LoggerClass;

@@ -136,6 +136,7 @@ public:
 	void name(const char *pname);
 	void server(char pname[]);
 	void apiKey(char pname[]);
+	void resetPin(byte pin);
 
 	const char* name() { return Config.moduleName; }
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
@@ -353,7 +354,10 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 * Control of the Keep Alive / Ping can be left to the other side of the connection, in this case the "device" would be disabled */
 	void enableKeepAlive(bool val =  false);
 
-  void showFreeRam();
+    void showFreeRam();
+
+    /** Reset microcontroller (only for ESP) others need hardware changes */
+	void reset();
 
 	void enableDebug(uint8_t debugTarget = DEBUG_SERIAL);
 
@@ -372,21 +376,21 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	void debug(const String &s);
 	#endif
 
-	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	Device* addSensor(char* name, uint8_t pin, Device::DeviceType type);
-	Device* addSensor(char* name, Device& sensor);
-	Device* addSensor(char* name, Device* sensor){
+	Device* addSensor(const char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID);
+	Device* addSensor(const char* name, uint8_t pin, Device::DeviceType type);
+	Device* addSensor(const char* name, Device& sensor);
+	Device* addSensor(const char* name, Device* sensor){
 		return addDevice(name, *sensor);
 	}
-	Device* addSensor(char* name, value_t (*function)()){
+	Device* addSensor(const char* name, value_t (*function)()){
 		CustomSensor* func = new CustomSensor(function);
 		return addDevice(name, *func);
 	}
 
-	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
-	Device* addDevice(char* name, uint8_t pin, Device::DeviceType type);
+	Device* addDevice(const char* name, uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
+	Device* addDevice(const char* name, uint8_t pin, Device::DeviceType type);
 	Device* addDevice(Device& device);
-	Device* addDevice(char* name, Device& device);
+	Device* addDevice(const char* name, Device& device);
 
 	bool addCommand(const char * name, void (*function)());
 
@@ -421,52 +425,18 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	void toggle(uint8_t index);
 	void sendToAll(value_t value);
 
-	/**
-	 * Load configuration from storage (EEPROM).
-	 * Check if exist, if not, use default values
-	 **/
 	void load(){
-		if(check()){
-			EEPROM.get(CONFIG_START, Config);
-		} else{
-			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
-			// save(); // init and save defaults
-		}
-
+		Config.load();
 	}
 
-	/**
-	 * Check if exist a valid configuration (memory layout) in EEPROM
-	 */
-	bool check(){
-		return (EEPROM.read(CONFIG_START + 0) == CONFIG_VERSION[0] &&
-						EEPROM.read(CONFIG_START + 1) == CONFIG_VERSION[1] &&
-						EEPROM.read(CONFIG_START + 2) == CONFIG_VERSION[2]);
-	}
 
-	/** Save current configuration to storage */
 	void save(){
-		EEPROM.put(CONFIG_START, Config);
-		#if defined(ESP8266)
-			EEPROM.commit();
-		#endif
+		Config.save();
 	}
 
-  /**
-	 * Clear saved setings
-	 */
 	void clear(){
-
-		for (int i = CONFIG_START ; i < CONFIG_START + sizeof(Config) ; i++) {
-		  EEPROM.write(i, 0);
-		}
-
-		#if defined(ESP8266)
-		EEPROM.commit();
-		#endif
+		Config.clear();
 	}
-
-
 
 	void printStorageSettings(){
 
@@ -555,14 +525,13 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 		} else if (cmd.type == CommandType::RESET) {
 
-			pinMode(Config.pinReset, OUTPUT);
-			digitalWrite(Config.pinReset, LOW);
+			reset();
 
 		// Send response: GET_DEVICES_RESPONSE;ID;Index;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];
 		// NOTE: This message is sent to each device
 		} else if (cmd.type == CommandType::GET_DEVICES) {
 
-			char buffer[50] = {0};// FIXME: daria para usar o mesmo buffer do deviceConnection ??
+			char buffer[DATA_BUFFER] = {0}; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
 
 			for (int i = 0; i < deviceLength; ++i) {
 				Device *device = getDeviceAt(i);
@@ -622,9 +591,9 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		} else if (cmd.type == CommandType::FIRMWARE_UPDATE) {
 
 			#ifdef ESP8266HTTPUPDATE_H_
-        String url = conn->readString();
-  		  RemoteUpdate.updateFromURL(url);
-      #endif
+				String url = conn->readString();
+				RemoteUpdate.updateFromURL(url);
+			#endif
 
 		}else{
 
