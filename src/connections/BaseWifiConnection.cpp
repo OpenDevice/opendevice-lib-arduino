@@ -30,64 +30,66 @@ BaseWifiConnection::~BaseWifiConnection() {
 
 void BaseWifiConnection::onMessageReceived(Command cmd){
 
-	//  Format: /type/id/ctype/uri/passwd
-	if (cmd.type == CommandType::CONNECTION_ADD) {
+	// //  Format: /type/id/ctype/uri/passwd
+	// if (cmd.type == CommandType::CONNECTION_ADD) {
 
-		#if ENABLE_REMOTE_WIFI_SETUP
+	// 	#if ENABLE_REMOTE_WIFI_SETUP
 
-		Logger.debug("Connect ADD", "WIFI");
+	// 	Logger.debug("Connect ADD", "WIFI");
 
-		uint8_t ctype = readInt();
+	// 	uint8_t ctype = readInt();
 
-		if (ctype == 3) { // Type: WIFI
-			String ssid = readString();
-			String passwd = readString();
-			Logger.debug("Connect to:", ssid.c_str());
-			Logger.debug("Using Pass:", passwd.c_str());
+	// 	if (ctype == 3) { // Type: WIFI
+	// 		String ssid = readString();
+	// 		String passwd = readString();
+	// 		Logger.debug("Connect to:", ssid.c_str());
+	// 		Logger.debug("Using Pass:", passwd.c_str());
 
-			disconnect(false);
+	// 		disconnect(false);
 
-			mode(WIFI_AP_STA); // will reset module (if is nor current mode)
+	// 		mode(WIFI_AP_STA); // will reset module (if is nor current mode)
 
-			begin(ssid.c_str(), passwd.c_str());
+	// 		begin(ssid.c_str(), passwd.c_str());
 
-			unsigned long start = millis();
-			Serial.print("waitForConnected...");
-			waitForConnected(20000);
-			Serial.println();
-			Serial.print("delay : ");
-			Serial.println(millis() - start, DEC);
+	// 		unsigned long start = millis();
+	// 		Serial.print("waitForConnected...");
+	// 		waitForConnected(20000);
+	// 		Serial.println();
+	// 		Serial.print("delay : ");
+	// 		Serial.println(millis() - start, DEC);
 
-			begin(); // configure services
+	// 		begin(); // configure services
 
-			start = millis();
-			Serial.print("waitForClient...");
-			waitForClient(10000);
-			Serial.print("delay : ");
-			Serial.println(millis() - start, DEC);
+	// 		start = millis();
+	// 		Serial.print("waitForClient...");
+	// 		waitForClient(10000);
+	// 		Serial.print("delay : ");
+	// 		Serial.println(millis() - start, DEC);
 
-			// Send Back IP;
-			doStart();
-			print(CommandType::CONNECTION_ADD_RESPONSE);
-			doToken();
-			print(cmd.id);
-			doToken();
+	// 		// Send Back IP;
+	// 		doStart();
+	// 		print(CommandType::CONNECTION_ADD_RESPONSE);
+	// 		doToken();
+	// 		print(cmd.id);
+	// 		doToken();
 
-			if (status() == WL_CONNECTED) {
-				print(ResponseStatus::SUCCESS);
-				doToken();
-				print(getIP());
-				doToken();
-			} else {
-				print(ResponseStatus::INTERNAL_ERROR);
-				doToken();
-				print(0);
-				doToken();
-			}
-			doEnd();
-		}
-		#endif
-	} else if (cmd.type == CommandType::DISCOVERY_REQUEST) {
+	// 		if (status() == WL_CONNECTED) {
+	// 			print(ResponseStatus::SUCCESS);
+	// 			doToken();
+	// 			print(getIP());
+	// 			doToken();
+	// 		} else {
+	// 			print(ResponseStatus::INTERNAL_ERROR);
+	// 			doToken();
+	// 			print(0);
+	// 			doToken();
+	// 		}
+	// 		doEnd();
+	// 	}
+	// 	#endif
+	// } 
+	
+	if (cmd.type == CommandType::DISCOVERY_REQUEST) {
 		sendDiscoveryResponse();
 		delay(1000);
 		sendDiscoveryResponse();
