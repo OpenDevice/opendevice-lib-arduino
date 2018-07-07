@@ -17,7 +17,7 @@ namespace od {
 
 MQTTClient* MQTTWifiConnection::mqttClient;
 
-MQTTWifiConnection::MQTTWifiConnection(): mqtt(ethclient), mqttTimeout(5000) {
+MQTTWifiConnection::MQTTWifiConnection(): mqtt(ethclient), mqttTimeout(RECONNECT_TIMEOUT) {
 	mqttClient = new MQTTClient(mqtt, _buffer);
 }
 
@@ -70,16 +70,16 @@ void MQTTWifiConnection::mqttConnect(){
 	subscribe+= "/in/";
 	subscribe+= Config.moduleName;
 
-	Logger.debug("MQTT", "connecting... ");
+	Logger.debug("MQTT", "Connecting... ");
 	// Attempt to connect
 	if (mqtt.connect(clientID.c_str(), Config.appID, "*")) {
 	  Logger.debug("MQTT", "[connected]");
 	  mqtt.subscribe(subscribe.c_str());
 	} else {
+	  Logger.debug("MQTT", "<Fail>");
 	  mqttTimeout.reset();
-	  Logger.debug("MQTT <Fail>", mqtt.state());
 	}
-
+	
 }
 
 } /* namespace od */

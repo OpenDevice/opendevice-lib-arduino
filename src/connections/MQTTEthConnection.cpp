@@ -29,7 +29,7 @@ bool MQTTEthConnection::received = false;
 
 MQTTEthConnection::MQTTEthConnection(Client& client):
 		mqtt(client),
-		mqttTimeout(5000){
+		mqttTimeout(RECONNECT_TIMEOUT){
 
 		buffer = new StreamBuffer(_buffer, DATA_BUFFER);
 

@@ -127,7 +127,7 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
 
-	Logger.debug("Device Name", Config.moduleName);
+	Logger.debug("ModuleName", Config.moduleName);
 	Logger.debug("Server", Config.server);
 
 	// Load Device(ID) from Storage and set in devices
