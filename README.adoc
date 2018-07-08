@@ -1,8 +1,8 @@
 == opendevice-lib-arduino
 
-This library is responsible for communication using the API and protocols supported by OpenDevice.
+Library for creating IoT devices compatible with the OpenDevice and Arduino platform
 
-link:https://github.com/OpenDevice/OpenDevice/wiki/Supported-Devices[See supported devices]
+link:http://opendevice.io[http://opendevice.io]
 
 === Example
 
@@ -64,7 +64,7 @@ See: link:http://www.arduino.cc/en/guide/libraries[Installing Additional Arduino
 
 See documentation and examples at:
 
-http://opendevice.io
+https://opendevice.atlassian.net/wiki/spaces/DOC/pages/1704011/Arduino+Library
 
 https://opendevice.atlassian.net/wiki/display/DOC/Getting+started
 
