@@ -1,0 +1,8 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$df/dd8/class_device.html" title="Device" alt="" coords="5,107,68,133"/>
+<area shape="rect" id="node2" href="$d8/d08/class_adafruit_sensor.html" title="AdafruitSensor" alt="" coords="117,5,225,32"/>
+<area shape="rect" id="node3" href="$d9/daf/class_custom_sensor.html" title="CustomSensor" alt="" coords="116,56,225,83"/>
+<area shape="rect" id="node4" href="$dd/d24/class_i_r_sensor.html" title="IRSensor" alt="" coords="132,107,209,133"/>
+<area shape="rect" id="node5" href="$dc/db5/class_r_f_i_d_sensor.html" title="RFIDSensor" alt="" coords="123,157,218,184"/>
+<area shape="rect" id="node6" href="$d3/d33/class_r_f_sensor.html" title="RFSensor" alt="" coords="130,208,211,235"/>
+</map>
