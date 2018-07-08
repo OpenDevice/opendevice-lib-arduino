@@ -154,7 +154,6 @@ public:
     using Print::write;
     using Print::print;
 
-	static int api_version() { return API_VERSION;}
 };
 
 

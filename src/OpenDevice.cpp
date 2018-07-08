@@ -129,7 +129,13 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	Logger.debug("ModuleName", Config.moduleName);
 	Logger.debug("Server", Config.server);
-	Logger.debug("Firmware", FirmwareBuildDate); // from build_defs.h
+
+	char version[30];
+	strcpy(version, API_VERSION);
+	strcat(version, "@");
+	strcat(version, FirmwareBuildDate);
+	
+	Logger.debug("Firmware", version); // from build_defs.h
 
 	// Load Device(ID) from Storage and set in devices
 	loadDevicesFromStorage();

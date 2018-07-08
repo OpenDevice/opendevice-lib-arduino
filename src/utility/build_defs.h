@@ -69,6 +69,7 @@
 //builds a version that looks like 1-b140216.2041
 const char FirmwareBuildDate[] =
 {
+    // API_VERSION[0],API_VERSION[1],API_VERSION[2],API_VERSION[3],API_VERSION[4],
     BUILD_DAY_CH0,
 	BUILD_DAY_CH1,
     BUILD_MONTH_CH0,
