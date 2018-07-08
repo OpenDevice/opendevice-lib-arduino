@@ -35,30 +35,31 @@ namespace CommandType {
 
 		// ---
 		PING_REQUEST            = 20,
-    PING_RESPONSE           = 21,
-    DISCOVERY_REQUEST       = 22,
-    DISCOVERY_RESPONSE      = 23,
-    MEMORY_REPORT           = 24, // Report the amount of memory = displays the current and maximum).
-    CPU_TEMPERATURE_REPORT  = 25,
-    CPU_USAGE_REPORT        = 26,
+		PING_RESPONSE           = 21,
+		DISCOVERY_REQUEST       = 22,
+		DISCOVERY_RESPONSE      = 23,
+		MEMORY_REPORT           = 24, // Report the amount of memory = displays the current and maximum).
+		CPU_TEMPERATURE_REPORT  = 25,
+		CPU_USAGE_REPORT        = 26,
 		RESET 		        			= 27, // Reset Microcontroller
 
 		// ---
-		GET_DEVICES 					= 30,
+		GET_DEVICES 			= 30,
 		GET_DEVICES_RESPONSE 	= 31,
-    DEVICE_ADD 						= 32,
-    DEVICE_ADD_RESPONSE		= 33,
-    DEVICE_DEL 						= 34,
-		CLEAR_DEVICES 				= 35,
-		SYNC_DEVICES_ID 			= 36,
-		FIRMWARE_UPDATE       = 37,
+   		DEVICE_ADD 				= 32,
+    	DEVICE_ADD_RESPONSE		= 33,
+    	DEVICE_DEL 				= 34,
+		CLEAR_DEVICES 			= 35,
+		SYNC_DEVICES_ID 		= 36,
+		SYNC_HISTORY            = 37,
+		FIRMWARE_UPDATE       	= 38,
 
 
 		GET_CONNECTIONS 					= 40,
 		GET_CONNECTIONS_RESPONSE  = 41,
-    CONNECTION_ADD 						= 42,
-    CONNECTION_ADD_RESPONSE 	= 43, // Return IP
-    CONNECTION_DEL 						= 44,
+		CONNECTION_ADD 						= 42,
+		CONNECTION_ADD_RESPONSE 	= 43, // Return IP
+		CONNECTION_DEL 						= 44,
 		CLEAR_CONNECTIONS 				= 45,
 		// ---
 		USER_EVENT								= 98, // Command used to send user-defined events / notifications

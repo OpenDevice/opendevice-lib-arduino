@@ -88,7 +88,7 @@
 #include <ArduinoOTA.h>
 #endif
 
-#ifdef ESP8266HTTPUPDATE_H_ // Enable OTA Updates
+#if defined(__ARDUINO_OTA_H) && defined(ESP8266) // Enable OTA Updates
 #include <ESP8266httpUpdate.h>
 #endif
 

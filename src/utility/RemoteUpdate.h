@@ -55,27 +55,29 @@ class RemoteUpdateClass
       #endif
     }
 
-    void updateFromURL(String path){
+    boolean updateFromURL(String path){
 
-      Serial.println("firmware update .. ");
+      LOG_DEBUG("OTA", path);
 
       #ifdef ESP8266HTTPUPDATE_H_
-        Serial.println(Config.server);
-        Serial.println("/tests/firmwares/download/"+path);
 
-        t_httpUpdate_return ret = ESPhttpUpdate.update(Config.server, 8181, "/uploads/firmwares/"+path); // .c_str()
+        ESPhttpUpdate.rebootOnUpdate(false);
+
+        t_httpUpdate_return ret = ESPhttpUpdate.update(path); // .c_str()
         switch(ret) {
             case HTTP_UPDATE_FAILED:
-                Serial.println("[update] Update failed.");
-                break;
+              LOG_DEBUG("OTA", ESPhttpUpdate.getLastErrorString());
+              return false;
             case HTTP_UPDATE_NO_UPDATES:
-                Serial.println("[update] Update no Update.");
-                break;
+              LOG_DEBUG("OTA","no Update.");
+              return false;
             case HTTP_UPDATE_OK:
-                Serial.println("[update] Update ok."); // may not called we reboot the ESP
-                break;
+              LOG_DEBUG("OTA","Update ok."); // may not called we reboot the ESP
+              return true;
         }
       #endif
+
+      return false;
     }
 };
 

@@ -642,8 +642,10 @@ void OpenDeviceClass::showFreeRam() {
 
 void OpenDeviceClass::reset() {
 	#if defined(ESP8266)
-		Serial.print(F("DB:Reseting..."));
+		LOG_DEBUG(F("DB:Disconnecting..."));
+		deviceConnection->disconnect();
 		delay(2000);
+		LOG_DEBUG(F("DB:Reseting..."));
 		ESP.reset();
 		delay(2000);
 	#else

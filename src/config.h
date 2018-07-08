@@ -43,6 +43,7 @@
 
 #define DEFAULT_BAUD 115200
 #define DEFAULT_SERVER_PORT 8182	// Used only in server mode to receive socket connections
+#define ODEV_OTA_REMOTE_PORT 80			// Port for remote ota updates
 #define DISCOVERY_PORT 6142				// UDP port to enable discovery services.
 #define KEEP_ALIVE_INTERVAL 30000
 #define KEEP_ALIVE_MAX_MISSING 3

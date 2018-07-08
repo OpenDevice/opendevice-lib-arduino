@@ -595,8 +595,30 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		} else if (cmd.type == CommandType::FIRMWARE_UPDATE) {
 
 			#ifdef ESP8266HTTPUPDATE_H_
-				String url = conn->readString();
-				RemoteUpdate.updateFromURL(url);
+
+				int port = ODEV_OTA_REMOTE_PORT;
+
+				if(Config.server[0] == '1' && Config.server[1] == '9'){ // local IP
+					port = 8181;
+				}
+
+				String uuid = conn->readString();
+				 
+				String url = "http://" +String(Config.server) + ":" + port + "/middleware/firmwares/download/"+uuid;
+				
+				bool updated = RemoteUpdate.updateFromURL(url);
+
+				if(updated){
+					notifyReceived(ResponseStatus::SUCCESS);
+					reset();
+				}else{
+					notifyReceived(ResponseStatus::INTERNAL_ERROR); 
+				}
+
+			#else
+
+				notifyReceived(ResponseStatus::NOT_IMPLEMENTED); 
+				
 			#endif
 
 		}else{

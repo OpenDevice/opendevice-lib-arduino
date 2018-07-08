@@ -38,6 +38,10 @@ void DeviceConnection::begin(){
 	// nothing
 }
 
+void DeviceConnection::disconnect(){
+	// nothing
+}
+
 void DeviceConnection::init(){
 
 	readTimeout = 1; // ms

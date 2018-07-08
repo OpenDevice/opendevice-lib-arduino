@@ -33,6 +33,11 @@ void MQTTWifiConnection::begin(){
 	mqttConnect();
 }
 
+void MQTTWifiConnection::disconnect(){
+	if (!mqtt.connected()) mqtt.disconnect();
+}
+
+
 bool MQTTWifiConnection::checkDataAvalible(void){
 
 	// Reconnect MQTT if OFFLINE and not have Client (TcpServer)

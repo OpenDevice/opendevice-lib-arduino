@@ -44,6 +44,7 @@ public:
 	virtual ~MQTTWifiConnection();
 
 	virtual void begin(void);
+	virtual void disconnect(void);
 
 	virtual bool checkDataAvalible(void);
 
