@@ -117,9 +117,8 @@ enum ConnectionMode{
 
 namespace od {
 
- /**
-  * Configuration Storage Struct
-	* Default values in .cpp
+  /**
+    * OpenDevice dynamic configuration options. (See defaults in config.cpp file).
 	*/
 	struct ConfigClass{
 

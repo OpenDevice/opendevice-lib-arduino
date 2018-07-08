@@ -37,12 +37,14 @@ extern volatile uint8_t* PIN_INTERRUPT;
 #endif
 
 
-
-/*
- * OpenDeviceClass.h
+/**
+ * Main point of device configuration and management in firmware.
+ * Several settings can be made through the file: config.h
+ * The automatic configuration system is implemented in this file in conjunction with dependencies.h
  *
- *  Created on: 27/06/2014
- *      Author: ricardo
+ *  
+ * @author Ricardo JL Rufino
+ * @date 27/06/2014
  */
 class OpenDeviceClass {
 
@@ -73,6 +75,9 @@ private:
 
 	// Utils....
 	void clear(Command cmd);
+	/** Create a simple command (using lastCMD buffer)*/
+	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
+	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
 	void debugChange(uint8_t id, value_t value);
 
 	void _loop();
@@ -98,7 +103,7 @@ public:
 	OpenDeviceClass();
 	// virtual ~OpenDeviceClass();
 
-
+	/** OpenDevice main operating point. You should call this method in the Skech main loop */
 	void loop(){
 
 		#ifdef CUSTOM_CONNECTION_CLASS
@@ -133,12 +138,20 @@ public:
 	 */
 	void id(uint8_t *pid) { memcpy(Config.id, pid, sizeof(Config.id)); }
 
+	/** Configure this Device/Module Name to identify and group devices*/
 	void name(const char *pname);
+
+	/** Set server IP or Host to connect */
 	void server(char pname[]);
+
+	/** Set APIKey for this Device*/
 	void apiKey(char pname[]);
+
+	/** Set reset PIN, if you are using ESP, it must be set to active low */
 	void resetPin(byte pin);
 
 	const char* name() { return Config.moduleName; }
+
 	void ip(uint8_t n1, uint8_t n2, uint8_t n3, uint8_t n4) { Config.ip[0] = n1; Config.ip[1] = n2; Config.ip[2] = n3; Config.ip[3] = n4;}
 
 
@@ -162,10 +175,7 @@ public:
 
 	}
 
-/**
- * Setup connection using default settings <br/>
- * Thus the connection settings are detected according to the active libraries
- */
+
 #if defined(USING_CUSTOM_CONNECTION)
 	void begin(){
 
@@ -175,13 +185,10 @@ public:
 	}
 #else
 	/**
-	 * No parameters, use Serial/Wifi by default
+	 * Setup connection using default settings <br/>
+	 * The connection settings are detected according to the active libraries
 	 */
 	void begin(){
-
-		#ifdef ODEV_MODULE_NAME
-		strcpy(Config.moduleName, ODEV_MODULE_NAME);
-		#endif
 
 		// Wait serial if using Leonardo / YUN
 		#if defined(__AVR_ATmega32U4__) && !(defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_))
@@ -363,9 +370,6 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	void send(Command cmd);
 
-	/** Create a simple command (using lastCMD buffer)*/
-	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
-	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
 
 #ifdef __FlashStringHelper
 	void debug(const __FlashStringHelper* data);
@@ -417,23 +421,23 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 **/
 	uint8_t * generateID(uint8_t apin = 0);
 
-	void setDefaultListener(void (*pt2Func)(uint8_t, value_t));
-
 	void setValue(uint8_t id, value_t value);
 	void sendValue(Device* device);
 
 	void toggle(uint8_t index);
 	void sendToAll(value_t value);
 
+	/** @see od::ConfigClass#load() */
 	void load(){
 		Config.load();
 	}
 
-
+	/** @see od::ConfigClass#save() */
 	void save(){
 		Config.save();
 	}
 
+	/** @see od::ConfigClass#clear() */
 	void clear(){
 		Config.clear();
 	}

@@ -11,13 +11,6 @@
  * *****************************************************************************
  */
 
-/*
- * Device.h
- *
- *  Created on: 05/02/2013
- *      Author: Ricardo JL Rufino
- */
-
 #ifndef Device_H_
 #define Device_H_
 
@@ -32,6 +25,12 @@ extern "C"
   typedef bool (*DeviceListener) (uint8_t iid, value_t value);
 }
 
+/**
+ * Base class of Devices
+ * 
+ * @date  05/02/2013
+ * @author: Ricardo JL Rufino
+ */
 class Device
 {
 public:

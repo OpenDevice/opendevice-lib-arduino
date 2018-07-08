@@ -22,8 +22,11 @@
 namespace od {
 
 /**
- * Utility class to Configure Wifi and Server parameters
+ * Utility class to Configure Wifi and Server parameters.
  * Use WiFiManager to create a Self configuration page
+ * 
+ * @author Ricardo JL Rufino
+ * @date 27/06/2018
  */
 class WiFi
 {
@@ -33,15 +36,19 @@ class WiFi
 
     boolean autoConnect(char const *apPassword = NULL);
     
+    /** Set ping used to provide feedback (blink) for setup mode*/
     void setLed(int led, byte ledOffState);
 
-    /** Set to fase, to use ODev.resetPin to enter in Seup Mode */
+    /** 
+     * Set to fase, to GoTo setup mode ONLY if RESET pressed
+     * Use: ODev.resetPin(RESET_PIN);
+     */
     void enableAutoSetup(bool mode);
 
     /** Allow customize Server, ApiKey, DeviceName */
     void enableServerParams(bool mode);
 
-    /** INTENAL - Used to provide feedback */
+    /** @internal - Used to provide feedback */
     static void onConfigLoop(bool connected);
     
   private:

@@ -1,4 +1,6 @@
 .settings/
+.generated/
+.vscode/
 .cproject
 .project
 spec.d
