@@ -37,7 +37,7 @@
 #define DEBUG_CON	  0 // set 1 to enable (receiving debug)
 #define ENABLE_SERIAL     1
 
-#define API_VERSION   050 // software version of this library
+#define API_VERSION   051 // software version of this library
 #define CONFIG_VERSION "cv1"  // version of config layout
 #define CONFIG_START 0        // start address in EEPROM
 
