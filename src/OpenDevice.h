@@ -23,8 +23,8 @@
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/CustomSensor.h"
-#include "devices/VirtualSensor.h"
 #include "utility/Logger.h"
+#include "utility/build_defs.h"
 
 using namespace od;
 

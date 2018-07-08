@@ -1,5 +1,5 @@
 .settings/
-.generated/
+generated/
 .vscode/
 .cproject
 .project
