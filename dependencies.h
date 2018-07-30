@@ -126,7 +126,8 @@
 #endif
 
 #if defined(_RCSwitch_h)
-	#include <devices/RFSensor.h>
+	#include <RCSwitch.h>
+	#include <devices/RFSensor.cpp>
 #endif
 
 #if defined(IRremote_h) || defined(IRREMOTEESP8266_H_)
