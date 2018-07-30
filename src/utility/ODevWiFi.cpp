@@ -12,6 +12,8 @@
  * *****************************************************************************
  */
 
+#ifdef ESP8266
+
 #include "ODevWiFi.h"
 
 namespace od {
@@ -122,3 +124,5 @@ namespace od {
     serverParams = mode;
   }
 }
+
+#endif

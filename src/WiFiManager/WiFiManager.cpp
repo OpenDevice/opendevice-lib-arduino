@@ -10,6 +10,8 @@
    Licensed under MIT license
  **************************************************************/
 
+#ifdef ESP8266
+
 #include "WiFiManager.h"
 
 namespace od {
@@ -819,3 +821,5 @@ String WiFiManager::toStringIp(IPAddress ip) {
 }
 
 }
+
+#endif
