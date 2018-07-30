@@ -49,7 +49,7 @@
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
 #define ENABLE_SYNC_DEVICEID 1    // Sync DeviceID from server and save on EEPROM.
-#define ENABLE_PREFIX_NAME 1      // Add Module name to Devices
+#define ENABLE_PREFIX_NAME 0      // Add Module name to Devices
 #define LOAD_DEVICE_STORAGE 0     // Load deviceID from EEPROM ? (enable in production)
 
 #define RECONNECT_TIMEOUT 30000		

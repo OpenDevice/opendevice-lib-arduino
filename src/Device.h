@@ -48,6 +48,23 @@ public:
     BOARD = 10,
     MANAGER = 11
 	};
+
+
+	static uint8_t TypeToCommand( DeviceType type ) {
+		switch (type) {
+		case Device::DIGITAL: return CommandType::ON_OFF;
+		case Device::ANALOG: return CommandType::ANALOG;
+		case Device::ANALOG_SIGNED: return CommandType::ANALOG;
+		case Device::NUMERIC: return CommandType::NUMERIC;
+		case Device::FLOAT2: return CommandType::ANALOG;
+		case Device::FLOAT2_SIGNED: return CommandType::ANALOG;
+		case Device::FLOAT4: return CommandType::ANALOG;
+//		case Device::CHARACTER: return CommandType::ON_OFF;
+		default:
+			return 0; // undefined ....
+		}
+	}
+
   // NOTE: On change this, my need change: OpenDeviceClass::onSensorChanged
 
 	const static uint8_t MAX_ANALOG_VALUE = 255;
@@ -60,8 +77,8 @@ public:
 
   // For sensor types
 	bool sensor;
-  int32_t readLastTime;
-  int32_t readInterval;
+	int32_t readLastTime;
+	int32_t readInterval;
 
 	uint8_t targetID; // associated device (used in sensors)
 
@@ -102,11 +119,11 @@ public:
 
 	virtual void deserializeExtraData(Command *cmd, DeviceConnection *conn);
 
-  /** For Sensors ::  read sensor ans check if value has changed */
+  	/** For Sensors ::  read sensor ans check if value has changed */
 	virtual bool hasChanged();
 
-  /**  For Sensors ::  If set readInterval has set, check if time as elapsed */
-  bool canReadSensor();
+	/**  For Sensors ::  If set readInterval has set, check if time as elapsed */
+	bool canReadSensor();
 
 	void name(const char* name);
 
@@ -123,7 +140,7 @@ public:
 	 */
 	Device* invertedState();
 
-  Device* activeLow(){ return invertedState(); };
+	Device* activeLow(){ return invertedState(); };
 
 	virtual void init();
 

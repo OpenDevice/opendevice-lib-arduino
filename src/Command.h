@@ -110,15 +110,16 @@ struct Command {
 	}
 
 	static bool isSimpleCommand( uint8_t type ) {
-			if (type == 0) return false;
-			switch (type) {
-			case CommandType::DISCOVERY_REQUEST: return true;
-			case CommandType::PING_REQUEST: return true;
-			case CommandType::PING_RESPONSE: return true;
-			default:
-				return false;
-			}
+		if (type == 0) return false;
+		switch (type) {
+		case CommandType::DISCOVERY_REQUEST: return true;
+		case CommandType::PING_REQUEST: return true;
+		case CommandType::PING_RESPONSE: return true;
+		default:
+			return false;
 		}
+	}
+
 };
 
 #endif /* HEADER */
