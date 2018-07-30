@@ -75,8 +75,7 @@ private:
 
 	// Utils....
 	void clear(Command cmd);
-	/** Create a simple command (using lastCMD buffer)*/
-	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
+
 	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
 	void debugChange(uint8_t id, value_t value);
 
@@ -367,6 +366,9 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	void reset();
 
 	void enableDebug(uint8_t debugTarget = DEBUG_SERIAL);
+
+	/** Create a simple command (using lastCMD buffer)*/
+	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
 
 	void send(Command cmd);
 

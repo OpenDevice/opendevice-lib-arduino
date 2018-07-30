@@ -188,7 +188,7 @@ void OpenDeviceClass::_loop() {
 
 
 	// Check reset
-	if(Config.pinReset != -1 && digitalRead(Config.pinReset) == LOW){
+	if(Config.pinReset != 255 && digitalRead(Config.pinReset) == LOW){
 		reset();
 	}
 
@@ -263,20 +263,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
 	// SEND: Command
 	// ==========================
 	lastCMD.id = 0;
-
-  // Adapter for CommandType
-  if(sensor->type == Device::ANALOG ||
-	   sensor->type == Device::ANALOG_SIGNED ||
-		 sensor->type == Device::FLOAT2 ||
-	 	 sensor->type == Device::FLOAT2_SIGNED ||
-		 sensor->type == Device::FLOAT4){
-
-		lastCMD.type = (uint8_t) CommandType::ANALOG;
-
-	}else{
-		lastCMD.type = (uint8_t) sensor->type;
-	}
-
+    lastCMD.type = Device::TypeToCommand(sensor->type);
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
@@ -299,6 +286,7 @@ Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, va
 	cmd.type = type;
 	cmd.deviceID = deviceID;
 	cmd.value = value;
+	cmd.length = 0;
 	return cmd;
 }
 
@@ -509,7 +497,7 @@ void OpenDeviceClass::setValue(uint8_t id, value_t value){
 
 void OpenDeviceClass::sendValue(Device* device){
 	lastCMD.id = 0;
-	lastCMD.type = (uint8_t) device->type;
+	lastCMD.type = (uint8_t) Device::TypeToCommand(device->type);
 	lastCMD.deviceID = device->id;
 	lastCMD.value = device->currentValue;
 	deviceConnection->send(lastCMD, true);

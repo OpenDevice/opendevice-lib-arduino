@@ -9,7 +9,7 @@ namespace od {
     "*", // APP_ID
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, // MAC
     { 0, 0, 0, 0 }, // IP
-    -1, // ResetPIN
+    255, // ResetPIN
     false, // debugMode
     true, // keepAlive
     DEBUG_SERIAL, // debugTarget
