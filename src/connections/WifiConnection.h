@@ -71,8 +71,8 @@ public:
 protected:
 	WiFiServer server;
 	boolean isStartup;
+	boolean hasWiFi;
 	WiFiUDP Udp; // A UDP instance (discovery service)
-
 	uint8_t waitForConnectResult();
 
 };

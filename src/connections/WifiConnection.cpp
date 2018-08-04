@@ -184,14 +184,12 @@ uint8_t WifiConnection::waitForConnectResult() {
         return WL_DISCONNECTED;
     }
     Serial.print(F("WiFi-"));
+
     uint8_t count = 0;
     while(status() != WL_CONNECTED) {
         delay(500);
         Serial.print("#");
-        if(count++ == 40){ // line-break
-          Serial.println();
-          count = 0;
-        }
+        if(count++ > 10) break;
     }
 
     Serial.println();
