@@ -30,19 +30,24 @@ bool RFSensor::hasChanged(){
 
 	if (rf.available()) {
 
-		int value = rf.getReceivedValue();
+		value_t value = (value_t) rf.getReceivedValue();
+
+		rf.resetAvailable();
 
 		if (value == 0) {
 			return false;
 		}
 
-		currentValue = (value_t) value;
+		// Filter
+		if(filter && !filter->accept(value)){
+			return false;
+		}
 
-		rf.resetAvailable();
+		currentValue = value;
+		readLastTime = millis(); // last change time
 
 		return true;
 	}
-
 
 	return false;
 
