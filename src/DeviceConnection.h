@@ -86,6 +86,9 @@ public:
 	Stream  *conn;
 	Command cmd;
 
+	bool connected = true;
+	uint16_t reconnectionsCount = 0;
+
 	// public methods
 	DeviceConnection();
 	DeviceConnection(Stream &serial);

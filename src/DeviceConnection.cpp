@@ -234,12 +234,12 @@ void DeviceConnection::printBuffer(){
 
 #if defined(ARDUINO) && ARDUINO >= 100
 size_t DeviceConnection::write(uint8_t b){
-	if(!conn || processing) return 0;
+	if(!conn || !connected || processing) return 0;
 	return conn->write(b);
 }
 #else
 void DeviceConnection::write(uint8_t b){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(b);
 }
 #endif
@@ -268,14 +268,14 @@ void DeviceConnection::send(char c ){
 }
 
 void DeviceConnection::send(const char str[]){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	write(START_BIT);
 	conn->write(str);
 	write(ACK_BIT);
 }
 
 void DeviceConnection::send(long values[], int size){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	char vbuffer[3];
 	for (int i = 0; i < size; ++i) {
@@ -288,7 +288,7 @@ void DeviceConnection::send(long values[], int size){
 
 
 void DeviceConnection::send(int values[], int size){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	char vbuffer[3]; // 3 digits
 	for (int i = 0; i < size; ++i) {
@@ -300,51 +300,51 @@ void DeviceConnection::send(int values[], int size){
 }
 
 void DeviceConnection::send(uint8_t n){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->write(n);
 	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(int n){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(unsigned int n){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(long n){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(unsigned long n){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
 
 void DeviceConnection::send(long n, int base){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->print(n, base);
 	conn->write(ACK_BIT);
 }
 void DeviceConnection::send(double n){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
 	conn->write(START_BIT);
 	conn->print(n);
 	conn->write(ACK_BIT);
 }
 
 void DeviceConnection::send(Command cmd, bool complete){
-	if(!conn || processing) return;
+	if(!conn || !connected || processing) return;
     // digitalWrite(10, LOW);
 	unsigned long values[] = {cmd.type, cmd.id, cmd.deviceID};
 
