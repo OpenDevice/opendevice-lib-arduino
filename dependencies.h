@@ -126,7 +126,6 @@
 #endif
 
 #if defined(_RCSwitch_h)
-	#include <RCSwitch.h>
 	#include <devices/RFSensor.cpp>
 #endif
 
