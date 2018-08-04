@@ -19,11 +19,50 @@
 #include "config.h"
 #include "DeviceConnection.h"
 
+
+class Device; // friend declaration
+
 extern "C"
 {
   // Definition of the listener function
   typedef bool (*DeviceListener) (uint8_t iid, value_t value);
 }
+
+/**
+ * Interface for filtering values
+ */
+class ValueFilter {
+public:
+	ValueFilter();
+	virtual ~ValueFilter();
+
+	virtual bool accept(value_t value){ return false; };
+
+	void setDevice(Device* _device){
+		device = _device;
+	}
+
+protected:
+	Device* device;
+
+};
+
+
+/**
+ * Interface for port IOExtender
+ */
+class IOExtender {
+public:
+	IOExtender();
+	virtual ~IOExtender();
+
+	virtual int digitalReadEx(uint16_t pin){ return -1;};
+	virtual int analogReadEx(uint16_t pin){ return -1;};
+	virtual void analogWriteEx(uint16_t pin, int val){};
+	virtual void digitalWriteEx(uint16_t pin, uint8_t val){};
+
+	virtual void loop(){};
+};
 
 /**
  * Base class of Devices
@@ -33,6 +72,7 @@ extern "C"
  */
 class Device
 {
+
 public:
 
 	enum DeviceType{
@@ -70,7 +110,7 @@ public:
 	const static uint8_t MAX_ANALOG_VALUE = 255;
 
 	uint8_t id;
-	uint8_t pin;
+	uint16_t pin;
 	value_t currentValue;
 	DeviceType type;
 	const char* deviceName;
@@ -79,6 +119,7 @@ public:
 	bool sensor;
 	int32_t readLastTime;
 	int32_t readInterval;
+	ValueFilter* filter;
 
 	uint8_t targetID; // associated device (used in sensors)
 
@@ -90,21 +131,23 @@ public:
 	uint8_t interruptMode;
 
 	Device();
-	Device(uint8_t ipin);
-	Device(uint8_t ipin, DeviceType type);
-	Device(uint8_t ipin, DeviceType type, bool sensor);
-	Device(uint8_t iid, uint8_t ipin, DeviceType type);
-	Device(uint8_t iid, uint8_t ipin, DeviceType type, bool sensor);
+	Device(uint16_t ipin);
+	Device(uint16_t ipin, DeviceType type);
+	Device(uint16_t ipin, DeviceType type, bool sensor);
+	Device(uint8_t iid, uint16_t ipin, DeviceType type);
+	Device(uint8_t iid, uint16_t ipin, DeviceType type, bool sensor);
 
 	/**
 	 * Change value / state of Device
 	 * @param sync - sync with server
 	 */
-	bool setValue(value_t value, bool sync = true);
+	virtual bool setValue(value_t value, bool sync = true);
 
 	void on();
 
 	void off();
+
+	void toggle();
 
 	bool isON() { return currentValue == HIGH; }
 
@@ -153,6 +196,10 @@ public:
 
 	void setSyncListener(DeviceListener listener);
 
+	Device* setFilter(ValueFilter* filter);
+
+	Device* setIOExtender(IOExtender* _extender);
+
 	bool notifyListeners();
 
 	int toString(char buffer[]);
@@ -162,7 +209,15 @@ private:
 	DeviceListener changeListener;
 	DeviceListener syncListerner;
 
-	void _init(char* name, uint8_t iid, uint8_t ipin, Device::DeviceType type, bool sensor);
+	IOExtender* ioExtender;
+
+	void _init(char* name, uint8_t iid, uint16_t ipin, Device::DeviceType type, bool sensor);
+
+protected:
+	int _digitalRead(uint16_t pin);
+	int _analogRead(uint16_t pin);
+	void _analogWrite(uint16_t pin, int val);
+	void _digitalWrite(uint16_t pin, uint8_t val);
 
 };
 

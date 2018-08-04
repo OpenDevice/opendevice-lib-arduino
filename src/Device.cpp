@@ -28,28 +28,28 @@ Device::Device(){
 	_init(NULL, 0, 0, DIGITAL, false);
 }
 
-Device::Device(uint8_t ipin){
+Device::Device(uint16_t ipin){
 	_init(NULL, 0, ipin, DIGITAL, false);
 }
 
-Device::Device(uint8_t ipin, DeviceType type){
+Device::Device(uint16_t ipin, DeviceType type){
 	_init(NULL, 0, ipin, type, false);
 }
 
-Device::Device(uint8_t ipin, DeviceType type, bool sensor){
+Device::Device(uint16_t ipin, DeviceType type, bool sensor){
 	_init(NULL, 0, ipin, type, sensor);
 }
 
-Device::Device(uint8_t _id, uint8_t _pin, DeviceType _type){
+Device::Device(uint8_t _id, uint16_t _pin, DeviceType _type){
 	_init(NULL, _id, _pin, _type, false);
 }
 
-Device::Device(uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
+Device::Device(uint8_t _id, uint16_t _pin, DeviceType _type, bool _sensor){
 	_init(NULL, _id, _pin, _type, _sensor);
 }
 
 
-void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool _sensor){
+void Device::_init(char* name, uint8_t _id, uint16_t _pin, DeviceType _type, bool _sensor){
 
 	id = _id;
 	pin = _pin;
@@ -65,6 +65,8 @@ void Device::_init(char* name, uint8_t _id, uint8_t _pin, DeviceType _type, bool
 	readInterval = 0;
 	readLastTime = 0;
 	currentValue = 0;
+	ioExtender = NULL;
+	filter = NULL;
 }
 
 
@@ -72,8 +74,12 @@ void Device::on(){
 	setValue(HIGH, true);
 }
 
-void  Device::off(){
+void Device::off(){
 	setValue(LOW, true);
+}
+
+void Device::toggle(){
+	setValue(!currentValue, true);
 }
 
 bool Device::setValue(value_t value, bool sync){
@@ -84,9 +90,9 @@ bool Device::setValue(value_t value, bool sync){
 
 			if(inverted) value = ! value;
 
-			digitalWrite(pin, (value == 0 ? LOW : HIGH));
+			_digitalWrite(pin, (value == 0 ? LOW : HIGH));
 		}else{
-			analogWrite(pin, value);
+			_analogWrite(pin, value);
 		}
 
 		notifyListeners(); // Notify internal listeners (onChange)
@@ -107,7 +113,7 @@ value_t Device::getValue(){
 	}else{
 		if(type == Device::DIGITAL){
 
-			uint8_t value = digitalRead(pin);
+			uint8_t value = _digitalRead(pin);
 
 			if(inverted) value = ! value;
 
@@ -115,7 +121,7 @@ value_t Device::getValue(){
 		}else if(type == Device::BOARD){
 			return 0;
 		}else{
-			return analogRead(pin);
+			return _analogRead(pin);
 		}
 	}
 
@@ -157,10 +163,10 @@ bool Device::hasChanged(){
 	value_t v = 0;
 
 	if(type == Device::DIGITAL){
-		v = digitalRead(pin); // READ and Invert state because (sensor) is a INPUT_PULLUP
+		v = _digitalRead(pin); // READ and Invert state because (sensor) is a INPUT_PULLUP
 		if(inverted) v = !v;
 	}else{
-		v = analogRead(pin);
+		v = _analogRead(pin);
 		//if(currentValue != v){
 			// call analog filter...
 		//}
@@ -174,12 +180,40 @@ bool Device::hasChanged(){
 
 	return false;
 }
+
+
+int Device::_digitalRead(uint16_t pin){
+	if(ioExtender) return ioExtender->digitalReadEx(pin);
+	else return digitalRead(pin);
+}
+
+int Device::_analogRead(uint16_t pin){
+	if(ioExtender) return ioExtender->analogReadEx(pin);
+	else return analogRead(pin);
+}
+
+void Device::_analogWrite(uint16_t pin, int val){
+	if(ioExtender) ioExtender->analogWriteEx(pin, val);
+	else analogWrite(pin, val);
+}
+
+void Device::_digitalWrite(uint16_t pin, uint8_t val){
+	if(ioExtender) ioExtender->digitalWriteEx(pin, val);
+	else digitalWrite(pin, val);
+}
+
 /**
  * This will be called on ODev.begin() to do extra initialization
  */
 void Device::init(){
 
-  // pinMode INIT
+	// Ignore default init() for io expander.
+	if(ioExtender){
+		// ioExtender.init();
+		return;
+	}
+
+	// pinMode INIT
 	if(pin > 0 && type != Device::BOARD){
 
 		// sensor - opering in inverted mode
@@ -243,6 +277,17 @@ void Device::setSyncListener(DeviceListener listener){
 	syncListerner = listener;
 }
 
+Device* Device::setFilter(ValueFilter* _filter){
+	filter = _filter;
+	filter->setDevice(this);
+	return this;
+}
+
+Device* Device::setIOExtender(IOExtender* _extender){
+	ioExtender = _extender;
+	return this;
+}
+
 /**
  * fire 'onChange' listener
  */
@@ -283,3 +328,36 @@ int Device::toString(char buffer[]){
 	//  Serial.println(buffer);
 	 return size;
 }
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Value Filter
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+ValueFilter::ValueFilter() : device(NULL) {
+
+}
+
+ValueFilter::~ValueFilter() {
+
+}
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Value Filter
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+IOExtender::IOExtender() {
+
+}
+
+IOExtender::~IOExtender() {
+
+}
+
+
+
+
