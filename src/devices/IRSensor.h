@@ -27,6 +27,7 @@
 #include "IRremote.h"
 #endif
 
+#include <IRrecv.h>
 
 /*
  * IRSensor.h
@@ -40,7 +41,7 @@ public:
 	IRSensor(uint8_t iid, uint8_t ipin);
 	virtual void init();
 	virtual bool hasChanged();
-	virtual size_t serializeExtraData(DeviceConnection *conn);
+//	virtual size_t serializeExtraData(DeviceConnection *conn);
 	virtual ~IRSensor();
 
 private:
