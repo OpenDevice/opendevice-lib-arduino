@@ -24,6 +24,7 @@
 #include "Device.h"
 #include "devices/CustomSensor.h"
 #include "utility/Logger.h"
+#include "utility/Timeout.h"
 #include "utility/build_defs.h"
 
 using namespace od;
@@ -59,11 +60,12 @@ private:
 	CommandCallback commands[MAX_COMMAND];
 
 	// Debouncing of normal pressing (for Sensor's)
-	long time;
+	unsigned long time;
 	bool autoControl; // Changes in the sensor should affect bonded devices..
 	long keepAliveTime;
 	long keepAliveMiss;
-	bool connected;
+	bool needSaveDevices;
+	Timeout saveDevicesTimer;
 
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
@@ -382,8 +384,8 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	void debug(const String &s);
 	#endif
 
-	Device* addSensor(const char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID);
-	Device* addSensor(const char* name, uint8_t pin, Device::DeviceType type);
+	Device* addSensor(const char* name, uint16_t pin, Device::DeviceType type, uint8_t targetID);
+	Device* addSensor(const char* name, uint16_t pin, Device::DeviceType type);
 	Device* addSensor(const char* name, Device& sensor);
 	Device* addSensor(const char* name, Device* sensor){
 		return addDevice(name, *sensor);
@@ -393,8 +395,8 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		return addDevice(name, *func);
 	}
 
-	Device* addDevice(const char* name, uint8_t pin, Device::DeviceType type, bool sensor,uint8_t id);
-	Device* addDevice(const char* name, uint8_t pin, Device::DeviceType type);
+	Device* addDevice(const char* name, uint16_t pin, Device::DeviceType type, bool sensor,uint8_t id);
+	Device* addDevice(const char* name, uint16_t pin, Device::DeviceType type);
 	Device* addDevice(Device& device);
 	Device* addDevice(const char* name, Device& device);
 
@@ -416,6 +418,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	Device* getDevice(uint8_t);
 	Device* getDeviceAt(uint8_t);
+	Device* getDevice(const char* name);
 
 	/**
 	 * This function generates a Module.ID/MAC (pseudo-random) to be used in the connection and save to EEPROM for future use.
@@ -469,9 +472,9 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	}
 
 
-
-	inline bool isConnected(){return connected;}
-	inline void setConnected(bool val){connected = val;}
+	bool isConnected(){
+		return (deviceConnection && deviceConnection->connected);
+	}
 
 	inline String readString() { return deviceConnection->readString(); }
 	inline int readInt(){ return deviceConnection->readInt(); }
@@ -495,7 +498,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		DeviceConnection *conn = deviceConnection;
 
 		messageReceived = false;
-		connected = true;
+		conn->connected = true;
 		keepAliveTime = millis();
 		keepAliveMiss = 0;
 
@@ -537,19 +540,25 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		// NOTE: This message is sent to each device
 		} else if (cmd.type == CommandType::GET_DEVICES) {
 
-			char buffer[DATA_BUFFER] = {0}; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
+			char buffer[DATA_BUFFER]; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
+			memset(buffer, 0, sizeof(buffer));
+
+			LOG_DEBUG("GET_DEVICES", deviceLength);
 
 			for (int i = 0; i < deviceLength; ++i) {
+
 				Device *device = getDeviceAt(i);
+
+				Serial.printf("SEND (%d/%d): %s \n", i+1, deviceLength, device->deviceName);
 
 				conn->doStart();
 				conn->print(CommandType::GET_DEVICES_RESPONSE);
 				conn->doToken();
-				conn->print(cmd.id);
+				conn->print(cmd.id); // cmd index
 				conn->doToken();
-				conn->print(i+1);
+				conn->print(i + 1); // track current index
 				conn->doToken();
-				conn->print(deviceLength);
+				conn->print(deviceLength); // max devices
 				conn->doToken();
 
 				device->toString(buffer);
@@ -559,6 +568,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 				memset(buffer, 0, sizeof(buffer));
 
 				conn->doEnd();
+
 			}
 
 	  // Save devices ID on storage
@@ -568,14 +578,14 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 			int length = conn->readInt();
 
-			Config.devicesLength = length;
-
 			LOG_DEBUG("SYNC", length);
 
 			if(length!= deviceLength) {   // Invalid Match
 				notifyReceived(ResponseStatus::BAD_REQUEST);
 				return;
 			}
+
+			Config.devicesLength = length;
 
 			for (size_t i = 0; i < length; i++) {
 				int uid = conn->readInt();

@@ -28,6 +28,7 @@ namespace od {
 			EEPROM.get(CONFIG_START, Config);
 		} else{
 			memset(this->devices, 0, MAX_DEVICE); // initialize defaults as 0
+			memset(this->devicesState, 0, MAX_DEVICE); // initialize defaults as 0
 			// save(); // init and save defaults
 		}
 
@@ -45,22 +46,22 @@ namespace od {
   /** Save current configuration to storage */
   void ConfigClass::save(){
     EEPROM.put(CONFIG_START, Config);
-		#if defined(ESP8266)
-			EEPROM.commit();
-		#endif 
+	#if defined(ESP8266)
+		EEPROM.commit();
+	#endif
   }
 
  /**
 	 * Clear saved setings
 	 */
   void ConfigClass::clear(){
-    
+
 		for (int i = CONFIG_START ; i < CONFIG_START + sizeof(Config) ; i++) {
 		  EEPROM.write(i, 0);
 		}
 
 		#if defined(ESP8266)
 		EEPROM.commit();
-		#endif  
+		#endif
   }
 }

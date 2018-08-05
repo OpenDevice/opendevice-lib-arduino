@@ -15,9 +15,7 @@
 #define COMMAND_H_
 
 #include <inttypes.h>
-
-/* Define value type for devince */
-typedef double value_t;
+#include "config.h"
 
 namespace CommandType {
 	enum CommandType {

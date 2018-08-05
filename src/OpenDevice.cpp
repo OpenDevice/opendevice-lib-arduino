@@ -16,21 +16,27 @@
 
 volatile uint8_t* PIN_INTERRUPT = 0;
 
+
 /*
  * OpenDeviceClass.cpp
  *
  *  Created on: 27/06/2014
  *      Author: ricardo
  */
-OpenDeviceClass::OpenDeviceClass() {
+OpenDeviceClass::OpenDeviceClass() :
+		saveDevicesTimer(SAVE_DEVICE_INTERVAL){
 	deviceConnection = NULL;
 	autoControl = false;
-	connected = false;
 	keepAliveTime = 0;
 	keepAliveMiss = 0;
 	time = 0;
 	deviceLength = 0;
 	commandsLength = 0;
+	needSaveDevices = false;
+
+	if(SAVE_DEVICE_INTERVAL == 0) saveDevicesTimer.disable();
+	else saveDevicesTimer.enable();
+
 	for (int i = 0; i < MAX_DEVICE; i++) {
 		devices[i] = NULL;
 	}
@@ -137,9 +143,6 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 	
 	Logger.debug("Firmware", version); // from build_defs.h
 
-	// Load Device(ID) from Storage and set in devices
-	loadDevicesFromStorage();
-
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
 		if(devices[i]->interruptEnabled){
@@ -150,6 +153,8 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 		}
 	}
 
+	// Load Device(ID) / Value from Storage and set in devices
+	loadDevicesFromStorage();
 
 	if(deviceConnection){
 		deviceConnection->setDefaultListener(&(OpenDeviceClass::onMessageReceived));
@@ -167,23 +172,40 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 void OpenDeviceClass::_loop() {
 
 	if(deviceConnection){
+
 		deviceConnection->checkDataAvalible();
+
+		// Send PING/KeepAlive if enabled
+		if(Config.keepAlive){
+		  unsigned long currentMillis = millis();
+		  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
+				keepAliveTime = currentMillis;
+				keepAliveMiss++;
+				send(cmd(CommandType::PING_REQUEST));
+				if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
+					deviceConnection->connected = false;
+				}
+		  }
+		}
 	}
 
 	checkSensorsStatus();
 
-	// Send PING/KeepAlive if enabled
-	if(connected && Config.keepAlive){
-	  unsigned long currentMillis = millis();
-	  if(currentMillis - keepAliveTime > KEEP_ALIVE_INTERVAL) {
-			keepAliveTime = currentMillis;
-			keepAliveMiss++;
+	// Save
+	if(needSaveDevices && saveDevicesTimer.expired()){
 
-			send(cmd(CommandType::PING_REQUEST));
-			if(keepAliveMiss > KEEP_ALIVE_MAX_MISSING){
-				connected = false;
-			}
-	  }
+		unsigned long time = micros();
+
+		for (int i = 0; i < deviceLength; ++i) {
+			Device *device = getDeviceAt(i);
+			Config.devicesState[i] = device->currentValue;
+		}
+
+		save(); // TODO: improve saving only device state
+		saveDevicesTimer.reset();
+		needSaveDevices = false;
+
+		Logger.debug("Saving devices, time(uS)", micros() - time);
 	}
 
 
@@ -191,7 +213,6 @@ void OpenDeviceClass::_loop() {
 	if(Config.pinReset != 255 && digitalRead(Config.pinReset) == LOW){
 		reset();
 	}
-
 }
 
 void OpenDeviceClass::enableKeepAlive(bool val){
@@ -208,6 +229,7 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
  * Fired by Device when user change device state in Sketch
  */
 bool OpenDeviceClass::onDeviceChanged(uint8_t iid, value_t value) {
+	ODev.needSaveDevices = true;
 	ODev.debugChange(iid, value);
 	ODev.sendValue(ODev.getDevice(iid)); // sync with server
 	return true;
@@ -238,6 +260,7 @@ void OpenDeviceClass::onInterruptReceived(){
 
 
 void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
+	needSaveDevices = true;
 	Device* sensor = getDevice(id);
 	Device* device = getDevice(sensor->targetID);
 
@@ -267,7 +290,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
 	lastCMD.deviceID = sensor->id;
 	lastCMD.value = value;
 
-	if(connected){
+	if(deviceConnection->connected){
 		deviceConnection->send(lastCMD, false);
 		// Check extra data to send.
 		sensor->serializeExtraData(deviceConnection);
@@ -278,7 +301,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
 
 
 void OpenDeviceClass::send(Command cmd){
-	if(connected) deviceConnection->send(cmd, true);
+	deviceConnection->send(cmd, true);
 }
 
 Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, value_t value){
@@ -346,11 +369,11 @@ void OpenDeviceClass::debugChange(uint8_t id, value_t value){
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-Device* OpenDeviceClass::addSensor(const char* name, uint8_t pin, Device::DeviceType type){
+Device* OpenDeviceClass::addSensor(const char* name, uint16_t pin, Device::DeviceType type){
 	return addSensor(name, pin, type, 0);
 }
 
-Device* OpenDeviceClass::addSensor(const char* name, uint8_t pin, Device::DeviceType type, uint8_t targetID){
+Device* OpenDeviceClass::addSensor(const char* name, uint16_t pin, Device::DeviceType type, uint8_t targetID){
 	Device* v = addDevice(name, pin, type, true, 0);
 	if(v) devices[deviceLength-1]->targetID = targetID;
 	return v;
@@ -360,7 +383,7 @@ Device* OpenDeviceClass::addSensor(const char* name, Device& sensor){
 	return addDevice(name, sensor);
 }
 
-Device* OpenDeviceClass::addDevice(const char* name, uint8_t pin, Device::DeviceType type){
+Device* OpenDeviceClass::addDevice(const char* name, uint16_t pin, Device::DeviceType type){
 	return addDevice(name, pin, type, false, 0);
 }
 
@@ -401,7 +424,7 @@ Device* OpenDeviceClass::addDevice(const char* name, Device& device){
 	}
 }
 
-Device* OpenDeviceClass::addDevice(const char* name, uint8_t pin, Device::DeviceType type, bool sensor, uint8_t id){
+Device* OpenDeviceClass::addDevice(const char* name, uint16_t pin, Device::DeviceType type, bool sensor, uint8_t id){
 	devices[deviceLength] = new Device(id, pin, type, sensor);
 	return addDevice(name, *devices[deviceLength]);
 }
@@ -447,10 +470,10 @@ void OpenDeviceClass::checkSensorsStatus(){
 	// Arduino DOC (http://arduino.cc/en/Reference/analogRead):
 	// Takes about 100 microseconds (0.0001 s) to read an analog input, so the maximum reading rate is about 10,000 times
 
-	if(time == 0) time = millis();
+	if(time == 0) time = micros();
 
 	// don't sample analog/digital more than {READING_INTERVAL} ms
-	bool pollingReady = millis() - time > READING_INTERVAL;
+	bool pollingReady = micros() - time > READING_INTERVAL;
 
 	for (int i = 0; i < deviceLength; i++) {
 
@@ -458,8 +481,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 		bool syncCurrent = false;
 
-    // Cheak
-		bool canReadSensor = (pollingReady && devices[i]->canReadSensor());
+		bool canReadSensor = (pollingReady && devices[i]->canReadSensor()); // check elapsed interval (if exist)
 
 		// polling mode
 		if(canReadSensor && devices[i]->interruptEnabled == false && devices[i]->hasChanged()){
@@ -478,7 +500,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 	}
 
-	if(pollingReady) time = millis(); // reset
+	if(pollingReady) time = micros(); // reset
 
 
 
@@ -544,6 +566,20 @@ Device* OpenDeviceClass::getDeviceAt(uint8_t index){
 	if(index <= deviceLength){
 		return devices[index];
 	}
+
+    return NULL;
+}
+
+Device* OpenDeviceClass::getDevice(const char* name){
+
+
+    for (int i = 0; i < deviceLength; i++) {
+
+    	if(strcmp(devices[i]->deviceName,name) == 0){
+    		return devices[i];
+    	}
+    }
+
 
     return NULL;
 }
@@ -684,23 +720,32 @@ void OpenDeviceClass::debug(const String &str){
 #endif
 
 /**
- * Verify if was saved the devices(IDs) on the internal storage.
+ * Verify if was saved the devices(IDs) and values on the internal storage.
  * If not saved, then the server will send IDs.
  */
 void OpenDeviceClass::loadDevicesFromStorage(){
 	#if(LOAD_DEVICE_STORAGE)
 
-		LOG_DEBUG("Stored Devices ", Config.devicesLength);
+		Logger.debug("Load Stored Devices ", Config.devicesLength);
 
-    // Only restore IDs if has no change
+		// Only restore IDs if has no change
 		// Otherise IDs will loaded from server
 		if(Config.devicesLength == deviceLength){
-				for (int i = 0; i < deviceLength; ++i) {
-					Device *device = getDeviceAt(i);
-					if(device->id == 0 && i < Config.devicesLength){
-						device->id = Config.devices[i];
+			for (int i = 0; i < deviceLength; ++i) {
+				Device *device = getDeviceAt(i);
+				if(device->id == 0 && i < Config.devicesLength){
+					device->id = Config.devices[i];
+					device->setValue(Config.devicesState[i], false);
+
+					//ogger.debug(device->deviceName, Config.devicesState[i]);
+					if(Config.debugMode){
+						Serial.print(device->deviceName);
+						Serial.print(" = ");
+						Serial.println(Config.devicesState[i]);
 					}
+
 				}
+			}
 		}
 
 	#endif

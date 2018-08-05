@@ -50,9 +50,10 @@
 #define ENABLE_DEVICE_INTERRUPTION 0
 #define ENABLE_SYNC_DEVICEID 1    // Sync DeviceID from server and save on EEPROM.
 #define ENABLE_PREFIX_NAME 0      // Add Module name to Devices
-#define LOAD_DEVICE_STORAGE 0     // Load deviceID from EEPROM ? (enable in production)
+#define LOAD_DEVICE_STORAGE 1     // Load deviceID from EEPROM ? (enable in production)
+#define SAVE_DEVICE_INTERVAL 5000     // Set 0 to disable save device state interval
 
-#define RECONNECT_TIMEOUT 30000		
+#define RECONNECT_TIMEOUT 30000	//ms
 
 // #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 #define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)
@@ -100,6 +101,9 @@
 #endif
 
 
+/* Define value type for devince */
+typedef double value_t;
+
 // May be better use: https://github.com/mrRobot62/Arduino-logging-library OU -VDEBUG(see ESP8266)
 enum DebugTarget{
 	DEBUG_SERIAL,
@@ -135,7 +139,8 @@ namespace od {
 	  uint8_t debugTarget;
 	  uint8_t connectionMode;
 	  int8_t devicesLength;
-	  uint16_t devices[MAX_DEVICE];
+	  uint16_t devices[MAX_DEVICE]; // DeviceIDs
+	  value_t devicesState[MAX_DEVICE]; // Devices state
 
 	  void load();
 	  void save();
@@ -149,3 +154,4 @@ namespace od {
 
 
 #endif /* OPENDEVICE_CONFIG_H_ */
+
