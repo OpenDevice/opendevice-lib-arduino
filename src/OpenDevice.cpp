@@ -24,7 +24,8 @@ volatile uint8_t* PIN_INTERRUPT = 0;
  *      Author: ricardo
  */
 OpenDeviceClass::OpenDeviceClass() :
-		saveDevicesTimer(SAVE_DEVICE_INTERVAL){
+		saveAndDebugTimer(SAVE_DEVICE_INTERVAL, true),
+		resetTimer(RESET_TIMEOUT, false){
 	deviceConnection = NULL;
 	autoControl = false;
 	keepAliveTime = 0;
@@ -34,8 +35,7 @@ OpenDeviceClass::OpenDeviceClass() :
 	commandsLength = 0;
 	needSaveDevices = false;
 
-	if(SAVE_DEVICE_INTERVAL == 0) saveDevicesTimer.disable();
-	else saveDevicesTimer.enable();
+	if(SAVE_DEVICE_INTERVAL == 0) saveAndDebugTimer.disable();
 
 	for (int i = 0; i < MAX_DEVICE; i++) {
 		devices[i] = NULL;
@@ -156,6 +156,9 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 	// Load Device(ID) / Value from Storage and set in devices
 	loadDevicesFromStorage();
 
+	// Trace restarts using VALUE of board
+	devices[0]->currentValue++;
+
 	if(deviceConnection){
 		deviceConnection->setDefaultListener(&(OpenDeviceClass::onMessageReceived));
 	}
@@ -170,6 +173,8 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 
 void OpenDeviceClass::_loop() {
+
+	loops++;
 
 	if(deviceConnection){
 
@@ -191,27 +196,64 @@ void OpenDeviceClass::_loop() {
 
 	checkSensorsStatus();
 
-	// Save
-	if(needSaveDevices && saveDevicesTimer.expired()){
+	if(saveAndDebugTimer.expired()){
 
-		unsigned long time = micros();
+		// Debug info
+		#if defined(SHOW_DEBUG_STATE)
 
-		for (int i = 0; i < deviceLength; ++i) {
-			Device *device = getDeviceAt(i);
-			Config.devicesState[i] = device->currentValue;
+			Logger.printLoop('=', 60);
+
+			Serial.print("= Uptime: "); Serial.print((millis() / 1000) / 60); Serial.print("min");
+			Serial.print(" || Loop(s): "); Serial.print(loops);
+			Serial.print(" || Restart(s): "); Serial.print(devices[0]->currentValue);
+			Serial.println();
+
+			Serial.print("= Connected: "); Serial.print(isConnected());
+
+			#if defined(ESP8266)
+				wl_status_t status = WiFi.status();
+				Serial.print(" || WIFI: "); Serial.print(status);
+				if(status == WL_CONNECTED) Serial.print(" || RSSI: "); Serial.print(WiFi.RSSI());
+				Serial.println();
+				Serial.print("= RAM: "); Serial.print(ESP.getFreeHeap());
+				Serial.print(" || EPROM/SIZE: "); Serial.print(ESP.getFlashChipSize());
+			#endif
+				Serial.println();
+
+			loops=0;
+
+			Logger.printLoop('=', 60);
+
+		#endif
+
+		// Save
+		if(needSaveDevices){
+			unsigned long time = micros();
+
+			for (int i = 0; i < deviceLength; ++i) {
+				Device *device = getDeviceAt(i);
+				Config.devicesState[i] = device->currentValue;
+			}
+
+			save(); // TODO: improve saving only device state
+			saveAndDebugTimer.reset();
+			needSaveDevices = false;
+
+			Logger.debug("Saving devices, time(uS)", micros() - time);
 		}
 
-		save(); // TODO: improve saving only device state
-		saveDevicesTimer.reset();
-		needSaveDevices = false;
 
-		Logger.debug("Saving devices, time(uS)", micros() - time);
 	}
 
 
 	// Check reset
 	if(Config.pinReset != 255 && digitalRead(Config.pinReset) == LOW){
-		reset();
+
+		if(resetTimer.isEnabled()) resetTimer.enable(); // neable timer
+
+		if(resetTimer.expired()){
+			reset();
+		}
 	}
 }
 
@@ -230,8 +272,9 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
  */
 bool OpenDeviceClass::onDeviceChanged(uint8_t iid, value_t value) {
 	ODev.needSaveDevices = true;
-	ODev.debugChange(iid, value);
-	ODev.sendValue(ODev.getDevice(iid)); // sync with server
+	Device* device = ODev.getDevice(iid);
+	ODev.debugChange(device);
+	ODev.sendValue(device); // sync with server
 	return true;
 }
 
@@ -259,15 +302,14 @@ void OpenDeviceClass::onInterruptReceived(){
 }
 
 
-void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
+void OpenDeviceClass::onSensorChanged(Device* sensor){
 	needSaveDevices = true;
-	Device* sensor = getDevice(id);
 	Device* device = getDevice(sensor->targetID);
 
 //    if(id < 100) // FIXME: detectar se é o IR.
 //    	value = !value;        // NOTA: Os valores do Swicth sao invertidos
 
-  debugChange(id, value);
+	debugChange(sensor);
 
 	if(autoControl){
 		if(device != NULL){
@@ -288,7 +330,7 @@ void OpenDeviceClass::onSensorChanged(uint8_t id, value_t value){
 	lastCMD.id = 0;
     lastCMD.type = Device::TypeToCommand(sensor->type);
 	lastCMD.deviceID = sensor->id;
-	lastCMD.value = value;
+	lastCMD.value = sensor->currentValue;
 
 	if(deviceConnection->connected){
 		deviceConnection->send(lastCMD, false);
@@ -338,25 +380,23 @@ void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
   send(lastCMD);
 }
 
-void OpenDeviceClass::debugChange(uint8_t id, value_t value){
+void OpenDeviceClass::debugChange(Device* device){
 
 	if(Config.debugMode){
 
 		if(Config.debugTarget == 1){
 			deviceConnection->doStart();
 			deviceConnection->print("DB:CHANGE ");
-			Device* device =  ODev.getDevice(id);
 			deviceConnection->print(device->deviceName);
 			deviceConnection->print("=");
-			deviceConnection->print(value);
+			deviceConnection->print(device->currentValue);
 			deviceConnection->doEnd();
 		}else{
 			#if(ENABLE_SERIAL)
 			Serial.print("DB:CHANGE:");
-			Device* device =  ODev.getDevice(id);
 			Serial.print(device->deviceName);
 			Serial.print("=");
-			Serial.println(value, DEC);
+			Serial.println(device->currentValue, DEC);
 			#endif
 		}
 	}
@@ -493,7 +533,7 @@ void OpenDeviceClass::checkSensorsStatus(){
 
 		if(syncCurrent){
 			if(devices[i]->notifyListeners()){
-				onSensorChanged(devices[i]->id, devices[i]->currentValue);
+				onSensorChanged(devices[i]);
 			}
 			devices[i]->needSync = false;
 		}
@@ -735,9 +775,12 @@ void OpenDeviceClass::loadDevicesFromStorage(){
 				Device *device = getDeviceAt(i);
 				if(device->id == 0 && i < Config.devicesLength){
 					device->id = Config.devices[i];
-					device->setValue(Config.devicesState[i], false);
 
-					//ogger.debug(device->deviceName, Config.devicesState[i]);
+					if(! (device->sensor && device->type == Device::DIGITAL)){ // ignore digital sensors, and board
+						device->setValue(Config.devicesState[i], false);
+					}
+
+					//Logger.debug(device->deviceName, Config.devicesState[i]);
 					if(Config.debugMode){
 						Serial.print(device->deviceName);
 						Serial.print(" = ");

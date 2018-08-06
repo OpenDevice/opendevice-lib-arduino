@@ -67,6 +67,14 @@ typedef struct{
 			debug(title,messasge,newLine);
 		}
 
+		void printLoop(char txt, uint8_t times){
+			for (uint8_t i = 0; i < times; ++i) {
+				Serial.print(txt);
+			}
+
+			Serial.println();
+		}
+
 
 
 	//#ifdef __FlashStringHelper

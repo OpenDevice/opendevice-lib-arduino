@@ -52,8 +52,10 @@
 #define ENABLE_PREFIX_NAME 0      // Add Module name to Devices
 #define LOAD_DEVICE_STORAGE 1     // Load deviceID from EEPROM ? (enable in production)
 #define SAVE_DEVICE_INTERVAL 5000     // Set 0 to disable save device state interval
+#define SHOW_DEBUG_STATE 1          // Print debug (trace performace problems) information in interval of 'SAVE_DEVICE_INTERVAL'
 
 #define RECONNECT_TIMEOUT 30000	//ms
+#define RESET_TIMEOUT 5000     // Used in conjuntion with Config.resetPin, to add reset function for custon pin
 
 // #define ENABLE_REMOTE_WIFI_SETUP 0   // disable to reduce flash usage
 #define ENABLE_SSL 0 // disable to reduce flash/memory usage (tested only for MQTT/ESP8266)

@@ -26,12 +26,12 @@ MQTTWifiConnection::~MQTTWifiConnection() {
 }
 
 void MQTTWifiConnection::begin(){
-	WifiConnection::begin();
-	Logger.debug("MQTT", "BEGIN");
-	mqtt.setServer(Config.server, MQTT_PORT);
-	mqtt.setCallback(mqttCallback);
-	mqttClient->begin();
-	mqttConnect();
+	 WifiConnection::begin();
+	 Logger.debug("MQTT", "BEGIN");
+	 mqtt.setServer(Config.server, MQTT_PORT);
+	 mqtt.setCallback(mqttCallback);
+	 mqttClient->begin();
+	 mqttConnect();
 }
 
 void MQTTWifiConnection::disconnect(){
@@ -56,22 +56,24 @@ bool MQTTWifiConnection::checkDataAvalible(void){
 		Logger.debug("Got IP", WiFi.localIP());
 	}
 
+
 	// Reconnect MQTT if OFFLINE and not have Client (TcpServer)
-	if (!mqtt.connected() && (mqttTimeout.expired() || !mqttTimeout.isEnabled()) &&  !WifiConnection::client.connected()) {
-		if(hasWiFi || WiFi.getMode() == WIFI_AP){
+	if (!mqtt.connected() && (mqttTimeout.expired() || !mqttTimeout.isEnabled()) && !WifiConnection::client.connected()) {
+		if (hasWiFi || WiFi.getMode() == WIFI_AP) {
 			mqttConnect();
 		}
 	}
 
-	if (mqtt.connected()){
+	if (mqtt.connected()) {
 		Config.keepAlive = false; // on MQTT is not required
 		connected = true;
 		mqtt.loop();
 		mqttTimeout.disable();
 		setStream(mqttClient);
 		return DeviceConnection::checkDataAvalible();
-	}else{ // TCP SERVER...
-		if(!mqttTimeout.isEnabled()) mqttTimeout.enable();
+	} else { // TCP SERVER...
+		if (!mqttTimeout.isEnabled())
+			mqttTimeout.enable();
 		Config.keepAlive = true; // on raw TCP is  required
 		connected = false;
 		return WifiConnection::checkDataAvalible();

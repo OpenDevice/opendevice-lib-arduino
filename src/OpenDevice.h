@@ -65,13 +65,16 @@ private:
 	long keepAliveTime;
 	long keepAliveMiss;
 	bool needSaveDevices;
-	Timeout saveDevicesTimer;
+	Timeout saveAndDebugTimer;
+	Timeout resetTimer;
+	unsigned long loops=0; // loop couting debug (trace performace problems)
+
 
 	// Internal Listeners..
 	// NOTE: Static because: deviceConnection->setDefaultListener
 	static bool onDeviceChanged(uint8_t iid, value_t value);
 
-	void onSensorChanged(uint8_t id, value_t value);
+	void onSensorChanged(Device* sensor);
 
 	void notifyReceived(ResponseStatus::ResponseStatus status);
 
@@ -79,7 +82,7 @@ private:
 	void clear(Command cmd);
 
 	Command resp(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
-	void debugChange(uint8_t id, value_t value);
+	void debugChange(Device* device);
 
 	void _loop();
 
@@ -511,7 +514,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		if (cmd.deviceID > 0) {
 			Device *foundDevice = getDevice(cmd.deviceID);
 			if (foundDevice != NULL) {
-				debugChange(foundDevice->id, cmd.value);
+				debugChange(foundDevice);
 				foundDevice->setValue(cmd.value, false);
 				foundDevice->deserializeExtraData(&cmd, conn);
 				notifyReceived(ResponseStatus::SUCCESS);
@@ -549,7 +552,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 				Device *device = getDeviceAt(i);
 
-				Serial.printf("SEND (%d/%d): %s \n", i+1, deviceLength, device->deviceName);
+				// Serial.printf("SEND (%d/%d): %s \n", i+1, deviceLength, device->deviceName);
 
 				conn->doStart();
 				conn->print(CommandType::GET_DEVICES_RESPONSE);
