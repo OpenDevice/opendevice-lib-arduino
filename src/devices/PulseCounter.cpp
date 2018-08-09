@@ -29,7 +29,6 @@ void PulseCounter::onInterrupt(void)
 }
 
 void PulseCounter::init(){
-	pinMode(pin, INPUT_PULLUP);
 	attachInterrupt(pin, std::bind(&PulseCounter::onInterrupt, this), mode);
 }
 
