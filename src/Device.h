@@ -202,7 +202,7 @@ public:
 
 	bool notifyListeners();
 
-	int toString(char buffer[]);
+	int toString(Print* conn);
 
 private:
 

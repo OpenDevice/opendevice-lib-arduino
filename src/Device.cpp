@@ -301,32 +301,43 @@ bool Device::notifyListeners(){
 
 
 // [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
-int Device::toString(char buffer[]){
-	int itype = type;
+int Device::toString(Print* conn){
 
 	char v_str[6];
 	/* 4 is mininum width, 2 is precision; float value is copied onto str_temp*/
 	dtostrf(getValue(), 4, 2, v_str);
 
-	char name[MAX_DEVICE_NAME];
-	memset(name,0, sizeof(name));
+	conn->print('[');
 
 	#if(ENABLE_PREFIX_NAME)
 		if(type != Device::BOARD){
-			strcat( name, od::Config.moduleName );
-			strcat( name, "::" );
+			conn->print(od::Config.moduleName);
+			conn->print("::");
 		}
 	#endif
 
-	strcat( name, deviceName );
+	conn->print(deviceName);
+	conn->print(',');
+	conn->print(id);
+	conn->print(',');
+	conn->print(pin);
+	conn->print(',');
+	conn->print(v_str);
+	conn->print(',');
+	conn->print(targetID);
+	conn->print(',');
+	conn->print((sensor ? 1 : 0));
+	conn->print(',');
+	conn->print((int)type);
+	conn->print(']');
 
-	int size = sprintf (buffer, "[%s,%d,%d,%s,%d,%d,%d]", 
-				(name != NULL ? name : ""),
-				id, pin, v_str, targetID, (sensor ? 1 : 0), itype);
+//	int size = sprintf (buffer, "[%s,%d,%d,%s,%d,%d,%d]",
+//				(name != NULL ? name : ""),
+//				id, pin, v_str, targetID, (sensor ? 1 : 0), itype);
 
-  //  Serial.print(">>>>>> Device :");
-	//  Serial.println(buffer);
-	 return size;
+//  Serial.print(">>>>>> Device :");
+//  Serial.println(buffer);
+	 return 0;
 }
 
 

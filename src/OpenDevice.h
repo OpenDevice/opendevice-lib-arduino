@@ -543,9 +543,6 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		// NOTE: This message is sent to each device
 		} else if (cmd.type == CommandType::GET_DEVICES) {
 
-			char buffer[DATA_BUFFER]; // FIXME: daria para usar o mesmo buffer do deviceConnection ??
-			memset(buffer, 0, sizeof(buffer));
-
 			LOG_DEBUG("GET_DEVICES", deviceLength);
 
 			for (int i = 0; i < deviceLength; ++i) {
@@ -564,11 +561,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 				conn->print(deviceLength); // max devices
 				conn->doToken();
 
-				device->toString(buffer);
-
-				conn->print(buffer); // Write array to connection..
-
-				memset(buffer, 0, sizeof(buffer));
+				device->toString(conn);
 
 				conn->doEnd();
 
