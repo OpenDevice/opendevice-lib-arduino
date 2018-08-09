@@ -13,7 +13,7 @@
 
 class PulseCounter: public Device {
 public:
-	PulseCounter(uint8_t pin, uint32_t _debounceTime = 0);
+	PulseCounter(uint8_t pin, int mode, uint32_t _debounceTime = 0);
 	virtual ~PulseCounter();
 
 	bool setValue(value_t value, bool sync);
@@ -27,6 +27,7 @@ public:
 
 private:
 	uint32_t debounceTime;
+	int mode;
 
 };
 
