@@ -23,6 +23,7 @@
 #include "DeviceConnection.h"
 #include "Device.h"
 #include "devices/CustomSensor.h"
+#include "devices/VirtualDevice.h"
 #include "utility/Logger.h"
 #include "utility/Timeout.h"
 #include "utility/build_defs.h"
