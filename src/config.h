@@ -51,7 +51,7 @@
 #define ENABLE_SYNC_DEVICEID 1    // Sync DeviceID from server and save on EEPROM.
 #define ENABLE_PREFIX_NAME 0      // Add Module name to Devices
 #define LOAD_DEVICE_STORAGE 1     // Load deviceID from EEPROM ? (enable in production)
-#define SAVE_DEVICE_INTERVAL 5000     // Set 0 to disable save device state interval
+#define SAVE_DEVICE_INTERVAL 30000     // Set 0 to disable save device state interval
 #define SHOW_DEBUG_STATE 1          // Print debug (trace performace problems) information in interval of 'SAVE_DEVICE_INTERVAL'
 
 #define RECONNECT_TIMEOUT 30000	//ms

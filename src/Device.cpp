@@ -232,11 +232,11 @@ void Device::init(){
 			}
 
 		}else{
-				if (sensor) {
-					pinMode(pin, INPUT);
-				} else {
-					pinMode(pin, OUTPUT);
-				}
+			if (sensor) {
+				pinMode(pin, INPUT);
+			} else {
+				pinMode(pin, OUTPUT);
+			}
 		}
 
 	}

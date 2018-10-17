@@ -204,8 +204,8 @@ void OpenDeviceClass::_loop() {
 			Logger.printLoop('=', 60);
 
 			Serial.print("= Uptime: "); Serial.print((millis() / 1000) / 60); Serial.print("min");
-			Serial.print(" || Loop(s): "); Serial.print(loops);
-			Serial.print(" || Restart(s): "); Serial.print(devices[0]->currentValue);
+			Serial.print(" || Loops: "); Serial.print(loops / SAVE_DEVICE_INTERVAL);
+			Serial.print(" || Restarts: "); Serial.print(devices[0]->currentValue);
 			Serial.println();
 
 			Serial.print("= Connected: "); Serial.print(isConnected());
@@ -249,11 +249,16 @@ void OpenDeviceClass::_loop() {
 	// Check reset
 	if(Config.pinReset != 255 && digitalRead(Config.pinReset) == LOW){
 
-		if(resetTimer.isEnabled()) resetTimer.enable(); // neable timer
+		if(!resetTimer.isEnabled()){
+			Serial.println("Starting timmer...");
+			resetTimer.enable(); // neable timer
+		}
 
 		if(resetTimer.expired()){
 			reset();
 		}
+	}else if(Config.pinReset != 255 && resetTimer.isEnabled()){ // PIN released before reset
+		resetTimer.disable();
 	}
 }
 
@@ -707,8 +712,8 @@ void OpenDeviceClass::showFreeRam() {
 void OpenDeviceClass::reset() {
 	#if defined(ESP8266)
 		LOG_DEBUG(F("DB:Disconnecting..."));
-		deviceConnection->disconnect();
-		delay(2000);
+		if(deviceConnection) deviceConnection->disconnect();
+		delay(1000);
 		LOG_DEBUG(F("DB:Reseting..."));
 		ESP.reset();
 		delay(2000);
@@ -776,7 +781,7 @@ void OpenDeviceClass::loadDevicesFromStorage(){
 				if(device->id == 0 && i < Config.devicesLength){
 					device->id = Config.devices[i];
 
-					if(! (device->sensor && device->type == Device::DIGITAL)){ // ignore digital sensors, and board
+					if(! (device->sensor && device->type == Device::DIGITAL)){ // ignore digital sensors
 						device->setValue(Config.devicesState[i], false);
 					}
 

@@ -205,15 +205,13 @@ public:
 	int toString(Print* conn);
 
 private:
-
-	DeviceListener changeListener;
-	DeviceListener syncListerner;
-
-	IOExtender* ioExtender;
-
 	void _init(char* name, uint8_t iid, uint16_t ipin, Device::DeviceType type, bool sensor);
 
 protected:
+	DeviceListener changeListener;
+	DeviceListener syncListerner;
+	IOExtender* ioExtender;
+
 	int _digitalRead(uint16_t pin);
 	int _analogRead(uint16_t pin);
 	void _analogWrite(uint16_t pin, int val);

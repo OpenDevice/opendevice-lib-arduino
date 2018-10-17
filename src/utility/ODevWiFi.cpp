@@ -70,7 +70,7 @@ namespace od {
       }
     
     // Check if setup pin is pressed !
-    }else if (digitalRead(Config.pinReset) == LOW){
+    }else if (Config.pinReset != 255 && digitalRead(Config.pinReset) == LOW){
 
       if (!wifiManager.startConfigPortal(Config.moduleName, apPassword)) {
         Serial.println("ODev: Failed to connect and hit timeout (RESETING...)");
