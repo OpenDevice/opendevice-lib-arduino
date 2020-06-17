@@ -245,6 +245,9 @@ void DeviceConnection::write(uint8_t b){
 #endif
 
 
+bool DeviceConnection::canSend(){
+	return connected && !processing;
+}
 
 void DeviceConnection::doStart(){
 	flush();
@@ -255,11 +258,14 @@ void DeviceConnection::doToken(){ // FIXME: change name to putToken();
 	write(SEPARATOR);
 }
 
+void DeviceConnection::putSeparator(){ 
+	write(SEPARATOR);
+}
+
 void DeviceConnection::doEnd(){ // FIXME: change name to putEnd();
 	write(ACK_BIT);
 	flush();
 }
-
 
 void DeviceConnection::send(char c ){
 	write(START_BIT);

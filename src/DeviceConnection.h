@@ -125,10 +125,12 @@ public:
 	virtual void write(uint8_t);
 	#endif
 
-
+	/** Check if connected and is not processing (receiving, sending) */
+	bool canSend();
 	virtual void doStart();
 	virtual void doEnd();
 	void doToken();
+	void putSeparator(); // same as doToken
 
 	void send(char);
     void send(const char[]);
