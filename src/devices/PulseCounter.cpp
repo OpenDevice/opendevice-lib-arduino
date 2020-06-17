@@ -5,6 +5,8 @@
  *      Author: ricardo
  */
 
+#ifdef FUNCTIONALINTERRUPT_H
+
 #include "PulseCounter.h"
 
 PulseCounter::PulseCounter(uint8_t ipin, int _mode, uint32_t _debounceTime) :
@@ -47,4 +49,5 @@ bool PulseCounter::setValue(value_t value, bool sync){
 	count = value; // restore previous value
 	return true;
 }
+#endif
 

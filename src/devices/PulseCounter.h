@@ -8,6 +8,8 @@
 #ifndef LIBRARIES_OPENDEVICE_SRC_DEVICES_PULSECOUNTER_H_
 #define LIBRARIES_OPENDEVICE_SRC_DEVICES_PULSECOUNTER_H_
 
+#ifdef FUNCTIONALINTERRUPT_H
+
 #include "Device.h"
 #include <FunctionalInterrupt.h>
 
@@ -30,5 +32,7 @@ private:
 	int mode;
 
 };
+
+#endif 
 
 #endif /* LIBRARIES_OPENDEVICE_SRC_DEVICES_PULSECOUNTER_H_ */
