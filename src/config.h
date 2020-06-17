@@ -40,6 +40,7 @@
 #define API_VERSION   "0.5.2" // software version of this library (used in build_defs.h make X.X.X pattern)
 #define CONFIG_VERSION "cv1"  // version of config layout
 #define CONFIG_START 0        // start address in EEPROM
+#define ODEV_CONFIG_SIZE	0x0200 // 512bytes
 
 #define DEFAULT_BAUD 115200
 #define DEFAULT_SERVER_PORT 8182	// Used only in server mode to receive socket connections
@@ -125,7 +126,7 @@ enum ConnectionMode{
 namespace od {
 
   /**
-    * OpenDevice dynamic configuration options. (See defaults in config.cpp file).
+    * OpenDevice dynamic configuration options stored in EEPROM. (See defaults in config.cpp file).
 	*/
 	struct ConfigClass{
 

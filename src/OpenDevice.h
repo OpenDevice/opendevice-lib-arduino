@@ -57,6 +57,9 @@ private:
 				void (*function)();
 	} CommandCallback;
 
+	/** Function, to serialize custom command data (used in sendCustomCommand) */
+	typedef void (*CustomComandPtr)(DeviceConnection *conn);
+
 	Device* devices[MAX_DEVICE];
 	CommandCallback commands[MAX_COMMAND];
 
@@ -196,9 +199,10 @@ public:
 	void begin(){
 
 		// Wait serial if using Leonardo / YUN
-		#if defined(__AVR_ATmega32U4__) && !(defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_))
-			while (!Serial){delay(1);}
-		#endif
+		// This breaks in standalone mode...
+		// #if defined(__AVR_ATmega32U4__) && !(defined(_YUN_SERVER_H_) || defined(_YUN_CLIENT_H_))
+		// 	while (!Serial){delay(1);}
+		// #endif
 
 		#if defined(__ARDUINO_OTA_H)
 			RemoteUpdate.begin();
@@ -378,6 +382,15 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 	void send(Command cmd);
 
+	/**
+	 * Send custom data to server, function passed as argument allow to serialize extra data.
+	 * Function signarture:  ODev.sendCustomCommand("Chat1", [] (DeviceConnection* conn) { ... }); 
+	 * See example/HMI_Charts
+	 */
+	void sendCustomCommand(String name, volatile CustomComandPtr func);
+
+	void sendCustomCommand(String name, double length, ...);
+
 
 #ifdef __FlashStringHelper
 	void debug(const __FlashStringHelper* data);
@@ -515,10 +528,10 @@ void begin(usb_serial_class &serial, unsigned long baud){
 		if (cmd.deviceID > 0) {
 			Device *foundDevice = getDevice(cmd.deviceID);
 			if (foundDevice != NULL) {
-				debugChange(foundDevice);
-				foundDevice->setValue(cmd.value, false);
 				foundDevice->deserializeExtraData(&cmd, conn);
-				notifyReceived(ResponseStatus::SUCCESS);
+				notifyReceived(ResponseStatus::SUCCESS); // before set value, avoid callback errors.
+				foundDevice->setValue(cmd.value, false);
+				debugChange(foundDevice);
 			} else {
 				notifyReceived(ResponseStatus::NOT_FOUND);
 			}
@@ -542,10 +555,11 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 		// Send response: GET_DEVICES_RESPONSE;ID;Index;Length;[ID, PIN, VALUE, TARGET, SENSOR?, TYPE];
 		// NOTE: This message is sent to each device
-		} else if (cmd.type == CommandType::GET_DEVICES) {
+		} else if (cmd.type == CommandType::GET_DEVICES) { 
 
 			LOG_DEBUG("GET_DEVICES", deviceLength);
 
+			// Result in multiple responses, deviceLength is used to detect end of 'comand' by server 
 			for (int i = 0; i < deviceLength; ++i) {
 
 				Device *device = getDeviceAt(i);
@@ -554,13 +568,13 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 				conn->doStart();
 				conn->print(CommandType::GET_DEVICES_RESPONSE);
-				conn->doToken();
+				conn->putSeparator();
 				conn->print(cmd.id); // cmd index
-				conn->doToken();
+				conn->putSeparator();
 				conn->print(i + 1); // track current index
-				conn->doToken();
+				conn->putSeparator();
 				conn->print(deviceLength); // max devices
-				conn->doToken();
+				conn->putSeparator();
 
 				device->toString(conn);
 
@@ -608,6 +622,11 @@ void begin(usb_serial_class &serial, unsigned long baud){
 				int port = ODEV_OTA_REMOTE_PORT;
 
 				if(Config.server[0] == '1' && Config.server[1] == '9'){ // local IP
+					port = 8181;
+				}
+
+				// FIX: Apache proxy ou cloud.opendevice.io broke http 1.0 requests
+				if(Config.server[0] == 'c' && Config.server[1] == 'l'){ 
 					port = 8181;
 				}
 

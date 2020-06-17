@@ -68,3 +68,6 @@ https://opendevice.atlassian.net/wiki/spaces/DOC/pages/1704011/Arduino+Library
 
 https://opendevice.atlassian.net/wiki/display/DOC/Getting+started
 
+Here you will find the documentation generated automatically from the sources:
+
+http://opendevice.github.io/opendevice-lib-arduino 

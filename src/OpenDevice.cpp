@@ -201,19 +201,31 @@ void OpenDeviceClass::_loop() {
 		// Debug info
 		#if defined(SHOW_DEBUG_STATE)
 
-			Logger.printLoop('=', 60);
+		if(deviceConnection->conn != &Serial){ // don't show if using serial communication
+
+			Logger.printLoop('=', 23, false);
+			Serial.print(" [ OpenDevice ]");
+			Logger.printLoop('=', 23);
+
+			Serial.print("= ["); Serial.print(Config.moduleName);
+			Serial.print("] || Server: "); Serial.print(Config.server);
+			Serial.print(" || Devices: "); Serial.print(Config.devicesLength);
+			Serial.println();
 
 			Serial.print("= Uptime: "); Serial.print((millis() / 1000) / 60); Serial.print("min");
-			Serial.print(" || Loops: "); Serial.print(loops / SAVE_DEVICE_INTERVAL);
+			Serial.print(" || Loops/ms: "); Serial.print(loops / SAVE_DEVICE_INTERVAL);
 			Serial.print(" || Restarts: "); Serial.print(devices[0]->currentValue);
 			Serial.println();
 
 			Serial.print("= Connected: "); Serial.print(isConnected());
 
-			#if defined(ESP8266)
+			#if defined(ESP_h)
 				wl_status_t status = WiFi.status();
-				Serial.print(" || WIFI: "); Serial.print(status);
-				if(status == WL_CONNECTED) Serial.print(" || RSSI: "); Serial.print(WiFi.RSSI());
+				Serial.print(" || WIFI: "); Serial.print( (status == WL_CONNECTED ) );
+				if(status == WL_CONNECTED){
+					Serial.print("("); Serial.print(WiFi.RSSI());
+					Serial.print(") || IP: "); Serial.print(WiFi.localIP());
+				} 
 				Serial.println();
 				Serial.print("= RAM: "); Serial.print(ESP.getFreeHeap());
 				Serial.print(" || EPROM/SIZE: "); Serial.print(ESP.getFlashChipSize());
@@ -222,7 +234,9 @@ void OpenDeviceClass::_loop() {
 
 			loops=0;
 
-			Logger.printLoop('=', 60);
+			Logger.printLoop('=', 61);
+
+		}
 
 		#endif
 
@@ -250,7 +264,7 @@ void OpenDeviceClass::_loop() {
 	if(Config.pinReset != 255 && digitalRead(Config.pinReset) == LOW){
 
 		if(!resetTimer.isEnabled()){
-			Serial.println("Starting timmer...");
+			LOG_DEBUG_S("Starting timmer...");
 			resetTimer.enable(); // neable timer
 		}
 
@@ -350,6 +364,53 @@ void OpenDeviceClass::onSensorChanged(Device* sensor){
 void OpenDeviceClass::send(Command cmd){
 	deviceConnection->send(cmd, true);
 }
+
+void OpenDeviceClass::sendCustomCommand(String name, volatile CustomComandPtr func) {
+	
+	if(deviceConnection->canSend()){
+		deviceConnection->doStart();
+		deviceConnection->print(CommandType::USER_COMMAND);
+		deviceConnection->putSeparator();
+		deviceConnection->print(0); // cmdID
+		deviceConnection->putSeparator();
+		deviceConnection->print(name);
+		deviceConnection->putSeparator();
+		func(deviceConnection); 
+		deviceConnection->doEnd();
+	}else{
+		LOG_DEBUG("Can't send.");
+	}
+}
+
+void OpenDeviceClass::sendCustomCommand(String name, double length, ...){
+	
+	if(deviceConnection->canSend()){
+		deviceConnection->doStart();
+		deviceConnection->print(CommandType::USER_COMMAND);
+		deviceConnection->putSeparator();
+		deviceConnection->print(0); // cmdID
+		deviceConnection->putSeparator();
+		deviceConnection->print(name);
+		deviceConnection->putSeparator();
+
+		va_list args;
+    	va_start(args, length);
+		double value;
+		for (uint8_t i = 0; i < length - 1; ++i){
+			value = va_arg(args, double);
+			deviceConnection->print(value);
+			deviceConnection->putSeparator();
+		}
+		deviceConnection->print(va_arg(args, double));
+		va_end(args);
+
+		deviceConnection->doEnd();
+	}else{
+		LOG_DEBUG("Can't send.");
+	}
+
+}
+
 
 Command OpenDeviceClass::cmd(CommandType::CommandType type, uint8_t deviceID, value_t value){
 	Command cmd;
@@ -465,7 +526,7 @@ Device* OpenDeviceClass::addDevice(const char* name, Device& device){
 
 		return &device;
 	} else{
-		return false;
+		return NULL;
 	}
 }
 
@@ -495,7 +556,11 @@ Device* OpenDeviceClass::addDevice(const char* name, uint16_t pin, Device::Devic
 // 	}
 // }
 
-
+/**
+ * Register a custom command to trigger a user function.
+ * Parameters can be used, this cab be get using (ODev.readString(), ODev.readInt())
+ * For details se 'examples/EthernetCustomCommands'
+ */
 bool OpenDeviceClass::addCommand(const char * name, void (*function)()){
 	if (commandsLength < MAX_COMMAND) {
 
