@@ -43,7 +43,14 @@ bool RFIDSensor::hasChanged(){
 
 		byte *raw = mfrc522.uid.uidByte;
 
-		currentValue = (unsigned long) (raw[3] << 24) | (raw[2] << 16) | (raw[1] << 8) | raw[0];
+		unsigned long UID_unsigned;
+		UID_unsigned =  (long) raw[3] << 24;
+		UID_unsigned += (long) raw[2] << 16;
+		UID_unsigned += (long) raw[1] <<  8;
+		UID_unsigned += (long) raw[0];
+
+		currentValue = UID_unsigned;
+
 		mfrc522.PICC_HaltA(); // mark as 'READ'
 		return true;
 	}
