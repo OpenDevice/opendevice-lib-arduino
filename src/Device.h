@@ -115,11 +115,11 @@ public:
 	DeviceType type;
 	const char* deviceName;
 
-  // For sensor types
+    // For sensor types
 	bool sensor;
 	int32_t readLastTime;
 	int32_t readInterval;
-	ValueFilter* filter;
+	
 
 	uint8_t targetID; // associated device (used in sensors)
 
@@ -129,6 +129,14 @@ public:
 	volatile bool needSync;
 	bool interruptEnabled; // only for sensor
 	uint8_t interruptMode;
+
+	// Listeners
+	DeviceListener changeListener;
+	DeviceListener syncListerner;
+
+	// Advanced.
+	IOExtender* ioExtender;
+	ValueFilter* filter;
 
 	Device();
 	Device(uint16_t ipin);
@@ -208,10 +216,6 @@ private:
 	void _init(char* name, uint8_t iid, uint16_t ipin, Device::DeviceType type, bool sensor);
 
 protected:
-	DeviceListener changeListener;
-	DeviceListener syncListerner;
-	IOExtender* ioExtender;
-
 	int _digitalRead(uint16_t pin);
 	int _analogRead(uint16_t pin);
 	void _analogWrite(uint16_t pin, int val);
