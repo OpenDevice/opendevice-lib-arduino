@@ -37,7 +37,7 @@
 #define DEBUG_CON	  0 // set 1 to enable (receiving debug)
 #define ENABLE_SERIAL     1
 
-#define API_VERSION   "0.5.2" // software version of this library (used in build_defs.h make X.X.X pattern)
+#define API_VERSION   "0.5.3" // software version of this library (used in build_defs.h make X.X.X pattern)
 #define CONFIG_VERSION "cv1"  // version of config layout
 #define CONFIG_START 0        // start address in EEPROM
 #define ODEV_CONFIG_SIZE	0x0200 // 512bytes
@@ -49,7 +49,10 @@
 #define KEEP_ALIVE_INTERVAL 30000
 #define KEEP_ALIVE_MAX_MISSING 3
 #define ENABLE_DEVICE_INTERRUPTION 0
-#define ENABLE_SYNC_DEVICEID 1    // Sync DeviceID from server and save on EEPROM.
+#define ENABLE_SYNC_DEVICEID 1    // If Sync = 1, DeviceID is generated on server and save on EEPROM.
+								  // If Sync = 0, sequential DeviceID  will generated
+								  // If you are working with multiple devices, server must generate the ID
+
 #define ENABLE_PREFIX_NAME 0      // Add Module name to Devices
 #define LOAD_DEVICE_STORAGE 1     // Load deviceID from EEPROM ? (enable in production)
 #define SAVE_DEVICE_INTERVAL 30000     // Set 0 to disable save device state interval
@@ -74,7 +77,6 @@
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
 #define MAX_DEVICE_NAME  10
-#define MAX_LISTENERS 2
 #define MAX_DEVICE 5
 
 #define MAX_COMMAND 5 // this is used for user command callbacks
@@ -84,18 +86,17 @@
 // ---- High Memory Devices --------
 #elif defined(ESP8266)
 #define DATA_BUFFER  256
-#define MAX_LISTENERS 5
-#define MAX_DEVICE 20
+#define MAX_DEVICE 30
 #define MAX_DEVICE_NAME  25
 #define MAX_COMMAND 5 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 
 // ---- Medium Memory Devices --------
+// Target to ATMEGA 328p and similar..
 #else
 #define DATA_BUFFER  128
-#define MAX_LISTENERS 5
-#define MAX_DEVICE 10
+#define MAX_DEVICE 12
 #define MAX_DEVICE_NAME  25
 #define MAX_COMMAND 3 // this is used for user command callbacks
 #define MAX_COMMAND_STRLEN 14
