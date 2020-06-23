@@ -34,6 +34,7 @@ OpenDeviceClass::OpenDeviceClass() :
 	deviceLength = 0;
 	commandsLength = 0;
 	needSaveDevices = false;
+	syncDone = false;
 
 	if(SAVE_DEVICE_INTERVAL == 0) saveAndDebugTimer.disable();
 
@@ -280,6 +281,7 @@ void OpenDeviceClass::enableKeepAlive(bool val){
 	Config.keepAlive = val;
 }
 
+
 void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
 	Config.debugMode = true;
 	Config.debugTarget = _debugTarget;
@@ -291,9 +293,12 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
  */
 bool OpenDeviceClass::onDeviceChanged(uint8_t iid, value_t value) {
 	ODev.needSaveDevices = true;
-	Device* device = ODev.getDevice(iid);
-	ODev.debugChange(device);
-	ODev.sendValue(device); // sync with server
+	// Send only when sync done..
+	if(ODev.syncDone){
+		Device* device = ODev.getDevice(iid);
+		ODev.debugChange(device);
+		ODev.sendValue(device); // sync with server
+	}
 	return true;
 }
 
@@ -365,15 +370,15 @@ void OpenDeviceClass::send(Command cmd){
 	deviceConnection->send(cmd, true);
 }
 
-void OpenDeviceClass::sendCustomCommand(String name, volatile CustomComandPtr func) {
+void OpenDeviceClass::sendCustomCommand(const char cmdName[], volatile CustomComandPtr func) {
 	
-	if(deviceConnection->canSend()){
+	if(syncDone && deviceConnection->canSend()){
 		deviceConnection->doStart();
 		deviceConnection->print(CommandType::USER_COMMAND);
 		deviceConnection->putSeparator();
 		deviceConnection->print(0); // cmdID
 		deviceConnection->putSeparator();
-		deviceConnection->print(name);
+		deviceConnection->print(cmdName);
 		deviceConnection->putSeparator();
 		func(deviceConnection); 
 		deviceConnection->doEnd();
@@ -382,15 +387,15 @@ void OpenDeviceClass::sendCustomCommand(String name, volatile CustomComandPtr fu
 	}
 }
 
-void OpenDeviceClass::sendCustomCommand(String name, double length, ...){
+void OpenDeviceClass::sendCustomCommand(const char cmdName[], double length, ...){
 	
-	if(deviceConnection->canSend()){
+	if(syncDone && deviceConnection->canSend()){
 		deviceConnection->doStart();
 		deviceConnection->print(CommandType::USER_COMMAND);
 		deviceConnection->putSeparator();
 		deviceConnection->print(0); // cmdID
 		deviceConnection->putSeparator();
-		deviceConnection->print(name);
+		deviceConnection->print(cmdName);
 		deviceConnection->putSeparator();
 
 		va_list args;
@@ -749,18 +754,15 @@ void OpenDeviceClass::showFreeRam() {
 
 	#if(ARDUINO && !defined(ESP8266))
 	  extern int __heap_start, *__brkval;
-
 	  int v;
 
-
 	  #if defined (E2END)
-	  //Serial.print(F("DB:EPROM:"));
-	  Serial.print(E2END);
-	  Serial.print("-");
+	  Serial.print(F("DB:E:"));
+	  Serial.println(E2END);
 	  #endif
 
 
-	  //Serial.print(F("DB:RAM:"));
+	  Serial.print(F("DB:R:"));
 	  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval), DEC);
   #endif
 
@@ -846,8 +848,13 @@ void OpenDeviceClass::loadDevicesFromStorage(){
 				if(device->id == 0 && i < Config.devicesLength){
 					device->id = Config.devices[i];
 
-					if(! (device->sensor && device->type == Device::DIGITAL)){ // ignore digital sensors
+					// restorevalue, ignore digital sensors
+					if(! (device->sensor && device->type == Device::DIGITAL)){
+						// Disable listeners on startup....
+						DeviceListener listener = device->changeListener;
+						device->changeListener = NULL;
 						device->setValue(Config.devicesState[i], false);
+						device->changeListener = listener;
 					}
 
 					//Logger.debug(device->deviceName, Config.devicesState[i]);

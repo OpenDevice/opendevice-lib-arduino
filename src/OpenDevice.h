@@ -69,6 +69,7 @@ private:
 	long keepAliveTime;
 	long keepAliveMiss;
 	bool needSaveDevices;
+	bool syncDone; // check if server send a SYNC_DEVICES_ID
 	Timeout saveAndDebugTimer;
 	Timeout resetTimer;
 	unsigned long loops=0; // loop couting debug (trace performace problems)
@@ -375,6 +376,14 @@ void begin(usb_serial_class &serial, unsigned long baud){
     /** Reset microcontroller (only for ESP) others need hardware changes */
 	void reset();
 
+	/**
+	 * Enable debug messages.
+	 *
+	 * IF _debugTarget = DEBUG_SERIAL, messages will send to Serial
+	 * IF _debugTarget = DEBUG_CURRENT, messages will send to active connection (Serial, Wifi.. )
+	 *
+	 * @param _debugTarget - (default DEBUG_SERIAL)
+	 */
 	void enableDebug(uint8_t debugTarget = DEBUG_SERIAL);
 
 	/** Create a simple command (using lastCMD buffer)*/
@@ -387,9 +396,9 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 * Function signarture:  ODev.sendCustomCommand("Chat1", [] (DeviceConnection* conn) { ... }); 
 	 * See example/HMI_Charts
 	 */
-	void sendCustomCommand(String name, volatile CustomComandPtr func);
+	void sendCustomCommand(const char cmdName[], volatile CustomComandPtr func);
 
-	void sendCustomCommand(String name, double length, ...);
+	void sendCustomCommand(const char cmdName[], double length, ...);
 
 
 #ifdef __FlashStringHelper
@@ -579,10 +588,10 @@ void begin(usb_serial_class &serial, unsigned long baud){
 				device->toString(conn);
 
 				conn->doEnd();
-
+				syncDone = true;
 			}
 
-	  // Save devices ID on storage
+	  	// Save devices ID on storage
 		} else if (cmd.type == CommandType::SYNC_DEVICES_ID) {
 
 			//		conn->printBuffer();
@@ -591,7 +600,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 			LOG_DEBUG("SYNC", length);
 
-			if(length!= deviceLength) {   // Invalid Match
+			if(length != deviceLength) {   // Invalid Match
 				notifyReceived(ResponseStatus::BAD_REQUEST);
 				return;
 			}
@@ -610,10 +619,9 @@ void begin(usb_serial_class &serial, unsigned long baud){
 				Config.devices[i] = uid;
 				// Serial.print("SYNC :: ");Serial.print(i);Serial.print(" => ");Serial.println(devices[i]->id, DEC);
 			}
-
+			
 			save();
 			notifyReceived(ResponseStatus::SUCCESS);
-
 
 		} else if (cmd.type == CommandType::FIRMWARE_UPDATE) {
 
