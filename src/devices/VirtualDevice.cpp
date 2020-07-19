@@ -8,9 +8,14 @@
 #include "VirtualDevice.h"
 
 VirtualDevice::VirtualDevice(DeviceType _type) : Device(0, 0, _type, false) {
+	currentValue = 0;
 }
 
 VirtualDevice::~VirtualDevice() {
+}
+
+value_t VirtualDevice::getValue(){
+	return currentValue;
 }
 
 bool VirtualDevice::setValue(value_t value, bool sync){

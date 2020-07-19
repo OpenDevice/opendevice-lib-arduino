@@ -164,7 +164,7 @@ public:
 	/**
 	 * Get current value.
 	 */
-	value_t getValue();
+	virtual value_t getValue();
 
 	virtual size_t serializeExtraData(DeviceConnection *conn);
 

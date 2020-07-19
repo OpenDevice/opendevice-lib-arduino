@@ -300,7 +300,7 @@ bool Device::notifyListeners(){
 }
 
 
-// [ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
+// [NAME, ID, PIN, VALUE, TARGET, SENSOR?, TYPE]
 int Device::toString(Print* conn){
 
 	char v_str[6];

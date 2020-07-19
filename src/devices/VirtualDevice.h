@@ -16,6 +16,7 @@ public:
 	virtual ~VirtualDevice();
 
 	bool setValue(value_t value, bool sync);
+	value_t getValue();
 	void init();
 };
 
