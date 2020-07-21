@@ -134,15 +134,24 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 
 	deviceConnection = &_deviceConnection;
 
-	Logger.debug("ModuleName", Config.moduleName);
-	Logger.debug("Server", Config.server);
+	// Setup debug target for Logger..
+	if(!Logger.out){
+		if(Config.debugTarget == DebugTarget::DEBUG_SERIAL){
+			Logger.out = &Serial;
+		}else{
+			Logger.out = deviceConnection;
+		}
+	}
+
+	LOG_DEBUG("ModuleName", Config.moduleName);
+	LOG_DEBUG("Server", Config.server);
 
 	char version[30];
 	strcpy(version, API_VERSION);
 	strcat(version, "@");
 	strcat(version, FirmwareBuildDate);
 	
-	Logger.debug("Firmware", version); // from build_defs.h
+	LOG_DEBUG("Firmware", version); // from build_defs.h
 
 	for (int i = 0; i < deviceLength; i++) {
 		devices[i]->init();
@@ -155,7 +164,7 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 	}
 
 	// Load Device(ID) / Value from Storage and set in devices
-	loadDevicesFromStorage();
+	// restoreDevicesFromStorage();
 
 	// Trace restarts using VALUE of board
 	devices[0]->currentValue++;
@@ -167,8 +176,6 @@ void OpenDeviceClass::begin(DeviceConnection &_deviceConnection) {
 	deviceConnection->begin();
 
 	_afterBegin();
-
-	// ODev.debug("Begin [OK]");
 
 }
 
@@ -200,7 +207,7 @@ void OpenDeviceClass::_loop() {
 	if(saveAndDebugTimer.expired()){
 
 		// Debug info
-		#if defined(SHOW_DEBUG_STATE)
+		#if DEBUG && defined(SHOW_DEBUG_STATE)
 
 		if(deviceConnection->conn != &Serial){ // don't show if using serial communication
 
@@ -286,6 +293,12 @@ void OpenDeviceClass::enableDebug(uint8_t _debugTarget){
 	Config.debugMode = true;
 	Config.debugTarget = _debugTarget;
 	if(_debugTarget == DEBUG_SERIAL) Serial.begin(DEFAULT_BAUD);
+}
+
+void OpenDeviceClass::enableDebug(Print &out){
+	Config.debugMode = true;
+	Config.debugTarget = DebugTarget::DEBUG_CUSTOM;
+	Logger.out = &out;
 }
 
 /**
@@ -453,6 +466,7 @@ void OpenDeviceClass::notifyReceived(ResponseStatus::ResponseStatus status){
 
 void OpenDeviceClass::debugChange(Device* device){
 
+	#if DEBUG
 	if(Config.debugMode){
 
 		if(Config.debugTarget == 1){
@@ -471,6 +485,7 @@ void OpenDeviceClass::debugChange(Device* device){
 			#endif
 		}
 	}
+	#endif
 }
 
 
@@ -526,7 +541,7 @@ Device* OpenDeviceClass::addDevice(const char* name, Device& device){
 			// }
 		#endif
 
-		Logger.debug("Add Device", deviceName);
+		// LOG_DEBUG("Add Device", deviceName);
 		device.name(deviceName);
 
 		return &device;
@@ -569,7 +584,8 @@ Device* OpenDeviceClass::addDevice(const char* name, uint16_t pin, Device::Devic
 bool OpenDeviceClass::addCommand(const char * name, void (*function)()){
 	if (commandsLength < MAX_COMMAND) {
 
-			strncpy(commands[commandsLength].command, name , MAX_COMMAND_STRLEN);
+//			strncpy(commands[commandsLength].command, name , strlen(name));
+			commands[commandsLength].command = name;
 			commands[commandsLength].function = function;
 			commandsLength++;
 
@@ -832,13 +848,13 @@ void OpenDeviceClass::debug(const String &str){
 #endif
 
 /**
- * Verify if was saved the devices(IDs) and values on the internal storage.
+ * Verify if was saved the devices ID and value on the internal storage.
  * If not saved, then the server will send IDs.
  */
-void OpenDeviceClass::loadDevicesFromStorage(){
+void OpenDeviceClass::restoreDevicesFromStorage(){
 	#if(LOAD_DEVICE_STORAGE)
 
-		Logger.debug("Load Stored Devices ", Config.devicesLength);
+		LOG_DEBUG("Restore Devices", Config.devicesLength);
 
 		// Only restore IDs if has no change
 		// Otherise IDs will loaded from server
@@ -858,11 +874,11 @@ void OpenDeviceClass::loadDevicesFromStorage(){
 					}
 
 					//Logger.debug(device->deviceName, Config.devicesState[i]);
-					if(Config.debugMode){
-						Serial.print(device->deviceName);
-						Serial.print(" = ");
-						Serial.println(Config.devicesState[i]);
-					}
+//					if(Config.debugMode){
+//						Serial.print(device->deviceName);
+//						Serial.print(" = ");
+//						Serial.println(Config.devicesState[i]);
+//					}
 
 				}
 			}

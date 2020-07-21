@@ -30,7 +30,7 @@
 // =====================================
 
 #ifndef DEBUG
-#define DEBUG	1
+#define DEBUG	0
 #endif
 
 #define DEBUG_SETUP	  1 // set 1 to enable (receiving debug)
@@ -54,7 +54,7 @@
 								  // If you are working with multiple devices, server must generate the ID
 
 #define ENABLE_PREFIX_NAME 0      // Add Module name to Devices
-#define LOAD_DEVICE_STORAGE 1     // Load deviceID from EEPROM ? (enable in production)
+#define LOAD_DEVICE_STORAGE 1     // Load deviceID,Value from EEPROM ? (enable in production, disable for off-line apps)
 #define SAVE_DEVICE_INTERVAL 30000     // Set 0 to disable save device state interval
 #define SHOW_DEBUG_STATE 1          // Print debug (trace performace problems) information in interval of 'SAVE_DEVICE_INTERVAL'
 
@@ -76,20 +76,16 @@
 // ---- Low Memory Devices ----------
 #if defined(__AVR_ATtinyX313__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__)
 #define DATA_BUFFER  16
-#define MAX_DEVICE_NAME  10
 #define MAX_DEVICE 5
 
 #define MAX_COMMAND 5 // this is used for user command callbacks
-#define MAX_COMMAND_STRLEN 5
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 
 // ---- High Memory Devices --------
 #elif defined(ESP8266)
 #define DATA_BUFFER  256
 #define MAX_DEVICE 30
-#define MAX_DEVICE_NAME  25
 #define MAX_COMMAND 5 // this is used for user command callbacks
-#define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 
 // ---- Medium Memory Devices --------
@@ -97,9 +93,7 @@
 #else
 #define DATA_BUFFER  128
 #define MAX_DEVICE 12
-#define MAX_DEVICE_NAME  25
 #define MAX_COMMAND 3 // this is used for user command callbacks
-#define MAX_COMMAND_STRLEN 14
 #define READING_INTERVAL 100 // sensor reading interval (ms)
 
 #endif
@@ -111,7 +105,8 @@ typedef double value_t;
 // May be better use: https://github.com/mrRobot62/Arduino-logging-library OU -VDEBUG(see ESP8266)
 enum DebugTarget{
 	DEBUG_SERIAL,
-	DEBUG_CURRENT
+	DEBUG_CONNETION,
+	DEBUG_CUSTOM
 };
 
 enum ConnectionMode{

@@ -53,7 +53,7 @@ class OpenDeviceClass {
 private:
 
 	typedef struct {
-				char command[MAX_COMMAND_STRLEN];
+				const char* command;
 				void (*function)();
 	} CommandCallback;
 
@@ -93,7 +93,7 @@ private:
 
 	void beginDefault();
 
-	void loadDevicesFromStorage();
+	void restoreDevicesFromStorage();
 
 public:
 
@@ -386,6 +386,8 @@ void begin(usb_serial_class &serial, unsigned long baud){
 	 */
 	void enableDebug(uint8_t debugTarget = DEBUG_SERIAL);
 
+	void enableDebug(Print &out);
+
 	/** Create a simple command (using lastCMD buffer)*/
 	Command cmd(CommandType::CommandType type, uint8_t deviceID = 0, value_t value = 0);
 
@@ -530,7 +532,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 
 		bool cont = true; // TODO: Chama handlers(functions), se retornar false abota a continuacao;
 
-		debug("CType:", cmd.type);
+		LOG_DEBUG("CType:", cmd.type);
 		// showFreeRam();
 
 		// Directed to a device (Like On/OFF or more complex)
@@ -550,7 +552,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 			for (int i = 0; i < commandsLength; i++) {
 				// if(debugMode){ debug("Call function:"); debug(name); }
 				if (name.equals(commands[i].command)) {
-					notifyReceived(ResponseStatus::SUCCESS);
+					notifyReceived(ResponseStatus::SUCCESS); // response must set before, to avoid callback clear CMD ID.
 					(*commands[i].function)();
 				}
 			}
@@ -574,7 +576,7 @@ void begin(usb_serial_class &serial, unsigned long baud){
 				Device *device = getDeviceAt(i);
 
 				// Serial.printf("SEND (%d/%d): %s \n", i+1, deviceLength, device->deviceName);
-
+				
 				conn->doStart();
 				conn->print(CommandType::GET_DEVICES_RESPONSE);
 				conn->putSeparator();

@@ -38,6 +38,8 @@ namespace od {
 
 typedef struct{
 
+		Print* out;
+
 		template<typename T, typename M = char> void debug(const T title, const M str, bool newLine = true){
 
 			// if(Config.debugMode){
@@ -48,14 +50,14 @@ typedef struct{
 //					deviceConnection->doEnd();
 				// }else{
 					// #if(ENABLE_SERIAL)
-					Serial.print("DB:");
-					Serial.print(title);
+					out->print("DB:");
+					out->print(title);
 					if(str){
-						Serial.print(" :: ");
-						if(newLine) Serial.println(str);
-						else Serial.print(str);
+						out->print(" :: ");
+						if(newLine) out->println(str);
+						else out->print(str);
 					}else{
-						Serial.println();
+						out->println();
 					}
 					// #endif
 				// }
@@ -69,24 +71,24 @@ typedef struct{
 
 		void printLoop(char txt, uint8_t times, bool newLine = true){
 			for (uint8_t i = 0; i < times; ++i) {
-				Serial.print(txt);
+				out->print(txt);
 			}
 
-			if(newLine) Serial.println();
+			if(newLine) out->println();
 		}
 
 
 
 	//#ifdef __FlashStringHelper
 		// template <class T> void debug(const __FlashStringHelper* title, const T str, bool newLine = true){
-		// 	Serial.print("DB:");
-		// 	Serial.print(title);
+		// 	out->print("DB:");
+		// 	out->print(title);
 		// 	if(str){
-		// 		Serial.print(" :: ");
-		// 		if(newLine) Serial.println(str);
-		// 		else Serial.print(str);
+		// 		out->print(" :: ");
+		// 		if(newLine) out->println(str);
+		// 		else out->print(str);
 		// 	}else{
-		// 		Serial.println();
+		// 		out->println();
 		// 	}
 		// }
 	//#endif
@@ -94,11 +96,11 @@ typedef struct{
 
 		// void debug(const char title[], int val, bool newLine = true){
 		// 	#if(DEBUG)
-		// 	Serial.print("DB:");
-		// 	Serial.print(title);
-		// 	Serial.print(" :: ");
-		// 	Serial.print(val, DEC);
-		// 	Serial.println();
+		// 	out->print("DB:");
+		// 	out->print(title);
+		// 	out->print(" :: ");
+		// 	out->print(val, DEC);
+		// 	out->println();
 		// 	#endif
 		// }
 

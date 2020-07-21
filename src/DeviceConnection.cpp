@@ -204,7 +204,7 @@ void DeviceConnection::parseCommand(uint8_t type){
 		cmd.value = 0;
 	}
 
-	#if DEBUG_CON || DEBUG_ON_PC
+	#if DEBUG && ( DEBUG_CON || DEBUG_ON_PC )
 		Serial.print("DB:CMD:");
 		Serial.print(cmd.type);Serial.print(";");
 		Serial.print(cmd.id);Serial.print(";");
